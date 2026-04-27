@@ -309,6 +309,7 @@ textarea.fc{resize:vertical;min-height:80px;}
           <div class="pin-btn" onclick="pinPress('0')">0</div>
           <div class="pin-btn del" onclick="pinDel()">⌫</div>
         </div>
+        <button class="btn-login" id="btn-valider-pin" style="display:none;margin-top:14px" onclick="doLogin()">✓ Valider</button>
         <div class="login-err" id="l-err2"></div>
         <button class="pin-back" onclick="stepBack()">← Changer de nom</button>
       </div>
@@ -526,20 +527,47 @@ function stepPin(){
 
 function stepBack(){
   pinVal='';updatePinDots();
+  document.getElementById('btn-valider-pin').style.display='none';
+  document.getElementById('l-err2').textContent='';
   document.getElementById('ls2').classList.remove('on');
   document.getElementById('ls1').classList.add('on');
 }
 
-function pinPress(d){if(pinVal.length>=4)return;pinVal+=d;updatePinDots();if(pinVal.length===4)setTimeout(doLogin,200);}
-function pinDel(){pinVal=pinVal.slice(0,-1);updatePinDots();}
+function pinPress(d){
+  if(pinVal.length>=4)return;
+  pinVal+=d;
+  updatePinDots();
+  if(pinVal.length===4){
+    document.getElementById('btn-valider-pin').style.display='block';
+  }
+}
+function pinDel(){
+  pinVal=pinVal.slice(0,-1);
+  updatePinDots();
+  document.getElementById('btn-valider-pin').style.display='none';
+  document.getElementById('l-err2').textContent='';
+}
 function updatePinDots(){for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.toggle('filled',i<pinVal.length);}
 
 async function doLogin(){
   const nom=document.getElementById('l-nom').value;
+  const btn=document.getElementById('btn-valider-pin');
   document.getElementById('l-err2').textContent='';
+  btn.textContent='⏳ Connexion...';
+  btn.disabled=true;
   const res=await apiP({action:'login',nom,pin:pinVal});
-  if(res.ok){U={nom:res.nom,svc:res.service,role:res.role};localStorage.setItem('crous_u2',JSON.stringify(U));afficherApp();}
-  else{document.getElementById('l-err2').textContent='❌ PIN incorrect. Réessayez.';pinVal='';updatePinDots();}
+  btn.textContent='✓ Valider';
+  btn.disabled=false;
+  if(res.ok){
+    U={nom:res.nom,svc:res.service,role:res.role};
+    localStorage.setItem('crous_u2',JSON.stringify(U));
+    afficherApp();
+  } else {
+    document.getElementById('l-err2').textContent='❌ PIN incorrect ou agent non trouvé. Réessayez.';
+    pinVal='';
+    updatePinDots();
+    btn.style.display='none';
+  }
 }
 
 function seDeconnecter(){
@@ -739,10 +767,4 @@ try{const s=localStorage.getItem('crous_u2');if(s){U=JSON.parse(s);afficherApp()
 </script>
 </body>
 </html>
-function ajouterResponsables() {
-  const ss = SpreadsheetApp.openById("18VZezmjKgGeUtlc0NXW-jOiRZ9Ld36c27sk8FCU5vxw");
-  const sheet = ss.getSheetByName("AGENTS");
-  sheet.appendRow(["secretariat", "UCA Production", "0000", "responsable", "secretariat.uca@crous-lille.fr"]);
-  sheet.appendRow(["Radomiak Philippe", "UCA Production", "0000", "responsable", "philippe.radomiak@crous-lille.fr"]);
-  Logger.log("Responsables ajoutés !");
-}
+
