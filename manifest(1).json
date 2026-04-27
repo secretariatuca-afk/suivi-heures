@@ -1,0 +1,26 @@
+{
+  "name": "Suivi Heures CROUS",
+  "short_name": "Suivi Heures",
+  "description": "Application de suivi des heures — CROUS de Lille UCA",
+  "start_url": "/suivi-heures/",
+  "scope": "/suivi-heures/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0C2340",
+  "theme_color": "#0C2340",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "https://secretariatuca-afk.github.io/suivi-heures/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://secretariatuca-afk.github.io/suivi-heures/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
