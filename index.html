@@ -476,6 +476,38 @@ let U=null,cT=null,myDem=[],allDem=[],allSol=[],allAgents=[];
 let fM='all',fV='att',fS='all',pinVal='';
 
 const fmt=m=>{if(isNaN(m))return'0:00';const s=m<0?'-':'',a=Math.abs(m);return`${s}${Math.floor(a/60)}:${String(a%60).padStart(2,'0')}`;};
+
+function fmtDate(val) {
+  if (!val) return '';
+  const s = val.toString();
+  // Format ISO date 2026-04-26T... → 26/04/2026
+  if (s.includes('T') || s.includes('-')) {
+    try {
+      const d = new Date(s);
+      if (!isNaN(d.getTime()) && d.getFullYear() > 1900) {
+        return d.toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric'});
+      }
+    } catch(e) {}
+  }
+  return s;
+}
+
+function fmtDuree(val) {
+  if (!val) return '';
+  const s = val.toString();
+  // Format ISO time 1899-12-30T01:35:39.000Z → 1:35
+  if (s.includes('T') || s.includes('1899')) {
+    try {
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) {
+        const h = d.getUTCHours();
+        const m = d.getUTCMinutes();
+        return `${h}:${String(m).padStart(2,'0')}`;
+      }
+    } catch(e) {}
+  }
+  return s;
+}
 const inits=n=>n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
 const apiG=async p=>{try{const r=await fetch(API+'?'+new URLSearchParams(p));return await r.json();}catch{return{ok:false};}};
 const apiP=async d=>{try{const r=await fetch(API,{method:'POST',body:JSON.stringify(d)});return await r.json();}catch{return{ok:false};}};
@@ -712,7 +744,24 @@ function renderValid(){
     const cls=d.statut==='En attente'?'dw':d.statut&&d.statut.includes('Valid')?'do':'dn';
     const bc=d.statut==='En attente'?'bw':d.statut&&d.statut.includes('Valid')?'bo':'bn';
     const act=d.statut==='En attente'?`<div class="di-actions"><button class="btn btn-ok btn-sm" onclick="valider('${d.id}')">✅ Valider</button><button class="btn btn-no btn-sm" onclick="refuser('${d.id}')">❌ Refuser</button></div>`:'';
-    return`<div class="di ${cls}"><div class="di-top"><div><div class="di-name">${d.nom}</div><div class="di-svc">${d.service}</div></div><span class="badge ${bc}">${d.statut||'En attente'}</span></div><div class="di-row">${d.type==='Heures prises'?'⏸️':'⚡'} <strong>${d.type}</strong> — ⏱️ <strong>${d.duree}</strong></div><div class="di-row">📅 ${d.date_debut||''}${d.date_fin&&d.date_fin!==d.date_debut?' → '+d.date_fin:''}</div>${d.observations?`<div class="di-obs">💬 ${d.observations}</div>`:''}<div class="di-time">🕐 ${d.horodateur}</div>${act}</div>`;
+    return`<div class="di ${cls}">
+      <div class="di-top">
+        <div>
+          <div class="di-name">${d.nom}</div>
+          <div class="di-svc">${d.service}</div>
+        </div>
+        <span class="badge ${bc}">${d.statut||'En attente'}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0;background:var(--g50);padding:8px;border-radius:8px">
+        <div style="font-size:12px;color:var(--g500)">📋 Type<br><strong style="color:var(--g800);font-size:13px">${d.type==='Heures prises'?'⏸️ Heures prises':'⚡ Heures sup'}</strong></div>
+        <div style="font-size:12px;color:var(--g500)">⏱️ Durée<br><strong style="color:var(--g800);font-size:13px">${fmtDuree(d.duree)}</strong></div>
+        <div style="font-size:12px;color:var(--g500)">📅 Début<br><strong style="color:var(--g800);font-size:13px">${fmtDate(d.date_debut)}</strong></div>
+        <div style="font-size:12px;color:var(--g500)">🏁 Fin<br><strong style="color:var(--g800);font-size:13px">${fmtDate(d.date_fin)||fmtDate(d.date_debut)}</strong></div>
+      </div>
+      ${d.observations?`<div class="di-obs">💬 <strong>Motif :</strong> ${d.observations}</div>`:'<div style="font-size:11px;color:var(--g400);font-style:italic">Aucun motif renseigné</div>'}
+      <div class="di-time">🕐 Soumis le ${d.horodateur}</div>
+      ${act}
+    </div>`;
   }).join('');
 }
 async function valider(id){const r=await apiP({action:'valider',id});if(r.ok){showAlert('al-val','ok','✅ Validée !');chargerValid();}else showAlert('al-val','no','❌ '+r.msg);}
