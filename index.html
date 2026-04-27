@@ -739,3 +739,10 @@ try{const s=localStorage.getItem('crous_u2');if(s){U=JSON.parse(s);afficherApp()
 </script>
 </body>
 </html>
+function ajouterResponsables() {
+  const ss = SpreadsheetApp.openById("18VZezmjKgGeUtlc0NXW-jOiRZ9Ld36c27sk8FCU5vxw");
+  const sheet = ss.getSheetByName("AGENTS");
+  sheet.appendRow(["secretariat", "UCA Production", "0000", "responsable", "secretariat.uca@crous-lille.fr"]);
+  sheet.appendRow(["Radomiak Philippe", "UCA Production", "0000", "responsable", "philippe.radomiak@crous-lille.fr"]);
+  Logger.log("Responsables ajoutés !");
+}
