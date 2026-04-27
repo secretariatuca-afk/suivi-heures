@@ -612,7 +612,8 @@ function go(id){
 
 async function chargerAccueil(){
   if(!U)return;
-  document.getElementById('acc-title').textContent=`Bonjour, ${U.nom.split(' ')[0]}`;
+  const mots=U.nom.split(' ');const prenom=mots[mots.length-1];
+  document.getElementById('acc-title').textContent=`Bonjour, ${prenom} 👋`;
   document.getElementById('acc-recent').innerHTML='<div class="loader"><div class="spin"></div>Chargement...</div>';
   const[rs,rd]=await Promise.all([apiG({action:'get_soldes'}),apiG({action:'get_demandes',nom:U.nom})]);
   if(rs.ok){
@@ -767,4 +768,3 @@ try{const s=localStorage.getItem('crous_u2');if(s){U=JSON.parse(s);afficherApp()
 </script>
 </body>
 </html>
-
