@@ -388,7 +388,7 @@ textarea{resize:vertical;min-height:80px}
 
 <script>
 // ══ CONFIG ══════════════════════════════════════════
-const GAS = 'https://script.google.com/macros/s/AKfycbxflTH3m23Y0iZRsrikiGuk3R-Xkw7bXKTaY0cOL0jIGVmYe3m6J-6gyjhcsj_gQjL7pw/exec';
+const GAS = 'https://script.google.com/macros/s/AKfycbxdkDdL5j9OubZWgE7JAH3onTyuMIhRp-KNJU2cO6A1BFEFDz9mC8cIf0nRLDnCt8mZOQ/exec';
 
 // ══ ÉTAT ════════════════════════════════════════════
 let CU = null; // currentUser
@@ -461,31 +461,21 @@ function pinDel(){pinBuffer=pinBuffer.slice(0,-1);updatePinDots();}
 function updatePinDots(){for(let i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('filled',i<pinBuffer.length);}
 
 async function pinValidate(){
-  // Utiliser la fonction login du Apps Script pour vérifier le PIN
   try{
-    const res=await gasPost({action:'login',nom:selectedName,pin:pinBuffer});
+    const res=await gasGet({action:"login",nom:selectedName,pin:pinBuffer});
     if(res.ok){
-      CU={nom:res.nom,service:res.service,role:res.role,pin:pinBuffer};
-      document.getElementById('pin-screen').style.display='none';
-      document.getElementById('app').style.display='flex';
+      CU={nom:res.nom||selectedName,service:res.service,role:res.role,pin:pinBuffer};
+      document.getElementById("pin-screen").style.display="none";
+      document.getElementById("app").style.display="flex";
       initApp();
     }else{
-      document.getElementById('pin-error').textContent='Code incorrect, réessayez.';
-      pinBuffer=''; updatePinDots();
+      document.getElementById("pin-error").textContent="Code incorrect, réessayez.";
+      pinBuffer=""; updatePinDots();
       if(navigator.vibrate)navigator.vibrate([100,50,100]);
     }
   }catch(e){
-    // Fallback : vérification locale si le serveur ne répond pas
-    const ag=allAgents.find(a=>a.nom===selectedName);
-    if(ag && String(ag.pin||'')===pinBuffer){
-      CU={...ag};
-      document.getElementById('pin-screen').style.display='none';
-      document.getElementById('app').style.display='flex';
-      initApp();
-    }else{
-      document.getElementById('pin-error').textContent='Erreur de connexion.';
-      pinBuffer=''; updatePinDots();
-    }
+    document.getElementById("pin-error").textContent="Erreur de connexion.";
+    pinBuffer=""; updatePinDots();
   }
 }
 function logout(){CU=null;initNameScreen();}
@@ -563,7 +553,7 @@ async function submitDemande(){
       p.type='Heures récupérées'; p.date_debut=date; p.date_fin=date; p.duree=duree;
       p.observations=document.getElementById('sup-obs').value.trim();
     }
-    const res=await gasPost(p);
+    const res=await gasGet(p);
     if(res.ok){
       toast('✅ Demande envoyée !');
       document.getElementById('prises-obs').value='';
@@ -661,7 +651,7 @@ function renderValidation(){
 async function validerDemande(id,action){
   // action = 'valider' ou 'refuser'
   try{
-    const res=await gasPost({action,id});
+    const res=await gasGet({action:action,id:id});
     if(res.ok){
       toast(action==='valider'?'✅ Validée !':'❌ Refusée');
       loadValidation();
@@ -753,7 +743,7 @@ async function addAgent(){
   const email=document.getElementById('new-email').value.trim();
   if(!nom||!service||pin.length!==4){toast('Nom, service et PIN (4 chiffres) obligatoires');return;}
   try{
-    const res=await gasPost({action:'add_agent',nom,service,pin,role,email});
+    const res=await gasGet({action:"add_agent",nom:nom,service:service,pin:pin,role:role,email:email});
     if(res.ok){
       toast('✅ Agent ajouté : '+nom);
       document.getElementById('new-nom').value='';
