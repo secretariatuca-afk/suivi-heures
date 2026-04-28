@@ -4,207 +4,178 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <meta name="theme-color" content="#1e3a5f"/>
-<meta name="description" content="CROUS de Lille — Suivi des heures agents"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Suivi Heures"/>
 <title>CROUS de Lille — Suivi des Heures</title>
 <link rel="manifest" href="manifest.json"/>
-<link rel="apple-touch-icon" href="icons/icon-192.png"/>
-
 <style>
-/* ── Reset & base ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --primary:#1e3a5f;--primary-light:#2a5298;--primary-dark:#12243d;
-  --accent:#e74c3c;--accent-light:#ff6b6b;
   --success:#27ae60;--warning:#f39c12;--danger:#e74c3c;
   --text:#2c3e50;--text-light:#7f8c8d;--text-muted:#95a5a6;
   --bg:#f5f7fa;--bg-card:#ffffff;--bg-input:#f8f9fa;
-  --border:#dee2e6;--border-light:#e9ecef;
-  --shadow:0 2px 8px rgba(0,0,0,.10);--shadow-lg:0 4px 20px rgba(0,0,0,.15);
+  --border:#dee2e6;--shadow:0 2px 8px rgba(0,0,0,.10);
   --radius:12px;--radius-sm:8px;
-  --font:'Segoe UI',system-ui,sans-serif;
-  --nav-h:64px;
 }
-html,body{height:100%;font-family:var(--font);color:var(--text);background:var(--bg);overflow-x:hidden}
+html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);background:var(--bg);overflow-x:hidden}
 button{cursor:pointer;font-family:inherit;border:none;outline:none}
 input,select,textarea{font-family:inherit;font-size:1rem}
 
-/* ── Layout général ── */
+/* App layout */
 #app{display:flex;flex-direction:column;min-height:100%}
 #header{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
 #header img{width:44px;height:44px;border-radius:8px;background:#fff;padding:2px}
 #header-text h1{font-size:.95rem;font-weight:700;line-height:1.2}
 #header-text p{font-size:.75rem;opacity:.85}
-#user-badge{margin-left:auto;background:rgba(255,255,255,.15);border-radius:20px;padding:4px 10px;font-size:.78rem;cursor:pointer;transition:background .2s;white-space:nowrap}
+#user-badge{margin-left:auto;background:rgba(255,255,255,.15);border-radius:20px;padding:4px 10px;font-size:.78rem;cursor:pointer;white-space:nowrap}
 #user-badge:hover{background:rgba(255,255,255,.25)}
 
-/* ── Navigation ── */
-#nav{display:flex;background:var(--bg-card);border-top:1px solid var(--border-light);position:sticky;bottom:0;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;font-size:.68rem;color:var(--text-muted);background:none;border:none;transition:color .2s;gap:2px;min-height:56px}
+/* Navigation */
+#nav{display:flex;background:var(--bg-card);border-top:1px solid var(--border);position:sticky;bottom:0;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;font-size:.65rem;color:var(--text-muted);background:none;border:none;gap:2px;min-height:56px;transition:color .2s}
 .nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .nav-btn.active{color:var(--primary-light)}
 .nav-btn.active svg{stroke:var(--primary-light)}
 
-/* ── Contenu ── */
+/* Contenu */
 #content{flex:1;overflow-y:auto;padding:16px;padding-bottom:8px}
 .page{display:none}
 .page.active{display:block}
 
-/* ── Cartes ── */
+/* Cartes */
 .card{background:var(--bg-card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
 .card h2{font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--primary)}
 
-/* ── Formulaire ── */
+/* Formulaire */
 .form-group{margin-bottom:14px}
 label{display:block;font-size:.85rem;font-weight:500;color:var(--text-light);margin-bottom:5px}
-input[type=text],input[type=date],input[type=number],input[type=email],select,textarea{
+input[type=text],input[type=date],input[type=email],select,textarea{
   width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
-  background:var(--bg-input);font-size:.9rem;transition:border-color .2s,box-shadow .2s;
+  background:var(--bg-input);font-size:.9rem;transition:border-color .2s;
   -webkit-appearance:none;appearance:none}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary-light);box-shadow:0 0 0 3px rgba(42,82,152,.12)}
 textarea{resize:vertical;min-height:80px}
+
 .btn{display:inline-flex;align-items:center;gap:6px;padding:11px 20px;border-radius:var(--radius-sm);font-size:.9rem;font-weight:600;transition:all .18s;justify-content:center;width:100%}
 .btn-primary{background:var(--primary-light);color:#fff}
 .btn-primary:hover{background:var(--primary)}
 .btn-primary:active{transform:scale(.98)}
-.btn-secondary{background:var(--bg-input);color:var(--text);border:1.5px solid var(--border)}
-.btn-danger{background:var(--danger);color:#fff}
-.btn-success{background:var(--success);color:#fff}
-.btn-sm{padding:6px 12px;font-size:.8rem;width:auto}
+.btn-secondary{background:var(--bg-input);color:var(--text);border:1.5px solid var(--border);width:auto}
+.btn-danger{background:var(--danger);color:#fff;width:auto}
+.btn-success{background:var(--success);color:#fff;width:auto}
+.btn-sm{padding:6px 12px;font-size:.8rem}
 
-/* ── Type de demande (toggle) ── */
+/* Type demande */
 .type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
 .type-card{border:2px solid var(--border);border-radius:var(--radius-sm);padding:14px 10px;text-align:center;cursor:pointer;transition:all .18s;background:var(--bg-card)}
-.type-card:hover{border-color:var(--primary-light);background:#f0f5ff}
 .type-card.selected{border-color:var(--primary-light);background:#e8f0fe}
 .type-card .type-icon{font-size:1.6rem;margin-bottom:4px}
-.type-card .type-label{font-size:.82rem;font-weight:600;color:var(--text)}
+.type-card .type-label{font-size:.82rem;font-weight:600}
 .type-card .type-desc{font-size:.72rem;color:var(--text-light);margin-top:2px}
 
-/* ── Durée (sélecteur h+min) ── */
-.duration-row{display:flex;gap:8px;align-items:center}
+/* Durée */
+.duration-row{display:flex;gap:8px}
 .duration-row select{flex:1}
 
-/* ── Badges de statut ── */
+/* Badges */
 .badge{display:inline-block;padding:3px 8px;border-radius:12px;font-size:.72rem;font-weight:600;white-space:nowrap}
 .badge-pending{background:#fff3cd;color:#856404}
 .badge-approved{background:#d1e7dd;color:#0f5132}
 .badge-rejected{background:#f8d7da;color:#842029}
-.badge-info{background:#cfe2ff;color:#084298}
 
-/* ── Liste demandes ── */
+/* Demandes */
 .demande-item{background:var(--bg-card);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow);border-left:4px solid transparent}
 .demande-item.pending{border-color:var(--warning)}
 .demande-item.approved{border-color:var(--success)}
 .demande-item.rejected{border-color:var(--danger)}
-.demande-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.demande-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
 .demande-title{font-weight:600;font-size:.9rem}
-.demande-meta{font-size:.78rem;color:var(--text-light);margin-top:4px}
+.demande-meta{font-size:.78rem;color:var(--text-light);margin-top:3px}
 .demande-obs{font-size:.8rem;color:var(--text);margin-top:6px;padding:6px 10px;background:#f8f9fa;border-radius:6px;border-left:3px solid var(--primary-light)}
 .demande-actions{display:flex;gap:8px;margin-top:10px}
 
-/* ── Solde ── */
-.solde-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.solde-box{background:var(--bg-input);border-radius:var(--radius-sm);padding:12px;text-align:center}
-.solde-box .val{font-size:1.5rem;font-weight:700;margin-bottom:2px}
+/* Solde agent */
+.solde-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.solde-box{background:var(--bg-input);border-radius:var(--radius-sm);padding:14px;text-align:center}
+.solde-box .val{font-size:1.4rem;font-weight:700;margin-bottom:2px}
 .solde-box .lbl{font-size:.72rem;color:var(--text-light)}
-.solde-pos{color:var(--success)}
-.solde-neg{color:var(--danger)}
-.solde-zero{color:var(--text-light)}
+.s-pos{color:var(--success)}.s-neg{color:var(--danger)}.s-zero{color:var(--text-muted)}
 
-/* ── Tableau admin ── */
+/* Tableau agents */
 .agent-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg-card);border-radius:var(--radius-sm);margin-bottom:8px;box-shadow:var(--shadow)}
 .agent-avatar{width:36px;height:36px;border-radius:50%;background:var(--primary-light);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;flex-shrink:0}
 .agent-info{flex:1;min-width:0}
-.agent-name{font-weight:600;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent-name{font-weight:600;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .agent-service{font-size:.73rem;color:var(--text-light)}
 
-/* ── PIN clavier ── */
-#pin-screen{position:fixed;inset:0;background:linear-gradient(160deg,var(--primary-dark),var(--primary));display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:24px}
-.pin-logo{width:72px;height:72px;background:#fff;border-radius:16px;padding:6px;margin-bottom:16px}
+/* PIN */
+#pin-screen,#name-screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:24px;background:linear-gradient(160deg,var(--primary-dark),var(--primary))}
+.pin-logo{width:72px;height:72px;background:#fff;border-radius:16px;padding:8px;margin-bottom:16px}
 .pin-title{color:#fff;font-size:1.1rem;font-weight:700;margin-bottom:4px;text-align:center}
-.pin-subtitle{color:rgba(255,255,255,.7);font-size:.82rem;margin-bottom:24px;text-align:center}
+.pin-sub{color:rgba(255,255,255,.7);font-size:.82rem;margin-bottom:24px;text-align:center}
 .pin-dots{display:flex;gap:12px;margin-bottom:28px}
 .pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.5);transition:all .15s}
 .pin-dot.filled{background:#fff;border-color:#fff;transform:scale(1.1)}
 .pin-keypad{display:grid;grid-template-columns:repeat(3,72px);gap:10px}
 .pin-key{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:1.3rem;font-weight:600;transition:all .15s;border:none}
-.pin-key:hover{background:rgba(255,255,255,.22)}
 .pin-key:active{transform:scale(.92);background:rgba(255,255,255,.3)}
-.pin-key.del{font-size:1.1rem}
 .pin-key.ok{background:rgba(39,174,96,.7)}
-.pin-key.ok:hover{background:rgba(39,174,96,.9)}
 #pin-error{color:#ff6b6b;font-size:.82rem;margin-top:12px;min-height:1.2em;text-align:center}
 
-/* ── Sélecteur de nom ── */
-#name-screen{position:fixed;inset:0;background:linear-gradient(160deg,var(--primary-dark),var(--primary));display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:24px}
-.name-card{background:#fff;border-radius:var(--radius);padding:24px;width:100%;max-width:380px;box-shadow:var(--shadow-lg)}
+/* Sélecteur nom */
+.name-card{background:#fff;border-radius:var(--radius);padding:24px;width:100%;max-width:380px;box-shadow:0 4px 20px rgba(0,0,0,.15)}
 .name-card h2{color:var(--primary);font-size:1rem;margin-bottom:14px;text-align:center}
-#name-select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.9rem;margin-bottom:14px}
-.name-logo{width:60px;height:60px;background:var(--bg-card);border-radius:12px;padding:4px;margin:0 auto 16px;display:block}
+#name-select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.9rem;margin-bottom:14px;-webkit-appearance:none;appearance:none}
+.name-logo{width:60px;height:60px;background:#fff;border-radius:12px;padding:4px;margin:0 auto 16px;display:block}
 
-/* ── Filtre onglets ── */
+/* Onglets */
 .tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .tab{padding:6px 12px;border-radius:20px;font-size:.78rem;font-weight:500;cursor:pointer;border:1.5px solid var(--border);background:var(--bg-card);color:var(--text-light);transition:all .15s}
 .tab.active{background:var(--primary-light);color:#fff;border-color:var(--primary-light)}
 
-/* ── Mise à jour PWA ── */
-#update-banner{display:none;position:fixed;top:0;left:0;right:0;z-index:200;background:var(--success);color:#fff;padding:10px 16px;text-align:center;font-size:.85rem}
-#update-banner button{background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:4px;padding:3px 10px;margin-left:8px;cursor:pointer;font-size:.82rem}
+/* Toast */
+#toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:.85rem;z-index:500;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ── Spinner ── */
+/* Spinner */
 .spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--primary-light);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-center{display:flex;justify-content:center;padding:32px}
 
-/* ── Toast ── */
-#toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:.85rem;z-index:500;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* Compteur badge */
+.notif-badge{position:absolute;top:4px;right:4px;background:var(--danger);color:#fff;border-radius:10px;font-size:.65rem;font-weight:700;padding:1px 5px;min-width:16px;text-align:center}
+.nav-btn{position:relative}
 
-/* ── Responsive ── */
 @media(min-width:600px){
   #content{max-width:580px;margin:0 auto;padding:20px}
-  .pin-keypad{grid-template-columns:repeat(3,80px)}
-  .pin-key{width:80px;height:80px}
 }
 </style>
 </head>
 <body>
-
-<!-- Bannière mise à jour PWA -->
-<div id="update-banner">
-  Nouvelle version disponible !
-  <button onclick="applyUpdate()">Mettre à jour</button>
-</div>
-
-<!-- Toast -->
 <div id="toast"></div>
 
-<!-- ═══ ÉCRAN SÉLECTION NOM ═══ -->
+<!-- ÉCRAN NOM -->
 <div id="name-screen">
-  <img class="name-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAABmJLR0QA/wD/AP+gvaeTAAAAB3RJTUUH6AQSCg4gM5ZzNQAAAqhJREFUaN7tmj9oFFEQxn9v7y65kCMYECysBAtJIYgQSBMQLARBCEEIgoUgWAiChSBYCIKFIFgIgoUgWAiChSBYCIKFIFgIgoUgWAiChSBYCIKFIFgIgoUg+H+bvcs9krt3m9vbu7vdvX3vzdx7b96bN29mZt+b92ZmBJBlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZb1HzAMQwiB7/sIIQghUEqhlEIphVIKpRRKKZRSKKVQSqGUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSikAAOA4DqWUMk2TqqpSSqGUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEop9A90uEH/AAAAAElFTkSuQmCC" alt="CROUS"/>
+  <img class="name-logo" src="icon-2.png" onerror="this.style.display='none'" alt="CROUS"/>
   <div class="name-card">
-    <h2>Sélectionnez votre nom</h2>
-    <select id="name-select">
-      <option value="">— Choisissez votre nom —</option>
-    </select>
+    <h2>CROUS de Lille — Suivi des Heures</h2>
+    <select id="name-select"><option value="">— Choisissez votre nom —</option></select>
     <button class="btn btn-primary" onclick="validateName()">Continuer →</button>
+    <p id="name-error" style="color:var(--danger);font-size:.8rem;margin-top:8px;text-align:center;min-height:1em"></p>
   </div>
 </div>
 
-<!-- ═══ ÉCRAN PIN ═══ -->
+<!-- ÉCRAN PIN -->
 <div id="pin-screen" style="display:none">
-  <img class="pin-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAABmJLR0QA/wD/AP+gvaeTAAAAB3RJTUUH6AQSCg4gM5ZzNQAAAqhJREFUaN7tmj9oFFEQxn9v7y65kCMYECysBAtJIYgQSBMQLARBCEEIgoUgWAiChSBYCIKFIFgIgoUgWAiChSBYCIKFIFgIgoUgWAiChSBYCIKFIFgIgoUgWAiChSBYCIKFIFgIgoUg+H+bvcs9krt3m9vbu7vdvX3vzdx7b96bN29mZt+b92ZmBJBlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZb1HzAMQwiB7/sIIQghUEqhlEIphVIKpRRKKZRSKKVQSqGUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSikAAOA4DqWUMk2TqqpSSqGUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEop9A90uEH/AAAAAElFTkSuQmCC" alt="CROUS"/>
+  <img class="pin-logo" src="icon-2.png" onerror="this.style.display='none'" alt="CROUS"/>
   <div class="pin-title" id="pin-name-label">Code PIN</div>
-  <div class="pin-subtitle">Saisissez votre code à 4 chiffres</div>
+  <div class="pin-sub">Saisissez votre code à 4 chiffres</div>
   <div class="pin-dots">
-    <div class="pin-dot" id="d0"></div>
-    <div class="pin-dot" id="d1"></div>
-    <div class="pin-dot" id="d2"></div>
-    <div class="pin-dot" id="d3"></div>
+    <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
   </div>
   <div class="pin-keypad">
     <button class="pin-key" onclick="pinKey(1)">1</button>
@@ -216,7 +187,7 @@ textarea{resize:vertical;min-height:80px}
     <button class="pin-key" onclick="pinKey(7)">7</button>
     <button class="pin-key" onclick="pinKey(8)">8</button>
     <button class="pin-key" onclick="pinKey(9)">9</button>
-    <button class="pin-key del" onclick="pinDel()">⌫</button>
+    <button class="pin-key" onclick="pinDel()">⌫</button>
     <button class="pin-key" onclick="pinKey(0)">0</button>
     <button class="pin-key ok" onclick="pinValidate()">✓</button>
   </div>
@@ -224,11 +195,10 @@ textarea{resize:vertical;min-height:80px}
   <button style="margin-top:16px;background:none;border:none;color:rgba(255,255,255,.6);font-size:.82rem;cursor:pointer" onclick="backToNames()">← Changer de nom</button>
 </div>
 
-<!-- ═══ APP PRINCIPALE ═══ -->
+<!-- APP -->
 <div id="app" style="display:none">
-  <!-- Header -->
   <div id="header">
-    <img id="header-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAABmJLR0QA/wD/AP+gvaeTAAAAB3RJTUUH6AQSCg4gM5ZzNQAAAqhJREFUaN7tmj9oFFEQxn9v7y65kCMYECysBAtJIYgQSBMQLARBCEEIgoUgWAiChSBYCIKFIFgIgoUgWAiChSBYCIKFIFgIgoUgWAiChSBYCIKFIFgIgoUgWAiChSBYCIKFIFgIgoUg+H+bvcs9krt3m9vbu7vdvX3vzdx7b96bN29mZt+b92ZmBJBlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZb1HzAMQwiB7/sIIQghUEqhlEIphVIKpRRKKZRSKKVQSqGUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSikAAOA4DqWUMk2TqqpSSqGUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEoplFIopVBKoZRCKYVSCqUUSqmUQimFUgqlFEop9A90uEH/AAAAAElFTkSuQmCC" alt="CROUS"/>
+    <img src="icon-2.png" onerror="this.style.display='none'" alt="CROUS"/>
     <div id="header-text">
       <h1>CROUS de Lille</h1>
       <p id="header-subtitle">Suivi des Heures</p>
@@ -236,24 +206,24 @@ textarea{resize:vertical;min-height:80px}
     <div id="user-badge" onclick="logout()">🚪 Changer</div>
   </div>
 
-  <!-- Contenu -->
   <div id="content">
-    <!-- Page Accueil -->
+
+    <!-- ACCUEIL -->
     <div id="page-home" class="page active">
       <div class="card">
         <h2>👋 Bonjour, <span id="welcome-name"></span></h2>
         <p style="font-size:.85rem;color:var(--text-light);margin-top:4px" id="welcome-service"></p>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-        <button class="card" style="text-align:center;cursor:pointer;transition:transform .15s" onclick="showPage('demande')" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
+        <button class="card" style="text-align:center;cursor:pointer" onclick="showPage('demande')">
           <div style="font-size:1.8rem;margin-bottom:6px">📝</div>
           <div style="font-weight:600;font-size:.88rem">Nouvelle demande</div>
           <div style="font-size:.75rem;color:var(--text-light);margin-top:2px">Heures prises ou sup</div>
         </button>
-        <button class="card" style="text-align:center;cursor:pointer;transition:transform .15s" onclick="showPage('solde')" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
-          <div style="font-size:1.8rem;margin-bottom:6px">💰</div>
-          <div style="font-weight:600;font-size:.88rem">Mon solde</div>
-          <div style="font-size:.75rem;color:var(--text-light);margin-top:2px">Détail & historique</div>
+        <button class="card" style="text-align:center;cursor:pointer" onclick="showPage('solde')">
+          <div style="font-size:1.8rem;margin-bottom:6px" id="home-icon-solde">💰</div>
+          <div style="font-weight:600;font-size:.88rem" id="home-label-solde">Mon solde</div>
+          <div style="font-size:.75rem;color:var(--text-light);margin-top:2px" id="home-desc-solde">Détail & historique</div>
         </button>
       </div>
       <div class="card">
@@ -262,7 +232,7 @@ textarea{resize:vertical;min-height:80px}
       </div>
     </div>
 
-    <!-- Page Demande -->
+    <!-- DEMANDE -->
     <div id="page-demande" class="page">
       <div class="card">
         <h2>Nouvelle demande</h2>
@@ -278,113 +248,78 @@ textarea{resize:vertical;min-height:80px}
             <div class="type-desc">Travail effectué</div>
           </div>
         </div>
-
-        <!-- Formulaire heures prises -->
         <div id="form-prises">
-          <div class="form-group">
-            <label>Date de début</label>
-            <input type="date" id="prises-debut" required/>
-          </div>
-          <div class="form-group">
-            <label>Date de fin</label>
-            <input type="date" id="prises-fin" required/>
-          </div>
-          <div class="form-group">
-            <label>Durée</label>
+          <div class="form-group"><label>Date de début</label><input type="date" id="prises-debut"/></div>
+          <div class="form-group"><label>Date de fin</label><input type="date" id="prises-fin"/></div>
+          <div class="form-group"><label>Durée</label>
             <div class="duration-row">
               <select id="prises-heures">
-                <option value="0">0 h</option>
-                <option value="1">1 h</option>
-                <option value="2">2 h</option>
-                <option value="3">3 h</option>
-                <option value="4">4 h</option>
-                <option value="5">5 h</option>
-                <option value="6">6 h</option>
-                <option value="7">7 h</option>
-                <option value="8" selected>8 h</option>
+                <option value="0">0 h</option><option value="1">1 h</option><option value="2">2 h</option>
+                <option value="3">3 h</option><option value="4">4 h</option><option value="5">5 h</option>
+                <option value="6">6 h</option><option value="7">7 h</option><option value="8" selected>8 h</option>
               </select>
               <select id="prises-min">
-                <option value="0" selected>00 min</option>
-                <option value="15">15 min</option>
-                <option value="30">30 min</option>
-                <option value="45">45 min</option>
+                <option value="0" selected>00 min</option><option value="15">15 min</option>
+                <option value="30">30 min</option><option value="45">45 min</option>
               </select>
             </div>
           </div>
-          <div class="form-group">
-            <label>💬 Observations (facultatif)</label>
-            <textarea id="prises-obs" placeholder="Précisez le motif, les modalités…" rows="3"></textarea>
+          <div class="form-group"><label>💬 Observations (facultatif)</label>
+            <textarea id="prises-obs" placeholder="Motif, modalités…" rows="3"></textarea>
           </div>
         </div>
-
-        <!-- Formulaire heures sup -->
         <div id="form-sup" style="display:none">
-          <div class="form-group">
-            <label>Date effectuée</label>
-            <input type="date" id="sup-date" required/>
-          </div>
-          <div class="form-group">
-            <label>Durée</label>
+          <div class="form-group"><label>Date effectuée</label><input type="date" id="sup-date"/></div>
+          <div class="form-group"><label>Durée</label>
             <div class="duration-row">
               <select id="sup-heures">
-                <option value="1" selected>1 h</option>
-                <option value="2">2 h</option>
-                <option value="3">3 h</option>
-                <option value="4">4 h</option>
-                <option value="5">5 h</option>
-                <option value="6">6 h</option>
-                <option value="7">7 h</option>
-                <option value="8">8 h</option>
+                <option value="1" selected>1 h</option><option value="2">2 h</option><option value="3">3 h</option>
+                <option value="4">4 h</option><option value="5">5 h</option><option value="6">6 h</option>
+                <option value="7">7 h</option><option value="8">8 h</option>
               </select>
               <select id="sup-min">
-                <option value="0" selected>00 min</option>
-                <option value="15">15 min</option>
-                <option value="30">30 min</option>
-                <option value="45">45 min</option>
+                <option value="0" selected>00 min</option><option value="15">15 min</option>
+                <option value="30">30 min</option><option value="45">45 min</option>
               </select>
             </div>
           </div>
-          <div class="form-group">
-            <label>💬 Observations (facultatif)</label>
-            <textarea id="sup-obs" placeholder="Contexte, événement, raison du dépassement…" rows="3"></textarea>
+          <div class="form-group"><label>💬 Observations (facultatif)</label>
+            <textarea id="sup-obs" placeholder="Contexte, événement…" rows="3"></textarea>
           </div>
         </div>
-
-        <button class="btn btn-primary" id="btn-submit" onclick="submitDemande()">
-          📤 Envoyer la demande
-        </button>
+        <button class="btn btn-primary" id="btn-submit" onclick="submitDemande()">📤 Envoyer la demande</button>
       </div>
     </div>
 
-    <!-- Page Mes demandes -->
+    <!-- MES DEMANDES -->
     <div id="page-mesdem" class="page">
       <div class="card">
-        <h2>Mes demandes</h2>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <div class="tabs" id="mesdem-tabs">
-            <div class="tab active" onclick="filterMesdem('all',this)">Toutes</div>
-            <div class="tab" onclick="filterMesdem('pending',this)">⏳ En attente</div>
-            <div class="tab" onclick="filterMesdem('approved',this)">✅ Validées</div>
-            <div class="tab" onclick="filterMesdem('rejected',this)">❌ Refusées</div>
-          </div>
+          <h2>Mes demandes</h2>
           <button class="btn btn-secondary btn-sm" onclick="loadMesDemandes()">🔄</button>
+        </div>
+        <div class="tabs" id="mesdem-tabs">
+          <div class="tab active" onclick="filterMesdem('all',this)">Toutes</div>
+          <div class="tab" onclick="filterMesdem('pending',this)">⏳ En attente</div>
+          <div class="tab" onclick="filterMesdem('approved',this)">✅ Validées</div>
+          <div class="tab" onclick="filterMesdem('rejected',this)">❌ Refusées</div>
         </div>
         <div id="mesdem-list"><div class="loading-center"><div class="spinner"></div></div></div>
       </div>
     </div>
 
-    <!-- Page Solde -->
+    <!-- SOLDE AGENT -->
     <div id="page-solde" class="page">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <h2>Mon solde</h2>
-          <button class="btn btn-secondary btn-sm" onclick="loadSolde()">🔄 Actualiser</button>
+          <h2 id="solde-page-title">Mon solde</h2>
+          <button class="btn btn-secondary btn-sm" onclick="loadSoldePage()">🔄</button>
         </div>
         <div id="solde-content"><div class="loading-center"><div class="spinner"></div></div></div>
       </div>
     </div>
 
-    <!-- Page Validation (responsables) -->
+    <!-- VALIDATION (responsables uniquement) -->
     <div id="page-validation" class="page">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -393,7 +328,7 @@ textarea{resize:vertical;min-height:80px}
         </div>
         <div class="form-group">
           <label>Filtrer par service</label>
-          <select id="valid-service-filter" onchange="filterValidation()">
+          <select id="valid-service-filter" onchange="renderValidation()">
             <option value="">— Tous les services —</option>
           </select>
         </div>
@@ -407,7 +342,7 @@ textarea{resize:vertical;min-height:80px}
       </div>
     </div>
 
-    <!-- Page Tableau (responsables) -->
+    <!-- TABLEAU (responsables uniquement) -->
     <div id="page-tableau" class="page">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -424,10 +359,10 @@ textarea{resize:vertical;min-height:80px}
       </div>
     </div>
 
-    <!-- Page Agents (responsables) -->
+    <!-- AGENTS (responsables uniquement) -->
     <div id="page-agents" class="page">
       <div class="card">
-        <h2>Gestion des agents</h2>
+        <h2>Ajouter un agent</h2>
         <div class="form-group"><label>Nom complet</label><input type="text" id="new-agent-nom" placeholder="Prénom Nom"/></div>
         <div class="form-group"><label>Service</label>
           <select id="new-agent-service">
@@ -436,18 +371,18 @@ textarea{resize:vertical;min-height:80px}
             <option>LEASUP</option><option>SUAIO</option><option>La Boutique</option><option>Le 3,14</option>
             <option>Basoche</option><option>IEP</option><option>IUT B</option><option>Le Comptoir</option>
             <option>TFL</option><option>Crous gourmand</option><option>Flores</option><option>MDE</option>
-            <option>Sandwicherie</option><option>Kiosk</option><option>SN1</option><option>IAE</option>
+            <option>Sandwicherie</option><option>Kiosk</option><option>SN1</option>
           </select>
         </div>
         <div class="form-group"><label>Code PIN (4 chiffres)</label><input type="text" id="new-agent-pin" maxlength="4" placeholder="1234"/></div>
         <div class="form-group"><label>Rôle</label>
-          <select id="new-agent-role">
+          <select id="new-agent-role" onchange="toggleEmailField()">
             <option value="agent">Agent</option>
             <option value="responsable">Responsable</option>
           </select>
         </div>
-        <div class="form-group" id="email-group">
-          <label>Email (si responsable)</label>
+        <div class="form-group" id="email-group" style="display:none">
+          <label>Email</label>
           <input type="email" id="new-agent-email" placeholder="prenom.nom@crous-lille.fr"/>
         </div>
         <button class="btn btn-primary" onclick="addAgent()">➕ Ajouter l'agent</button>
@@ -457,11 +392,12 @@ textarea{resize:vertical;min-height:80px}
           <h2>Liste des agents (<span id="agents-count">—</span>)</h2>
           <button class="btn btn-secondary btn-sm" onclick="loadAgents()">🔄</button>
         </div>
-        <input type="text" id="agent-search" placeholder="🔍 Rechercher…" oninput="filterAgents()" style="margin-bottom:10px"/>
+        <input type="text" id="agent-search" placeholder="🔍 Rechercher…" oninput="filterAgents()" style="margin-bottom:10px;width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.9rem"/>
         <div id="agents-list"><div class="loading-center"><div class="spinner"></div></div></div>
       </div>
     </div>
-  </div>
+
+  </div><!-- /content -->
 
   <!-- Navigation -->
   <nav id="nav">
@@ -479,363 +415,469 @@ textarea{resize:vertical;min-height:80px}
     </button>
     <button class="nav-btn" id="nav-solde" onclick="showPage('solde')">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      Mon solde
+      <span id="nav-solde-label">Mon solde</span>
     </button>
-    <button class="nav-btn resp-only" id="nav-validation" onclick="showPage('validation')" style="display:none">
+    <!-- Boutons responsables uniquement -->
+    <button class="nav-btn" id="nav-validation" onclick="showPage('validation')" style="display:none">
       <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
       Validation
+      <span class="notif-badge" id="badge-validation" style="display:none">0</span>
     </button>
-    <button class="nav-btn resp-only" id="nav-tableau" onclick="showPage('tableau')" style="display:none">
+    <button class="nav-btn" id="nav-tableau" onclick="showPage('tableau')" style="display:none">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       Tableau
     </button>
-    <button class="nav-btn resp-only" id="nav-agents" onclick="showPage('agents')" style="display:none">
+    <button class="nav-btn" id="nav-agents" onclick="showPage('agents')" style="display:none">
       <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Agents
     </button>
   </nav>
-</div>
+</div><!-- /app -->
 
 <script>
-// ══════════════════════════════════════════
-// CONFIG
-// ══════════════════════════════════════════
+// ══ CONFIG ══════════════════════════════════════
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyGcpwgAbBXr-7vckMMPP9f3gVGgyKkqce-AlGNYucfzV0LThbCUiI-WlE5XSvIuoEfpg/exec';
 
-// ══════════════════════════════════════════
-// ÉTAT GLOBAL
-// ══════════════════════════════════════════
-let currentUser = null;          // { nom, service, role, pin, email }
-let allAgents   = [];            // cache liste agents
-let allDemandes = [];            // cache pour filtres
-let allSoldes   = [];
-let validFilter = 'pending';
-let selectedName = '';
+// ══ ÉTAT ════════════════════════════════════════
+let currentUser   = null;
+let allAgents     = [];
+let allDemandes   = [];
+let allValidDem   = [];
+let allSoldes     = [];
+let mesdemFilter  = 'all';
+let validFilter   = 'pending';
+let tableauFilter = 'all';
+let agentsCache   = [];
+let selectedName  = '';
+let pinBuffer     = '';
+let currentType   = 'prises';
 
-// ══════════════════════════════════════════
-// PWA — Service Worker
-// ══════════════════════════════════════════
+// ══ PWA ═════════════════════════════════════════
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    try {
-      const reg = await navigator.serviceWorker.register('/suivi-heures/sw.js', { scope: '/suivi-heures/' });
-      reg.addEventListener('updatefound', () => {
-        const nw = reg.installing;
-        nw.addEventListener('statechange', () => {
-          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-            document.getElementById('update-banner').style.display = 'block';
-          }
-        });
-      });
-    } catch(e) { console.warn('[PWA] SW non enregistré :', e); }
-  });
+  navigator.serviceWorker.register('/suivi-heures/sw.js', {scope:'/suivi-heures/'}).catch(()=>{});
 }
 
-function applyUpdate() {
-  if (navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-  }
-  window.location.reload();
-}
-
-// ══════════════════════════════════════════
-// UTILS
-// ══════════════════════════════════════════
-function toast(msg, dur=2600) {
+// ══ UTILS ═══════════════════════════════════════
+function toast(msg, dur=2800) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), dur);
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
 }
-
 function fmtDate(d) {
   if (!d) return '—';
   try { return new Date(d).toLocaleDateString('fr-FR'); } catch(e) { return d; }
 }
-
 function fmtDuree(h, m) {
-  h = parseInt(h)||0; m = parseInt(m)||0;
-  if (h===0 && m===0) return '—';
-  if (m===0) return `${h}h`;
-  if (h===0) return `${m} min`;
-  return `${h}h${String(m).padStart(2,'0')}`;
+  h=parseInt(h)||0; m=parseInt(m)||0;
+  if (!h && !m) return '0h';
+  if (!m) return h+'h';
+  if (!h) return m+' min';
+  return h+'h'+String(m).padStart(2,'0');
+}
+function badgeHtml(s) {
+  const map={pending:['badge-pending','⏳ En attente'],approved:['badge-approved','✅ Validée'],rejected:['badge-rejected','❌ Refusée']};
+  const [c,l]=map[s]||['badge-pending',s];
+  return `<span class="badge ${c}">${l}</span>`;
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+async function gasGet(p) {
+  const url=new URL(GAS_URL);
+  Object.entries(p).forEach(([k,v])=>url.searchParams.set(k,v));
+  const r=await fetch(url.toString());
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+async function gasPost(d) {
+  const r=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
 }
 
-function badgeHtml(status) {
-  const map = {
-    pending:  ['badge-pending','⏳ En attente'],
-    approved: ['badge-approved','✅ Validée'],
-    rejected: ['badge-rejected','❌ Refusée'],
-  };
-  const [cls, lbl] = map[status] || ['badge-info', status];
-  return `<span class="badge ${cls}">${lbl}</span>`;
-}
-
-async function gasGet(params) {
-  const url = new URL(GAS_URL);
-  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
-  const res = await fetch(url.toString());
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
-
-async function gasPost(data) {
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
-
-// ══════════════════════════════════════════
-// AUTH — Sélection nom + PIN
-// ══════════════════════════════════════════
-let pinBuffer = '';
-
+// ══ AUTH — NOM ═══════════════════════════════════
 async function initNameScreen() {
-  // Charger les agents depuis GAS
-  document.getElementById('name-screen').style.display = 'flex';
-  document.getElementById('pin-screen').style.display  = 'none';
-  document.getElementById('app').style.display         = 'none';
+  document.getElementById('name-screen').style.display='flex';
+  document.getElementById('pin-screen').style.display='none';
+  document.getElementById('app').style.display='none';
+  document.getElementById('name-error').textContent='';
 
   try {
-    const data = await gasGet({ action: 'getAgents' });
+    const data = await gasGet({action:'getAgents'});
     allAgents = data.agents || [];
-  } catch(e) {
-    // fallback vide si hors ligne
-    allAgents = [];
-  }
+  } catch(e) { allAgents=[]; }
 
   const sel = document.getElementById('name-select');
-  sel.innerHTML = '<option value="">— Choisissez votre nom —</option>';
-  const sorted = [...allAgents].sort((a,b) => a.nom.localeCompare(b.nom));
-  sorted.forEach(ag => {
-    const opt = document.createElement('option');
-    opt.value = ag.nom;
-    opt.textContent = ag.nom + (ag.service ? ` — ${ag.service}` : '');
-    sel.appendChild(opt);
+  sel.innerHTML='<option value="">— Choisissez votre nom —</option>';
+  [...allAgents].sort((a,b)=>a.nom.localeCompare(b.nom,'fr')).forEach(ag=>{
+    const o=document.createElement('option');
+    o.value=ag.nom;
+    o.textContent=ag.nom+(ag.service?' — '+ag.service:'');
+    sel.appendChild(o);
   });
 }
 
 function validateName() {
-  const sel = document.getElementById('name-select');
-  selectedName = sel.value;
-  if (!selectedName) { toast('Veuillez sélectionner votre nom'); return; }
-  const agent = allAgents.find(a => a.nom === selectedName);
-  if (!agent) { toast('Agent introuvable'); return; }
-
-  pinBuffer = '';
+  selectedName=document.getElementById('name-select').value;
+  if(!selectedName){document.getElementById('name-error').textContent='Veuillez sélectionner votre nom.';return;}
+  const ag=allAgents.find(a=>a.nom===selectedName);
+  if(!ag){document.getElementById('name-error').textContent='Agent introuvable.';return;}
+  pinBuffer='';
   updatePinDots();
-  document.getElementById('pin-name-label').textContent = `Code PIN pour ${agent.nom}`;
-  document.getElementById('pin-error').textContent = '';
-  document.getElementById('name-screen').style.display = 'none';
-  document.getElementById('pin-screen').style.display  = 'flex';
+  document.getElementById('pin-name-label').textContent='Code PIN pour '+ag.nom;
+  document.getElementById('pin-error').textContent='';
+  document.getElementById('name-screen').style.display='none';
+  document.getElementById('pin-screen').style.display='flex';
 }
 
-function backToNames() {
-  document.getElementById('pin-screen').style.display  = 'none';
-  document.getElementById('name-screen').style.display = 'flex';
+function backToNames(){
+  document.getElementById('pin-screen').style.display='none';
+  document.getElementById('name-screen').style.display='flex';
 }
 
-function pinKey(n) {
-  if (pinBuffer.length >= 4) return;
-  pinBuffer += String(n);
-  updatePinDots();
-  if (pinBuffer.length === 4) setTimeout(pinValidate, 150);
+// ══ AUTH — PIN ═══════════════════════════════════
+function pinKey(n){
+  if(pinBuffer.length>=4)return;
+  pinBuffer+=String(n); updatePinDots();
+  if(pinBuffer.length===4)setTimeout(pinValidate,150);
 }
-
-function pinDel() {
-  pinBuffer = pinBuffer.slice(0,-1);
-  updatePinDots();
+function pinDel(){pinBuffer=pinBuffer.slice(0,-1);updatePinDots();}
+function updatePinDots(){
+  for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled',i<pinBuffer.length);
 }
-
-function updatePinDots() {
-  for (let i=0;i<4;i++) {
-    document.getElementById('d'+i).classList.toggle('filled', i < pinBuffer.length);
-  }
-}
-
-function pinValidate() {
-  const agent = allAgents.find(a => a.nom === selectedName);
-  if (!agent) return;
-  if (String(agent.pin) === pinBuffer) {
-    currentUser = agent;
-    document.getElementById('pin-screen').style.display = 'none';
-    document.getElementById('app').style.display        = 'flex';
+function pinValidate(){
+  const ag=allAgents.find(a=>a.nom===selectedName);
+  if(!ag)return;
+  if(String(ag.pin)===pinBuffer){
+    currentUser=ag;
+    document.getElementById('pin-screen').style.display='none';
+    document.getElementById('app').style.display='flex';
     initApp();
   } else {
-    document.getElementById('pin-error').textContent = 'Code incorrect, réessayez.';
-    pinBuffer = '';
-    updatePinDots();
-    // Vibration sur mobile
-    if (navigator.vibrate) navigator.vibrate([100,50,100]);
+    document.getElementById('pin-error').textContent='Code incorrect, réessayez.';
+    pinBuffer=''; updatePinDots();
+    if(navigator.vibrate)navigator.vibrate([100,50,100]);
   }
 }
+function logout(){currentUser=null;initNameScreen();}
 
-function logout() {
-  currentUser = null;
-  initNameScreen();
-}
+// ══ INIT APP ═════════════════════════════════════
+function initApp(){
+  const u=currentUser;
+  const isResp=(u.role==='responsable');
 
-// ══════════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════════
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-'+name)?.classList.add('active');
-  document.getElementById('nav-'+name)?.classList.add('active');
+  document.getElementById('welcome-name').textContent=u.nom;
+  document.getElementById('welcome-service').textContent=u.service||'';
+  document.getElementById('header-subtitle').textContent=u.service||'Suivi des Heures';
+  document.getElementById('user-badge').textContent='🚪 '+u.nom.split(' ')[0];
 
-  // Charger les données à la demande
-  if (name==='mesdem')    loadMesDemandes();
-  if (name==='solde')     loadSolde();
-  if (name==='validation') loadValidation();
-  if (name==='tableau')   loadTableau();
-  if (name==='agents')    loadAgents();
-}
+  // Adapter l'onglet "solde" selon le rôle
+  if(isResp){
+    document.getElementById('nav-solde-label').textContent='En attente';
+    document.getElementById('solde-page-title').textContent='Demandes en attente';
+    document.getElementById('home-icon-solde').textContent='⏳';
+    document.getElementById('home-label-solde').textContent='En attente';
+    document.getElementById('home-desc-solde').textContent='Demandes à valider';
+    // Afficher boutons responsables
+    ['nav-validation','nav-tableau','nav-agents'].forEach(id=>{
+      document.getElementById(id).style.display='flex';
+    });
+  } else {
+    document.getElementById('nav-solde-label').textContent='Mon solde';
+    document.getElementById('solde-page-title').textContent='Mon solde';
+    document.getElementById('home-icon-solde').textContent='💰';
+    document.getElementById('home-label-solde').textContent='Mon solde';
+    document.getElementById('home-desc-solde').textContent='Détail & historique';
+  }
 
-// ══════════════════════════════════════════
-// INIT APP
-// ══════════════════════════════════════════
-function initApp() {
-  const u = currentUser;
-  document.getElementById('welcome-name').textContent    = u.nom;
-  document.getElementById('welcome-service').textContent = u.service || '';
-  document.getElementById('header-subtitle').textContent  = u.service || 'Suivi des Heures';
-  document.getElementById('user-badge').textContent       = '🚪 ' + u.nom.split(' ')[0];
-
-  const isResp = (u.role === 'responsable');
-  document.querySelectorAll('.resp-only').forEach(el => el.style.display = isResp ? 'flex' : 'none');
-
-  // Pré-remplir les dates d'aujourd'hui
-  const today = new Date().toISOString().slice(0,10);
-  document.getElementById('prises-debut').value = today;
-  document.getElementById('prises-fin').value   = today;
-  document.getElementById('sup-date').value     = today;
-
-  // Rôle responsable → afficher email dans ajout
-  document.getElementById('new-agent-role').addEventListener('change', function() {
-    document.getElementById('email-group').style.display = this.value === 'responsable' ? 'block' : 'none';
-  });
-  document.getElementById('email-group').style.display = 'none';
+  // Dates par défaut
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('prises-debut').value=today;
+  document.getElementById('prises-fin').value=today;
+  document.getElementById('sup-date').value=today;
 
   loadRecentActivity();
+  if(isResp) loadPendingCount();
 }
 
-// ══════════════════════════════════════════
-// TYPE DEMANDE
-// ══════════════════════════════════════════
-let currentType = 'prises';
-
-function selectType(t) {
-  currentType = t;
-  document.getElementById('type-prises').classList.toggle('selected', t==='prises');
-  document.getElementById('type-sup').classList.toggle('selected', t==='sup');
-  document.getElementById('form-prises').style.display = t==='prises' ? 'block' : 'none';
-  document.getElementById('form-sup').style.display    = t==='sup'    ? 'block' : 'none';
+// ══ NAVIGATION ═══════════════════════════════════
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name)?.classList.add('active');
+  document.getElementById('nav-'+name)?.classList.add('active');
+  if(name==='mesdem')    loadMesDemandes();
+  if(name==='solde')     loadSoldePage();
+  if(name==='validation')loadValidation();
+  if(name==='tableau')   loadTableau();
+  if(name==='agents')    loadAgents();
 }
 
-// ══════════════════════════════════════════
-// SOUMETTRE DEMANDE
-// ══════════════════════════════════════════
-async function submitDemande() {
-  const btn = document.getElementById('btn-submit');
-  btn.disabled = true;
-  btn.textContent = '⏳ Envoi…';
+// ══ TYPE DEMANDE ══════════════════════════════════
+function selectType(t){
+  currentType=t;
+  document.getElementById('type-prises').classList.toggle('selected',t==='prises');
+  document.getElementById('type-sup').classList.toggle('selected',t==='sup');
+  document.getElementById('form-prises').style.display=t==='prises'?'block':'none';
+  document.getElementById('form-sup').style.display=t==='sup'?'block':'none';
+}
 
+// ══ SOUMETTRE DEMANDE ════════════════════════════
+async function submitDemande(){
+  const btn=document.getElementById('btn-submit');
+  btn.disabled=true; btn.textContent='⏳ Envoi…';
   try {
-    let payload = {
-      action: 'addDemande',
-      nom:     currentUser.nom,
-      service: currentUser.service,
-      type:    currentType,
-    };
-
-    if (currentType === 'prises') {
-      const debut   = document.getElementById('prises-debut').value;
-      const fin     = document.getElementById('prises-fin').value;
-      const heures  = document.getElementById('prises-heures').value;
-      const minutes = document.getElementById('prises-min').value;
-      const obs     = document.getElementById('prises-obs').value.trim();
-      if (!debut || !fin) { toast('Dates obligatoires'); return; }
-      Object.assign(payload, { debut, fin, heures, minutes, observations: obs });
+    let p={action:'addDemande',nom:currentUser.nom,service:currentUser.service,type:currentType};
+    if(currentType==='prises'){
+      const debut=document.getElementById('prises-debut').value;
+      const fin=document.getElementById('prises-fin').value;
+      if(!debut||!fin){toast('Dates obligatoires');return;}
+      Object.assign(p,{
+        debut,fin,
+        heures:document.getElementById('prises-heures').value,
+        minutes:document.getElementById('prises-min').value,
+        observations:document.getElementById('prises-obs').value.trim()
+      });
     } else {
-      const date    = document.getElementById('sup-date').value;
-      const heures  = document.getElementById('sup-heures').value;
-      const minutes = document.getElementById('sup-min').value;
-      const obs     = document.getElementById('sup-obs').value.trim();
-      if (!date) { toast('Date obligatoire'); return; }
-      Object.assign(payload, { date, heures, minutes, observations: obs });
+      const date=document.getElementById('sup-date').value;
+      if(!date){toast('Date obligatoire');return;}
+      Object.assign(p,{
+        date,
+        heures:document.getElementById('sup-heures').value,
+        minutes:document.getElementById('sup-min').value,
+        observations:document.getElementById('sup-obs').value.trim()
+      });
     }
-
-    const res = await gasPost(payload);
-    if (res.success) {
-      toast('✅ Demande envoyée avec succès !');
-      // Réinitialiser
-      document.getElementById('prises-obs').value = '';
-      document.getElementById('sup-obs').value    = '';
-    } else {
-      toast('❌ Erreur : ' + (res.message || 'inconnue'));
-    }
-  } catch(e) {
-    toast('❌ Erreur réseau, réessayez');
-    console.error(e);
-  } finally {
-    btn.disabled    = false;
-    btn.textContent = '📤 Envoyer la demande';
-  }
+    const res=await gasPost(p);
+    if(res.success){
+      toast('✅ Demande envoyée !');
+      document.getElementById('prises-obs').value='';
+      document.getElementById('sup-obs').value='';
+    } else { toast('❌ '+(res.message||'Erreur')); }
+  } catch(e){ toast('❌ Erreur réseau'); }
+  finally{ btn.disabled=false; btn.textContent='📤 Envoyer la demande'; }
 }
 
-// ══════════════════════════════════════════
-// MES DEMANDES
-// ══════════════════════════════════════════
-let mesdemFilter = 'all';
-
-async function loadMesDemandes() {
-  document.getElementById('mesdem-list').innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
+// ══ MES DEMANDES ══════════════════════════════════
+async function loadMesDemandes(){
+  document.getElementById('mesdem-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try {
-    const data = await gasGet({ action: 'getMesDemandes', nom: currentUser.nom });
-    allDemandes = data.demandes || [];
+    const d=await gasGet({action:'getMesDemandes',nom:currentUser.nom});
+    allDemandes=d.demandes||[];
     renderMesDemandes();
-  } catch(e) {
-    document.getElementById('mesdem-list').innerHTML = '<p style="color:var(--danger);padding:12px">Erreur de chargement</p>';
-  }
+  } catch(e){ document.getElementById('mesdem-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>'; }
 }
-
-function filterMesdem(f, el) {
-  mesdemFilter = f;
-  document.querySelectorAll('#mesdem-tabs .tab').forEach(t => t.classList.remove('active'));
+function filterMesdem(f,el){
+  mesdemFilter=f;
+  document.querySelectorAll('#mesdem-tabs .tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   renderMesDemandes();
 }
-
-function renderMesDemandes() {
-  const list = allDemandes.filter(d => mesdemFilter==='all' || d.statut===mesdemFilter);
-  const el = document.getElementById('mesdem-list');
-  if (!list.length) { el.innerHTML = '<p style="color:var(--text-muted);padding:12px;text-align:center">Aucune demande</p>'; return; }
-  el.innerHTML = list.map(d => demandeCard(d, false)).join('');
+function renderMesDemandes(){
+  const list=allDemandes.filter(d=>mesdemFilter==='all'||d.statut===mesdemFilter);
+  const el=document.getElementById('mesdem-list');
+  if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucune demande</p>';return;}
+  el.innerHTML=list.map(d=>demandeCard(d,false)).join('');
 }
 
-function demandeCard(d, isAdmin) {
-  const obs = d.observations ? `<div class="demande-obs">💬 ${escHtml(d.observations)}</div>` : '';
-  const actions = isAdmin && d.statut === 'pending' ? `
+// ══ SOLDE (agent) / EN ATTENTE (responsable) ══════
+async function loadSoldePage(){
+  const el=document.getElementById('solde-content');
+  el.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+  const isResp=(currentUser.role==='responsable');
+  if(isResp){
+    // Pour les responsables : afficher les demandes en attente
+    try {
+      const d=await gasGet({action:'getAllDemandes'});
+      const pending=(d.demandes||[]).filter(x=>x.statut==='pending');
+      if(!pending.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">✅ Aucune demande en attente</p>';return;}
+      el.innerHTML=pending.map(d=>demandeCard(d,true)).join('');
+      // Mettre à jour les données locales pour la validation aussi
+      allValidDem=d.demandes||[];
+    } catch(e){ el.innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>'; }
+  } else {
+    // Pour les agents : afficher le bilan d'heures
+    try {
+      const d=await gasGet({action:'getSolde',nom:currentUser.nom});
+      const s=d.solde||{};
+      const bilan=s.bilan||0;
+      const cls=bilan>0?'s-pos':bilan<0?'s-neg':'s-zero';
+      const sign=bilan>=0?'+':'';
+      el.innerHTML=`
+        <div class="solde-grid">
+          <div class="solde-box"><div class="val s-neg">${fmtDuree(s.prises_h||0,s.prises_m||0)}</div><div class="lbl">Heures prises</div></div>
+          <div class="solde-box"><div class="val s-pos">${fmtDuree(s.sup_h||0,s.sup_m||0)}</div><div class="lbl">Heures sup</div></div>
+        </div>
+        <div class="solde-box" style="padding:16px">
+          <div class="val ${cls}">${sign}${fmtDuree(Math.abs(s.bilan_h||0),Math.abs(s.bilan_m||0))}</div>
+          <div class="lbl">Solde total</div>
+        </div>`;
+    } catch(e){ el.innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>'; }
+  }
+}
+
+// ══ VALIDATION ═══════════════════════════════════
+async function loadValidation(){
+  document.getElementById('validation-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+  try {
+    const d=await gasGet({action:'getAllDemandes'});
+    allValidDem=d.demandes||[];
+    const services=[...new Set(allValidDem.map(x=>x.service).filter(Boolean))].sort();
+    const sel=document.getElementById('valid-service-filter');
+    const cur=sel.value;
+    sel.innerHTML='<option value="">— Tous les services —</option>'+services.map(s=>`<option${s===cur?' selected':''}>${s}</option>`).join('');
+    renderValidation();
+    updatePendingBadge(allValidDem.filter(x=>x.statut==='pending').length);
+  } catch(e){ document.getElementById('validation-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>'; }
+}
+function filterValidStatus(f,el){
+  validFilter=f;
+  document.querySelectorAll('#valid-tabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderValidation();
+}
+function renderValidation(){
+  const service=document.getElementById('valid-service-filter').value;
+  let list=allValidDem;
+  if(service) list=list.filter(d=>d.service===service);
+  if(validFilter!=='all') list=list.filter(d=>d.statut===validFilter);
+  const el=document.getElementById('validation-list');
+  if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucune demande</p>';return;}
+  el.innerHTML=list.map(d=>demandeCard(d,true)).join('');
+}
+async function validerDemande(id,statut){
+  try {
+    const res=await gasPost({action:'updateStatut',id,statut});
+    if(res.success){
+      toast(statut==='approved'?'✅ Validée':'❌ Refusée');
+      loadValidation();
+      loadPendingCount();
+      // Rafraichir aussi la page solde si on est responsable
+      if(currentUser.role==='responsable') loadSoldePage();
+    } else { toast('Erreur : '+(res.message||'')); }
+  } catch(e){ toast('Erreur réseau'); }
+}
+
+// ══ COMPTEUR BADGE ════════════════════════════════
+async function loadPendingCount(){
+  try {
+    const d=await gasGet({action:'getAllDemandes'});
+    const n=(d.demandes||[]).filter(x=>x.statut==='pending').length;
+    updatePendingBadge(n);
+    // Mettre à jour aussi le badge sur l'onglet solde (En attente)
+    const navSolde=document.getElementById('nav-solde');
+    if(n>0){
+      let b=navSolde.querySelector('.notif-badge');
+      if(!b){b=document.createElement('span');b.className='notif-badge';navSolde.appendChild(b);}
+      b.textContent=n; b.style.display='block';
+    }
+  } catch(e){}
+}
+function updatePendingBadge(n){
+  const b=document.getElementById('badge-validation');
+  if(!b)return;
+  if(n>0){b.textContent=n;b.style.display='block';}
+  else{b.style.display='none';}
+}
+
+// ══ TABLEAU ═══════════════════════════════════════
+async function loadTableau(){
+  document.getElementById('tableau-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+  try {
+    const d=await gasGet({action:'getTableau'});
+    allSoldes=d.soldes||[];
+    renderTableau();
+  } catch(e){ document.getElementById('tableau-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>'; }
+}
+function filterTableau(f,el){
+  tableauFilter=f;
+  document.querySelectorAll('#tableau-tabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderTableau();
+}
+function renderTableau(){
+  let list=allSoldes;
+  if(tableauFilter==='neg') list=list.filter(s=>s.bilan<0);
+  if(tableauFilter==='pos') list=list.filter(s=>s.bilan>0);
+  if(tableauFilter==='zero') list=list.filter(s=>s.bilan===0);
+  const el=document.getElementById('tableau-list');
+  if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun résultat</p>';return;}
+  el.innerHTML=list.map(s=>{
+    const cls=s.bilan>0?'s-pos':s.bilan<0?'s-neg':'s-zero';
+    return `<div class="agent-row">
+      <div class="agent-avatar">${s.nom.charAt(0).toUpperCase()}</div>
+      <div class="agent-info"><div class="agent-name">${esc(s.nom)}</div><div class="agent-service">${esc(s.service||'')}</div></div>
+      <div class="val ${cls}" style="font-size:1rem;font-weight:700">${s.bilan>=0?'+':''}${fmtDuree(Math.abs(s.bilan_h||0),Math.abs(s.bilan_m||0))}</div>
+    </div>`;
+  }).join('');
+}
+
+// ══ AGENTS ═══════════════════════════════════════
+async function loadAgents(){
+  document.getElementById('agents-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+  try {
+    const d=await gasGet({action:'getAgents'});
+    agentsCache=d.agents||[];
+    document.getElementById('agents-count').textContent=agentsCache.length;
+    renderAgents(agentsCache);
+  } catch(e){ document.getElementById('agents-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>'; }
+}
+function filterAgents(){
+  const q=document.getElementById('agent-search').value.toLowerCase();
+  renderAgents(agentsCache.filter(a=>a.nom.toLowerCase().includes(q)||(a.service||'').toLowerCase().includes(q)));
+}
+function renderAgents(list){
+  const el=document.getElementById('agents-list');
+  if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun agent</p>';return;}
+  el.innerHTML=list.map(a=>`
+    <div class="agent-row">
+      <div class="agent-avatar">${a.nom.charAt(0).toUpperCase()}</div>
+      <div class="agent-info">
+        <div class="agent-name">${esc(a.nom)}</div>
+        <div class="agent-service">${esc(a.service||'')} · ${a.role==='responsable'?'Responsable':'Agent'}</div>
+      </div>
+    </div>`).join('');
+}
+function toggleEmailField(){
+  const isResp=document.getElementById('new-agent-role').value==='responsable';
+  document.getElementById('email-group').style.display=isResp?'block':'none';
+}
+async function addAgent(){
+  const nom=document.getElementById('new-agent-nom').value.trim();
+  const service=document.getElementById('new-agent-service').value;
+  const pin=document.getElementById('new-agent-pin').value.trim();
+  const role=document.getElementById('new-agent-role').value;
+  const email=document.getElementById('new-agent-email').value.trim();
+  if(!nom||!service||pin.length!==4){toast('Nom, service et PIN (4 chiffres) obligatoires');return;}
+  try {
+    const res=await gasPost({action:'addAgent',nom,service,pin,role,email});
+    if(res.success){
+      toast('✅ Agent ajouté : '+nom);
+      document.getElementById('new-agent-nom').value='';
+      document.getElementById('new-agent-pin').value='';
+      document.getElementById('new-agent-email').value='';
+      loadAgents();
+    } else { toast('Erreur : '+(res.message||'')); }
+  } catch(e){ toast('Erreur réseau'); }
+}
+
+// ══ CARTE DEMANDE ════════════════════════════════
+function demandeCard(d, isAdmin){
+  const obs=d.observations?`<div class="demande-obs">💬 ${esc(d.observations)}</div>`:'';
+  // Les agents ne peuvent PAS valider — boutons uniquement pour les responsables
+  const actions=(isAdmin && currentUser.role==='responsable' && d.statut==='pending')?`
     <div class="demande-actions">
-      <button class="btn btn-success btn-sm" onclick="validerDemande('${d.id}','approved')">✅ Valider</button>
-      <button class="btn btn-danger btn-sm"  onclick="validerDemande('${d.id}','rejected')">❌ Refuser</button>
-    </div>` : '';
-
-  const duree = d.heures !== undefined ? fmtDuree(d.heures, d.minutes) : '';
-  const dates = d.debut ? `${fmtDate(d.debut)}${d.fin && d.fin!==d.debut ? ' → '+fmtDate(d.fin) : ''}` : fmtDate(d.date);
-
+      <button class="btn btn-success btn-sm" onclick="validerDemande('${esc(d.id)}','approved')">✅ Valider</button>
+      <button class="btn btn-danger btn-sm"  onclick="validerDemande('${esc(d.id)}','rejected')">❌ Refuser</button>
+    </div>`:'';
+  const duree=d.heures!==undefined?fmtDuree(d.heures,d.minutes):'';
+  const dates=d.debut?`${fmtDate(d.debut)}${d.fin&&d.fin!==d.debut?' → '+fmtDate(d.fin):''}`:fmtDate(d.date);
   return `
   <div class="demande-item ${d.statut}">
     <div class="demande-header">
       <div>
-        <div class="demande-title">${d.type==='sup' ? '⚡ Heures sup' : '⏸️ Heures prises'}${isAdmin ? ' — '+escHtml(d.nom) : ''}</div>
-        <div class="demande-meta">${dates}${duree ? ' · '+duree : ''} · ${fmtDate(d.dateCreation)}</div>
-        ${isAdmin ? `<div class="demande-meta" style="color:var(--text-muted)">${escHtml(d.service||'')}</div>` : ''}
+        <div class="demande-title">${d.type==='sup'?'⚡ Heures sup':'⏸️ Heures prises'}${isAdmin?' — '+esc(d.nom):''}</div>
+        <div class="demande-meta">${dates}${duree?' · '+duree:''} · ${fmtDate(d.dateCreation)}</div>
+        ${isAdmin?`<div class="demande-meta" style="color:var(--text-muted)">${esc(d.service||'')}</div>`:''}
       </div>
       ${badgeHtml(d.statut)}
     </div>
@@ -844,204 +886,20 @@ function demandeCard(d, isAdmin) {
   </div>`;
 }
 
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ══════════════════════════════════════════
-// SOLDE
-// ══════════════════════════════════════════
-async function loadSolde() {
-  document.getElementById('solde-content').innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
+// ══ ACTIVITÉ RÉCENTE ══════════════════════════════
+async function loadRecentActivity(){
   try {
-    const data = await gasGet({ action: 'getSolde', nom: currentUser.nom });
-    const s = data.solde || {};
-    const cls = s.bilan > 0 ? 'solde-pos' : s.bilan < 0 ? 'solde-neg' : 'solde-zero';
-    document.getElementById('solde-content').innerHTML = `
-      <div class="solde-grid" style="margin-bottom:14px">
-        <div class="solde-box"><div class="val solde-neg">${fmtDuree(s.prises_h||0,s.prises_m||0)}</div><div class="lbl">Heures prises</div></div>
-        <div class="solde-box"><div class="val solde-pos">${fmtDuree(s.sup_h||0,s.sup_m||0)}</div><div class="lbl">Heures sup</div></div>
-      </div>
-      <div class="solde-box" style="text-align:center;padding:16px;background:var(--bg-input)">
-        <div class="val ${cls}">${s.bilan >= 0 ? '+' : ''}${fmtDuree(Math.abs(s.bilan_h||0),Math.abs(s.bilan_m||0))}</div>
-        <div class="lbl">Solde total</div>
-      </div>`;
-  } catch(e) {
-    document.getElementById('solde-content').innerHTML = '<p style="color:var(--danger);padding:12px">Erreur de chargement</p>';
+    const d=await gasGet({action:'getMesDemandes',nom:currentUser.nom,limit:3});
+    const list=(d.demandes||[]).slice(0,3);
+    const el=document.getElementById('home-recent');
+    if(!list.length){el.innerHTML='<p style="color:var(--text-muted);font-size:.85rem">Aucune demande récente</p>';return;}
+    el.innerHTML=list.map(d=>demandeCard(d,false)).join('');
+  } catch(e){
+    document.getElementById('home-recent').innerHTML='<p style="color:var(--text-muted);font-size:.85rem">Chargement impossible</p>';
   }
 }
 
-// ══════════════════════════════════════════
-// VALIDATION (responsables)
-// ══════════════════════════════════════════
-let allValidDemandes = [];
-
-async function loadValidation() {
-  document.getElementById('validation-list').innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
-  try {
-    const data = await gasGet({ action: 'getAllDemandes' });
-    allValidDemandes = data.demandes || [];
-    // Remplir filtre services
-    const services = [...new Set(allValidDemandes.map(d => d.service).filter(Boolean))].sort();
-    const sel = document.getElementById('valid-service-filter');
-    const cur = sel.value;
-    sel.innerHTML = '<option value="">— Tous les services —</option>' + services.map(s=>`<option${s===cur?' selected':''}>${s}</option>`).join('');
-    renderValidation();
-  } catch(e) {
-    document.getElementById('validation-list').innerHTML = '<p style="color:var(--danger);padding:12px">Erreur</p>';
-  }
-}
-
-function filterValidation() { renderValidation(); }
-
-function filterValidStatus(f, el) {
-  validFilter = f;
-  document.querySelectorAll('#valid-tabs .tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  renderValidation();
-}
-
-function renderValidation() {
-  const service = document.getElementById('valid-service-filter').value;
-  let list = allValidDemandes;
-  if (service) list = list.filter(d => d.service === service);
-  if (validFilter !== 'all') list = list.filter(d => d.statut === validFilter);
-  const el = document.getElementById('validation-list');
-  if (!list.length) { el.innerHTML = '<p style="color:var(--text-muted);padding:12px;text-align:center">Aucune demande</p>'; return; }
-  el.innerHTML = list.map(d => demandeCard(d, true)).join('');
-}
-
-async function validerDemande(id, statut) {
-  try {
-    const res = await gasPost({ action: 'updateStatut', id, statut });
-    if (res.success) {
-      toast(statut==='approved' ? '✅ Validée' : '❌ Refusée');
-      loadValidation();
-    } else {
-      toast('Erreur : ' + (res.message||''));
-    }
-  } catch(e) { toast('Erreur réseau'); }
-}
-
-// ══════════════════════════════════════════
-// TABLEAU (responsables)
-// ══════════════════════════════════════════
-let tableauFilter = 'all';
-
-async function loadTableau() {
-  document.getElementById('tableau-list').innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
-  try {
-    const data = await gasGet({ action: 'getTableau' });
-    allSoldes = data.soldes || [];
-    renderTableau();
-  } catch(e) {
-    document.getElementById('tableau-list').innerHTML = '<p style="color:var(--danger);padding:12px">Erreur</p>';
-  }
-}
-
-function filterTableau(f, el) {
-  tableauFilter = f;
-  document.querySelectorAll('#tableau-tabs .tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  renderTableau();
-}
-
-function renderTableau() {
-  let list = allSoldes;
-  if (tableauFilter==='neg')  list = list.filter(s => s.bilan < 0);
-  if (tableauFilter==='pos')  list = list.filter(s => s.bilan > 0);
-  if (tableauFilter==='zero') list = list.filter(s => s.bilan === 0);
-  const el = document.getElementById('tableau-list');
-  if (!list.length) { el.innerHTML = '<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun agent</p>'; return; }
-  el.innerHTML = list.map(s => {
-    const cls = s.bilan > 0 ? 'solde-pos' : s.bilan < 0 ? 'solde-neg' : 'solde-zero';
-    return `<div class="agent-row">
-      <div class="agent-avatar">${s.nom.charAt(0).toUpperCase()}</div>
-      <div class="agent-info">
-        <div class="agent-name">${escHtml(s.nom)}</div>
-        <div class="agent-service">${escHtml(s.service||'')}</div>
-      </div>
-      <div class="val ${cls}" style="font-size:1rem;font-weight:700">${s.bilan>=0?'+':''}${fmtDuree(Math.abs(s.bilan_h||0),Math.abs(s.bilan_m||0))}</div>
-    </div>`;
-  }).join('');
-}
-
-// ══════════════════════════════════════════
-// AGENTS
-// ══════════════════════════════════════════
-let agentsCache = [];
-
-async function loadAgents() {
-  document.getElementById('agents-list').innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
-  try {
-    const data = await gasGet({ action: 'getAgents' });
-    agentsCache = data.agents || [];
-    document.getElementById('agents-count').textContent = agentsCache.length;
-    renderAgents(agentsCache);
-  } catch(e) {
-    document.getElementById('agents-list').innerHTML = '<p style="color:var(--danger);padding:12px">Erreur</p>';
-  }
-}
-
-function filterAgents() {
-  const q = document.getElementById('agent-search').value.toLowerCase();
-  renderAgents(agentsCache.filter(a => a.nom.toLowerCase().includes(q) || (a.service||'').toLowerCase().includes(q)));
-}
-
-function renderAgents(list) {
-  const el = document.getElementById('agents-list');
-  if (!list.length) { el.innerHTML = '<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun agent</p>'; return; }
-  el.innerHTML = list.map(a => `
-    <div class="agent-row">
-      <div class="agent-avatar">${a.nom.charAt(0).toUpperCase()}</div>
-      <div class="agent-info">
-        <div class="agent-name">${escHtml(a.nom)}</div>
-        <div class="agent-service">${escHtml(a.service||'')} · ${a.role==='responsable'?'Responsable':'Agent'}</div>
-      </div>
-    </div>`).join('');
-}
-
-async function addAgent() {
-  const nom     = document.getElementById('new-agent-nom').value.trim();
-  const service = document.getElementById('new-agent-service').value;
-  const pin     = document.getElementById('new-agent-pin').value.trim();
-  const role    = document.getElementById('new-agent-role').value;
-  const email   = document.getElementById('new-agent-email').value.trim();
-
-  if (!nom||!service||pin.length!==4) { toast('Nom, service et PIN (4 chiffres) obligatoires'); return; }
-
-  try {
-    const res = await gasPost({ action: 'addAgent', nom, service, pin, role, email });
-    if (res.success) {
-      toast('✅ Agent ajouté : ' + nom);
-      document.getElementById('new-agent-nom').value   = '';
-      document.getElementById('new-agent-pin').value   = '';
-      document.getElementById('new-agent-email').value = '';
-      loadAgents();
-    } else {
-      toast('Erreur : ' + (res.message||''));
-    }
-  } catch(e) { toast('Erreur réseau'); }
-}
-
-// ══════════════════════════════════════════
-// ACTIVITÉ RÉCENTE (accueil)
-// ══════════════════════════════════════════
-async function loadRecentActivity() {
-  try {
-    const data = await gasGet({ action: 'getMesDemandes', nom: currentUser.nom, limit: 3 });
-    const list = (data.demandes || []).slice(0,3);
-    const el = document.getElementById('home-recent');
-    if (!list.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem">Aucune demande récente</p>'; return; }
-    el.innerHTML = list.map(d => demandeCard(d, false)).join('');
-  } catch(e) {
-    document.getElementById('home-recent').innerHTML = '<p style="color:var(--text-muted);font-size:.85rem">Chargement impossible</p>';
-  }
-}
-
-// ══════════════════════════════════════════
-// DÉMARRAGE
-// ══════════════════════════════════════════
+// ══ DÉMARRAGE ════════════════════════════════════
 initNameScreen();
 </script>
 </body>
