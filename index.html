@@ -16,104 +16,72 @@
   --primary:#1e3a5f;--primary-light:#2a5298;--primary-dark:#12243d;
   --success:#27ae60;--warning:#f39c12;--danger:#e74c3c;
   --text:#2c3e50;--text-light:#7f8c8d;--text-muted:#95a5a6;
-  --bg:#f5f7fa;--bg-card:#ffffff;--bg-input:#f8f9fa;
+  --bg:#f5f7fa;--bg-card:#fff;--bg-input:#f8f9fa;
   --border:#dee2e6;--shadow:0 2px 8px rgba(0,0,0,.10);
   --radius:12px;--radius-sm:8px;
 }
 html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);background:var(--bg);overflow-x:hidden}
 button{cursor:pointer;font-family:inherit;border:none;outline:none}
 input,select,textarea{font-family:inherit;font-size:1rem}
-
-/* App layout */
 #app{display:flex;flex-direction:column;min-height:100%}
 #header{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
-#header img{width:44px;height:44px;border-radius:8px;background:#fff;padding:2px}
+#header img{width:44px;height:44px;border-radius:8px;background:#fff;padding:2px;object-fit:contain}
 #header-text h1{font-size:.95rem;font-weight:700;line-height:1.2}
 #header-text p{font-size:.75rem;opacity:.85}
 #user-badge{margin-left:auto;background:rgba(255,255,255,.15);border-radius:20px;padding:4px 10px;font-size:.78rem;cursor:pointer;white-space:nowrap}
 #user-badge:hover{background:rgba(255,255,255,.25)}
-
-/* Navigation */
 #nav{display:flex;background:var(--bg-card);border-top:1px solid var(--border);position:sticky;bottom:0;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;font-size:.65rem;color:var(--text-muted);background:none;border:none;gap:2px;min-height:56px;transition:color .2s}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;font-size:.65rem;color:var(--text-muted);background:none;border:none;gap:2px;min-height:56px;transition:color .2s;position:relative}
 .nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .nav-btn.active{color:var(--primary-light)}
 .nav-btn.active svg{stroke:var(--primary-light)}
-
-/* Contenu */
+.notif-badge{position:absolute;top:4px;right:6px;background:var(--danger);color:#fff;border-radius:10px;font-size:.65rem;font-weight:700;padding:1px 5px;min-width:16px;text-align:center;display:none}
 #content{flex:1;overflow-y:auto;padding:16px;padding-bottom:8px}
-.page{display:none}
-.page.active{display:block}
-
-/* Cartes */
+.page{display:none}.page.active{display:block}
 .card{background:var(--bg-card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
 .card h2{font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--primary)}
-
-/* Formulaire */
 .form-group{margin-bottom:14px}
 label{display:block;font-size:.85rem;font-weight:500;color:var(--text-light);margin-bottom:5px}
-input[type=text],input[type=date],input[type=email],select,textarea{
-  width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
-  background:var(--bg-input);font-size:.9rem;transition:border-color .2s;
-  -webkit-appearance:none;appearance:none}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary-light);box-shadow:0 0 0 3px rgba(42,82,152,.12)}
+input[type=text],input[type=date],input[type=email],select,textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-input);font-size:.9rem;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary-light)}
 textarea{resize:vertical;min-height:80px}
-
 .btn{display:inline-flex;align-items:center;gap:6px;padding:11px 20px;border-radius:var(--radius-sm);font-size:.9rem;font-weight:600;transition:all .18s;justify-content:center;width:100%}
-.btn-primary{background:var(--primary-light);color:#fff}
-.btn-primary:hover{background:var(--primary)}
-.btn-primary:active{transform:scale(.98)}
+.btn-primary{background:var(--primary-light);color:#fff}.btn-primary:hover{background:var(--primary)}
 .btn-secondary{background:var(--bg-input);color:var(--text);border:1.5px solid var(--border);width:auto}
 .btn-danger{background:var(--danger);color:#fff;width:auto}
 .btn-success{background:var(--success);color:#fff;width:auto}
 .btn-sm{padding:6px 12px;font-size:.8rem}
-
-/* Type demande */
 .type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
 .type-card{border:2px solid var(--border);border-radius:var(--radius-sm);padding:14px 10px;text-align:center;cursor:pointer;transition:all .18s;background:var(--bg-card)}
 .type-card.selected{border-color:var(--primary-light);background:#e8f0fe}
 .type-card .type-icon{font-size:1.6rem;margin-bottom:4px}
 .type-card .type-label{font-size:.82rem;font-weight:600}
 .type-card .type-desc{font-size:.72rem;color:var(--text-light);margin-top:2px}
-
-/* Durée */
-.duration-row{display:flex;gap:8px}
-.duration-row select{flex:1}
-
-/* Badges */
+.duration-row{display:flex;gap:8px}.duration-row select{flex:1}
 .badge{display:inline-block;padding:3px 8px;border-radius:12px;font-size:.72rem;font-weight:600;white-space:nowrap}
 .badge-pending{background:#fff3cd;color:#856404}
 .badge-approved{background:#d1e7dd;color:#0f5132}
 .badge-rejected{background:#f8d7da;color:#842029}
-
-/* Demandes */
-.demande-item{background:var(--bg-card);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow);border-left:4px solid transparent}
-.demande-item.pending{border-color:var(--warning)}
-.demande-item.approved{border-color:var(--success)}
-.demande-item.rejected{border-color:var(--danger)}
+.demande-item{background:var(--bg-card);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow);border-left:4px solid var(--warning)}
+.demande-item.validee{border-color:var(--success)}
+.demande-item.refusee{border-color:var(--danger)}
 .demande-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
 .demande-title{font-weight:600;font-size:.9rem}
 .demande-meta{font-size:.78rem;color:var(--text-light);margin-top:3px}
 .demande-obs{font-size:.8rem;color:var(--text);margin-top:6px;padding:6px 10px;background:#f8f9fa;border-radius:6px;border-left:3px solid var(--primary-light)}
 .demande-actions{display:flex;gap:8px;margin-top:10px}
-
-/* Solde agent */
 .solde-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .solde-box{background:var(--bg-input);border-radius:var(--radius-sm);padding:14px;text-align:center}
 .solde-box .val{font-size:1.4rem;font-weight:700;margin-bottom:2px}
 .solde-box .lbl{font-size:.72rem;color:var(--text-light)}
 .s-pos{color:var(--success)}.s-neg{color:var(--danger)}.s-zero{color:var(--text-muted)}
-
-/* Tableau agents */
 .agent-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg-card);border-radius:var(--radius-sm);margin-bottom:8px;box-shadow:var(--shadow)}
 .agent-avatar{width:36px;height:36px;border-radius:50%;background:var(--primary-light);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;flex-shrink:0}
 .agent-info{flex:1;min-width:0}
 .agent-name{font-weight:600;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .agent-service{font-size:.73rem;color:var(--text-light)}
-
-/* PIN */
 #pin-screen,#name-screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:24px;background:linear-gradient(160deg,var(--primary-dark),var(--primary))}
-.pin-logo{width:72px;height:72px;background:#fff;border-radius:16px;padding:8px;margin-bottom:16px}
+.pin-logo{width:72px;height:72px;background:#fff;border-radius:16px;padding:8px;margin-bottom:16px;object-fit:contain}
 .pin-title{color:#fff;font-size:1.1rem;font-weight:700;margin-bottom:4px;text-align:center}
 .pin-sub{color:rgba(255,255,255,.7);font-size:.82rem;margin-bottom:24px;text-align:center}
 .pin-dots{display:flex;gap:12px;margin-bottom:28px}
@@ -124,34 +92,18 @@ textarea{resize:vertical;min-height:80px}
 .pin-key:active{transform:scale(.92);background:rgba(255,255,255,.3)}
 .pin-key.ok{background:rgba(39,174,96,.7)}
 #pin-error{color:#ff6b6b;font-size:.82rem;margin-top:12px;min-height:1.2em;text-align:center}
-
-/* Sélecteur nom */
 .name-card{background:#fff;border-radius:var(--radius);padding:24px;width:100%;max-width:380px;box-shadow:0 4px 20px rgba(0,0,0,.15)}
 .name-card h2{color:var(--primary);font-size:1rem;margin-bottom:14px;text-align:center}
-#name-select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.9rem;margin-bottom:14px;-webkit-appearance:none;appearance:none}
-.name-logo{width:60px;height:60px;background:#fff;border-radius:12px;padding:4px;margin:0 auto 16px;display:block}
-
-/* Onglets */
+#name-select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.9rem;margin-bottom:14px;-webkit-appearance:none;appearance:none;background:var(--bg-input)}
 .tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .tab{padding:6px 12px;border-radius:20px;font-size:.78rem;font-weight:500;cursor:pointer;border:1.5px solid var(--border);background:var(--bg-card);color:var(--text-light);transition:all .15s}
 .tab.active{background:var(--primary-light);color:#fff;border-color:var(--primary-light)}
-
-/* Toast */
 #toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:.85rem;z-index:500;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-/* Spinner */
 .spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--primary-light);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-center{display:flex;justify-content:center;padding:32px}
-
-/* Compteur badge */
-.notif-badge{position:absolute;top:4px;right:4px;background:var(--danger);color:#fff;border-radius:10px;font-size:.65rem;font-weight:700;padding:1px 5px;min-width:16px;text-align:center}
-.nav-btn{position:relative}
-
-@media(min-width:600px){
-  #content{max-width:580px;margin:0 auto;padding:20px}
-}
+@media(min-width:600px){#content{max-width:580px;margin:0 auto;padding:20px}}
 </style>
 </head>
 <body>
@@ -159,7 +111,7 @@ textarea{resize:vertical;min-height:80px}
 
 <!-- ÉCRAN NOM -->
 <div id="name-screen">
-  <img class="name-logo" src="icon-2.png" onerror="this.style.display='none'" alt="CROUS"/>
+  <img class="pin-logo" src="icon-2.png" onerror="this.style.display='none'" alt="CROUS"/>
   <div class="name-card">
     <h2>CROUS de Lille — Suivi des Heures</h2>
     <select id="name-select"><option value="">— Choisissez votre nom —</option></select>
@@ -253,12 +205,12 @@ textarea{resize:vertical;min-height:80px}
           <div class="form-group"><label>Date de fin</label><input type="date" id="prises-fin"/></div>
           <div class="form-group"><label>Durée</label>
             <div class="duration-row">
-              <select id="prises-heures">
+              <select id="prises-h">
                 <option value="0">0 h</option><option value="1">1 h</option><option value="2">2 h</option>
                 <option value="3">3 h</option><option value="4">4 h</option><option value="5">5 h</option>
                 <option value="6">6 h</option><option value="7">7 h</option><option value="8" selected>8 h</option>
               </select>
-              <select id="prises-min">
+              <select id="prises-m">
                 <option value="0" selected>00 min</option><option value="15">15 min</option>
                 <option value="30">30 min</option><option value="45">45 min</option>
               </select>
@@ -272,12 +224,12 @@ textarea{resize:vertical;min-height:80px}
           <div class="form-group"><label>Date effectuée</label><input type="date" id="sup-date"/></div>
           <div class="form-group"><label>Durée</label>
             <div class="duration-row">
-              <select id="sup-heures">
+              <select id="sup-h">
                 <option value="1" selected>1 h</option><option value="2">2 h</option><option value="3">3 h</option>
                 <option value="4">4 h</option><option value="5">5 h</option><option value="6">6 h</option>
                 <option value="7">7 h</option><option value="8">8 h</option>
               </select>
-              <select id="sup-min">
+              <select id="sup-m">
                 <option value="0" selected>00 min</option><option value="15">15 min</option>
                 <option value="30">30 min</option><option value="45">45 min</option>
               </select>
@@ -300,15 +252,15 @@ textarea{resize:vertical;min-height:80px}
         </div>
         <div class="tabs" id="mesdem-tabs">
           <div class="tab active" onclick="filterMesdem('all',this)">Toutes</div>
-          <div class="tab" onclick="filterMesdem('pending',this)">⏳ En attente</div>
-          <div class="tab" onclick="filterMesdem('approved',this)">✅ Validées</div>
-          <div class="tab" onclick="filterMesdem('rejected',this)">❌ Refusées</div>
+          <div class="tab" onclick="filterMesdem('En attente',this)">⏳ En attente</div>
+          <div class="tab" onclick="filterMesdem('Validée ✅',this)">✅ Validées</div>
+          <div class="tab" onclick="filterMesdem('Refusée ❌',this)">❌ Refusées</div>
         </div>
         <div id="mesdem-list"><div class="loading-center"><div class="spinner"></div></div></div>
       </div>
     </div>
 
-    <!-- SOLDE AGENT -->
+    <!-- SOLDE / EN ATTENTE -->
     <div id="page-solde" class="page">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -319,7 +271,7 @@ textarea{resize:vertical;min-height:80px}
       </div>
     </div>
 
-    <!-- VALIDATION (responsables uniquement) -->
+    <!-- VALIDATION -->
     <div id="page-validation" class="page">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -333,16 +285,16 @@ textarea{resize:vertical;min-height:80px}
           </select>
         </div>
         <div class="tabs" id="valid-tabs">
-          <div class="tab active" onclick="filterValidStatus('pending',this)">⏳ En attente</div>
+          <div class="tab active" onclick="filterValidStatus('En attente',this)">⏳ En attente</div>
           <div class="tab" onclick="filterValidStatus('all',this)">Toutes</div>
-          <div class="tab" onclick="filterValidStatus('approved',this)">✅ Validées</div>
-          <div class="tab" onclick="filterValidStatus('rejected',this)">❌ Refusées</div>
+          <div class="tab" onclick="filterValidStatus('Validée ✅',this)">✅ Validées</div>
+          <div class="tab" onclick="filterValidStatus('Refusée ❌',this)">❌ Refusées</div>
         </div>
         <div id="validation-list"><div class="loading-center"><div class="spinner"></div></div></div>
       </div>
     </div>
 
-    <!-- TABLEAU (responsables uniquement) -->
+    <!-- TABLEAU -->
     <div id="page-tableau" class="page">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -359,47 +311,47 @@ textarea{resize:vertical;min-height:80px}
       </div>
     </div>
 
-    <!-- AGENTS (responsables uniquement) -->
+    <!-- AGENTS -->
     <div id="page-agents" class="page">
       <div class="card">
         <h2>Ajouter un agent</h2>
-        <div class="form-group"><label>Nom complet</label><input type="text" id="new-agent-nom" placeholder="Prénom Nom"/></div>
+        <div class="form-group"><label>Nom complet</label><input type="text" id="new-nom" placeholder="Prénom Nom"/></div>
         <div class="form-group"><label>Service</label>
-          <select id="new-agent-service">
+          <select id="new-service">
             <option value="">— Sélectionnez —</option>
-            <option>UCA Production</option><option>UCA Approvisionnement</option><option>IAE</option>
-            <option>LEASUP</option><option>SUAIO</option><option>La Boutique</option><option>Le 3,14</option>
+            <option>UCA Production</option><option>UCA Approvisionnement</option><option>IAE LEA</option>
+            <option>SUP SUAIO</option><option>La Boutique</option><option>Le 3,14</option>
             <option>Basoche</option><option>IEP</option><option>IUT B</option><option>Le Comptoir</option>
             <option>TFL</option><option>Crous gourmand</option><option>Flores</option><option>MDE</option>
-            <option>Sandwicherie</option><option>Kiosk</option><option>SN1</option>
+            <option>Sandwicherie</option><option>Kiosk</option><option>SN1</option><option>IAE</option>
           </select>
         </div>
-        <div class="form-group"><label>Code PIN (4 chiffres)</label><input type="text" id="new-agent-pin" maxlength="4" placeholder="1234"/></div>
+        <div class="form-group"><label>Code PIN (4 chiffres)</label><input type="text" id="new-pin" maxlength="4" placeholder="1234"/></div>
         <div class="form-group"><label>Rôle</label>
-          <select id="new-agent-role" onchange="toggleEmailField()">
+          <select id="new-role" onchange="document.getElementById('email-grp').style.display=this.value==='responsable'?'block':'none'">
             <option value="agent">Agent</option>
             <option value="responsable">Responsable</option>
           </select>
         </div>
-        <div class="form-group" id="email-group" style="display:none">
+        <div class="form-group" id="email-grp" style="display:none">
           <label>Email</label>
-          <input type="email" id="new-agent-email" placeholder="prenom.nom@crous-lille.fr"/>
+          <input type="email" id="new-email" placeholder="prenom.nom@crous-lille.fr"/>
         </div>
         <button class="btn btn-primary" onclick="addAgent()">➕ Ajouter l'agent</button>
       </div>
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <h2>Liste des agents (<span id="agents-count">—</span>)</h2>
+          <h2>Agents (<span id="agents-count">—</span>)</h2>
           <button class="btn btn-secondary btn-sm" onclick="loadAgents()">🔄</button>
         </div>
-        <input type="text" id="agent-search" placeholder="🔍 Rechercher…" oninput="filterAgents()" style="margin-bottom:10px;width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.9rem"/>
+        <input type="text" id="agent-search" placeholder="🔍 Rechercher…" oninput="filterAgents()"
+          style="margin-bottom:10px;width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.9rem"/>
         <div id="agents-list"><div class="loading-center"><div class="spinner"></div></div></div>
       </div>
     </div>
 
-  </div><!-- /content -->
+  </div>
 
-  <!-- Navigation -->
   <nav id="nav">
     <button class="nav-btn active" id="nav-home" onclick="showPage('home')">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -416,12 +368,12 @@ textarea{resize:vertical;min-height:80px}
     <button class="nav-btn" id="nav-solde" onclick="showPage('solde')">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <span id="nav-solde-label">Mon solde</span>
+      <span class="notif-badge" id="badge-solde"></span>
     </button>
-    <!-- Boutons responsables uniquement -->
     <button class="nav-btn" id="nav-validation" onclick="showPage('validation')" style="display:none">
       <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
       Validation
-      <span class="notif-badge" id="badge-validation" style="display:none">0</span>
+      <span class="notif-badge" id="badge-validation"></span>
     </button>
     <button class="nav-btn" id="nav-tableau" onclick="showPage('tableau')" style="display:none">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
@@ -432,81 +384,55 @@ textarea{resize:vertical;min-height:80px}
       Agents
     </button>
   </nav>
-</div><!-- /app -->
+</div>
 
 <script>
-// ══ CONFIG ══════════════════════════════════════
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyGcpwgAbBXr-7vckMMPP9f3gVGgyKkqce-ALGNYucfzV0LThbCUiI-WlE5XSvIuoEfpg/exec';
+// ══ CONFIG ══════════════════════════════════════════
+const GAS = 'https://script.google.com/macros/s/AKfycbyGcpwgAbBXr-7vckMMPP9f3gVGgyKkqce-ALGNYucfzV0LThbCUiI-WlE5XSvIuoEfpg/exec';
 
-// ══ ÉTAT ════════════════════════════════════════
-let currentUser   = null;
-let allAgents     = [];
-let allDemandes   = [];
-let allValidDem   = [];
-let allSoldes     = [];
-let mesdemFilter  = 'all';
-let validFilter   = 'pending';
-let tableauFilter = 'all';
-let agentsCache   = [];
-let selectedName  = '';
-let pinBuffer     = '';
-let currentType   = 'prises';
+// ══ ÉTAT ════════════════════════════════════════════
+let CU = null; // currentUser
+let allAgents=[], allDemandes=[], allValidDem=[], allSoldes=[], agentsCache=[];
+let mesdemFilter='all', validFilter='En attente', tableauFilter='all';
+let selectedName='', pinBuffer='', currentType='prises';
 
-// ══ PWA ═════════════════════════════════════════
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/suivi-heures/sw.js', {scope:'/suivi-heures/'}).catch(()=>{});
-}
+// ══ PWA ═════════════════════════════════════════════
+if('serviceWorker' in navigator)
+  navigator.serviceWorker.register('/suivi-heures/sw.js',{scope:'/suivi-heures/'}).catch(()=>{});
 
-// ══ UTILS ═══════════════════════════════════════
-function toast(msg, dur=2800) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), dur);
-}
-function fmtDate(d) {
-  if (!d) return '—';
-  try { return new Date(d).toLocaleDateString('fr-FR'); } catch(e) { return d; }
-}
-function fmtDuree(h, m) {
-  h=parseInt(h)||0; m=parseInt(m)||0;
-  if (!h && !m) return '0h';
-  if (!m) return h+'h';
-  if (!h) return m+' min';
-  return h+'h'+String(m).padStart(2,'0');
-}
-function badgeHtml(s) {
-  const map={pending:['badge-pending','⏳ En attente'],approved:['badge-approved','✅ Validée'],rejected:['badge-rejected','❌ Refusée']};
-  const [c,l]=map[s]||['badge-pending',s];
-  return `<span class="badge ${c}">${l}</span>`;
-}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+// ══ UTILS ═══════════════════════════════════════════
+function toast(m,d=2800){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function minsToHHMM(m){m=parseInt(m)||0;const h=Math.floor(Math.abs(m)/60),min=Math.abs(m)%60;return (m<0?'-':'')+(h>0?h+'h':'')+(min>0?String(min).padStart(2,'0')+' min':'')|| '0h';}
 
-async function gasGet(p) {
-  const url=new URL(GAS_URL);
-  Object.entries(p).forEach(([k,v])=>url.searchParams.set(k,v));
+async function gasGet(params){
+  const url=new URL(GAS);
+  Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));
   const r=await fetch(url.toString());
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
 }
-async function gasPost(d) {
-  const r=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+async function gasPost(data){
+  const r=await fetch(GAS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
 }
 
-// ══ AUTH — NOM ═══════════════════════════════════
-async function initNameScreen() {
+// ══ AUTH NOM ════════════════════════════════════════
+async function initNameScreen(){
   document.getElementById('name-screen').style.display='flex';
   document.getElementById('pin-screen').style.display='none';
   document.getElementById('app').style.display='none';
-  document.getElementById('name-error').textContent='';
-
-  try {
-    const data = await gasGet({action:'getAgents'});
-    allAgents = data.agents || [];
-  } catch(e) { allAgents=[]; }
-
-  const sel = document.getElementById('name-select');
+  document.getElementById('name-error').textContent='Chargement…';
+  try{
+    const d=await gasGet({action:'get_agents'});
+    allAgents=d.agents||[];
+    document.getElementById('name-error').textContent='';
+  }catch(e){
+    allAgents=[];
+    document.getElementById('name-error').textContent='Erreur de connexion au serveur.';
+  }
+  const sel=document.getElementById('name-select');
   sel.innerHTML='<option value="">— Choisissez votre nom —</option>';
   [...allAgents].sort((a,b)=>a.nom.localeCompare(b.nom,'fr')).forEach(ag=>{
     const o=document.createElement('option');
@@ -516,80 +442,71 @@ async function initNameScreen() {
   });
 }
 
-function validateName() {
+function validateName(){
   selectedName=document.getElementById('name-select').value;
   if(!selectedName){document.getElementById('name-error').textContent='Veuillez sélectionner votre nom.';return;}
   const ag=allAgents.find(a=>a.nom===selectedName);
   if(!ag){document.getElementById('name-error').textContent='Agent introuvable.';return;}
-  pinBuffer='';
-  updatePinDots();
+  pinBuffer=''; updatePinDots();
   document.getElementById('pin-name-label').textContent='Code PIN pour '+ag.nom;
   document.getElementById('pin-error').textContent='';
   document.getElementById('name-screen').style.display='none';
   document.getElementById('pin-screen').style.display='flex';
 }
+function backToNames(){document.getElementById('pin-screen').style.display='none';document.getElementById('name-screen').style.display='flex';}
 
-function backToNames(){
-  document.getElementById('pin-screen').style.display='none';
-  document.getElementById('name-screen').style.display='flex';
-}
-
-// ══ AUTH — PIN ═══════════════════════════════════
-function pinKey(n){
-  if(pinBuffer.length>=4)return;
-  pinBuffer+=String(n); updatePinDots();
-  if(pinBuffer.length===4)setTimeout(pinValidate,150);
-}
+// ══ AUTH PIN ════════════════════════════════════════
+function pinKey(n){if(pinBuffer.length>=4)return;pinBuffer+=String(n);updatePinDots();if(pinBuffer.length===4)setTimeout(pinValidate,150);}
 function pinDel(){pinBuffer=pinBuffer.slice(0,-1);updatePinDots();}
-function updatePinDots(){
-  for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled',i<pinBuffer.length);
-}
-function pinValidate(){
-  const ag=allAgents.find(a=>a.nom===selectedName);
-  if(!ag)return;
-  if(String(ag.pin)===pinBuffer){
-    currentUser=ag;
-    document.getElementById('pin-screen').style.display='none';
-    document.getElementById('app').style.display='flex';
-    initApp();
-  } else {
-    document.getElementById('pin-error').textContent='Code incorrect, réessayez.';
-    pinBuffer=''; updatePinDots();
-    if(navigator.vibrate)navigator.vibrate([100,50,100]);
+function updatePinDots(){for(let i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('filled',i<pinBuffer.length);}
+
+async function pinValidate(){
+  // Utiliser la fonction login du Apps Script pour vérifier le PIN
+  try{
+    const res=await gasPost({action:'login',nom:selectedName,pin:pinBuffer});
+    if(res.ok){
+      CU={nom:res.nom,service:res.service,role:res.role,pin:pinBuffer};
+      document.getElementById('pin-screen').style.display='none';
+      document.getElementById('app').style.display='flex';
+      initApp();
+    }else{
+      document.getElementById('pin-error').textContent='Code incorrect, réessayez.';
+      pinBuffer=''; updatePinDots();
+      if(navigator.vibrate)navigator.vibrate([100,50,100]);
+    }
+  }catch(e){
+    // Fallback : vérification locale si le serveur ne répond pas
+    const ag=allAgents.find(a=>a.nom===selectedName);
+    if(ag && String(ag.pin||'')===pinBuffer){
+      CU={...ag};
+      document.getElementById('pin-screen').style.display='none';
+      document.getElementById('app').style.display='flex';
+      initApp();
+    }else{
+      document.getElementById('pin-error').textContent='Erreur de connexion.';
+      pinBuffer=''; updatePinDots();
+    }
   }
 }
-function logout(){currentUser=null;initNameScreen();}
+function logout(){CU=null;initNameScreen();}
 
-// ══ INIT APP ═════════════════════════════════════
+// ══ INIT APP ════════════════════════════════════════
 function initApp(){
-  const u=currentUser;
-  const isResp=(u.role==='responsable');
+  const isResp=(CU.role==='responsable');
+  document.getElementById('welcome-name').textContent=CU.nom;
+  document.getElementById('welcome-service').textContent=CU.service||'';
+  document.getElementById('header-subtitle').textContent=CU.service||'Suivi des Heures';
+  document.getElementById('user-badge').textContent='🚪 '+CU.nom.split(' ')[0];
 
-  document.getElementById('welcome-name').textContent=u.nom;
-  document.getElementById('welcome-service').textContent=u.service||'';
-  document.getElementById('header-subtitle').textContent=u.service||'Suivi des Heures';
-  document.getElementById('user-badge').textContent='🚪 '+u.nom.split(' ')[0];
-
-  // Adapter l'onglet "solde" selon le rôle
   if(isResp){
     document.getElementById('nav-solde-label').textContent='En attente';
     document.getElementById('solde-page-title').textContent='Demandes en attente';
     document.getElementById('home-icon-solde').textContent='⏳';
     document.getElementById('home-label-solde').textContent='En attente';
     document.getElementById('home-desc-solde').textContent='Demandes à valider';
-    // Afficher boutons responsables
-    ['nav-validation','nav-tableau','nav-agents'].forEach(id=>{
-      document.getElementById(id).style.display='flex';
-    });
-  } else {
-    document.getElementById('nav-solde-label').textContent='Mon solde';
-    document.getElementById('solde-page-title').textContent='Mon solde';
-    document.getElementById('home-icon-solde').textContent='💰';
-    document.getElementById('home-label-solde').textContent='Mon solde';
-    document.getElementById('home-desc-solde').textContent='Détail & historique';
+    ['nav-validation','nav-tableau','nav-agents'].forEach(id=>document.getElementById(id).style.display='flex');
   }
 
-  // Dates par défaut
   const today=new Date().toISOString().slice(0,10);
   document.getElementById('prises-debut').value=today;
   document.getElementById('prises-fin').value=today;
@@ -599,7 +516,7 @@ function initApp(){
   if(isResp) loadPendingCount();
 }
 
-// ══ NAVIGATION ═══════════════════════════════════
+// ══ NAVIGATION ══════════════════════════════════════
 function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -612,7 +529,7 @@ function showPage(name){
   if(name==='agents')    loadAgents();
 }
 
-// ══ TYPE DEMANDE ══════════════════════════════════
+// ══ TYPE DEMANDE ════════════════════════════════════
 function selectType(t){
   currentType=t;
   document.getElementById('type-prises').classList.toggle('selected',t==='prises');
@@ -621,50 +538,49 @@ function selectType(t){
   document.getElementById('form-sup').style.display=t==='sup'?'block':'none';
 }
 
-// ══ SOUMETTRE DEMANDE ════════════════════════════
+// ══ SOUMETTRE DEMANDE ═══════════════════════════════
+// Le Apps Script attend : action, nom, service, type, date_debut, date_fin, duree, observations
 async function submitDemande(){
   const btn=document.getElementById('btn-submit');
   btn.disabled=true; btn.textContent='⏳ Envoi…';
-  try {
-    let p={action:'addDemande',nom:currentUser.nom,service:currentUser.service,type:currentType};
+  try{
+    let p={action:'nouvelle_demande', nom:CU.nom, service:CU.service};
     if(currentType==='prises'){
       const debut=document.getElementById('prises-debut').value;
       const fin=document.getElementById('prises-fin').value;
       if(!debut||!fin){toast('Dates obligatoires');return;}
-      Object.assign(p,{
-        debut,fin,
-        heures:document.getElementById('prises-heures').value,
-        minutes:document.getElementById('prises-min').value,
-        observations:document.getElementById('prises-obs').value.trim()
-      });
-    } else {
+      const h=parseInt(document.getElementById('prises-h').value)||0;
+      const m=parseInt(document.getElementById('prises-m').value)||0;
+      const duree=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+      p.type='Heures prises'; p.date_debut=debut; p.date_fin=fin; p.duree=duree;
+      p.observations=document.getElementById('prises-obs').value.trim();
+    }else{
       const date=document.getElementById('sup-date').value;
       if(!date){toast('Date obligatoire');return;}
-      Object.assign(p,{
-        date,
-        heures:document.getElementById('sup-heures').value,
-        minutes:document.getElementById('sup-min').value,
-        observations:document.getElementById('sup-obs').value.trim()
-      });
+      const h=parseInt(document.getElementById('sup-h').value)||0;
+      const m=parseInt(document.getElementById('sup-m').value)||0;
+      const duree=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+      p.type='Heures récupérées'; p.date_debut=date; p.date_fin=date; p.duree=duree;
+      p.observations=document.getElementById('sup-obs').value.trim();
     }
     const res=await gasPost(p);
-    if(res.success){
+    if(res.ok){
       toast('✅ Demande envoyée !');
       document.getElementById('prises-obs').value='';
       document.getElementById('sup-obs').value='';
-    } else { toast('❌ '+(res.message||'Erreur')); }
-  } catch(e){ toast('❌ Erreur réseau'); }
+    }else{ toast('❌ '+(res.msg||'Erreur')); }
+  }catch(e){ toast('❌ Erreur réseau'); console.error(e); }
   finally{ btn.disabled=false; btn.textContent='📤 Envoyer la demande'; }
 }
 
-// ══ MES DEMANDES ══════════════════════════════════
+// ══ MES DEMANDES ════════════════════════════════════
 async function loadMesDemandes(){
   document.getElementById('mesdem-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
-  try {
-    const d=await gasGet({action:'getMesDemandes',nom:currentUser.nom});
+  try{
+    const d=await gasGet({action:'get_demandes',nom:CU.nom});
     allDemandes=d.demandes||[];
     renderMesDemandes();
-  } catch(e){ document.getElementById('mesdem-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>'; }
+  }catch(e){ document.getElementById('mesdem-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>'; }
 }
 function filterMesdem(f,el){
   mesdemFilter=f;
@@ -673,61 +589,58 @@ function filterMesdem(f,el){
   renderMesDemandes();
 }
 function renderMesDemandes(){
-  const list=allDemandes.filter(d=>mesdemFilter==='all'||d.statut===mesdemFilter);
+  const list=mesdemFilter==='all'?allDemandes:allDemandes.filter(d=>d.statut===mesdemFilter);
   const el=document.getElementById('mesdem-list');
   if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucune demande</p>';return;}
   el.innerHTML=list.map(d=>demandeCard(d,false)).join('');
 }
 
-// ══ SOLDE (agent) / EN ATTENTE (responsable) ══════
+// ══ SOLDE / EN ATTENTE ══════════════════════════════
 async function loadSoldePage(){
   const el=document.getElementById('solde-content');
   el.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
-  const isResp=(currentUser.role==='responsable');
-  if(isResp){
-    // Pour les responsables : afficher les demandes en attente
-    try {
-      const d=await gasGet({action:'getAllDemandes'});
-      const pending=(d.demandes||[]).filter(x=>x.statut==='pending');
+  if(CU.role==='responsable'){
+    try{
+      const d=await gasGet({action:'get_demandes'});
+      const pending=(d.demandes||[]).filter(x=>x.statut==='En attente');
       if(!pending.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">✅ Aucune demande en attente</p>';return;}
       el.innerHTML=pending.map(d=>demandeCard(d,true)).join('');
-      // Mettre à jour les données locales pour la validation aussi
       allValidDem=d.demandes||[];
-    } catch(e){ el.innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>'; }
-  } else {
-    // Pour les agents : afficher le bilan d'heures
-    try {
-      const d=await gasGet({action:'getSolde',nom:currentUser.nom});
-      const s=d.solde||{};
-      const bilan=s.bilan||0;
-      const cls=bilan>0?'s-pos':bilan<0?'s-neg':'s-zero';
-      const sign=bilan>=0?'+':'';
+    }catch(e){ el.innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>'; }
+  }else{
+    try{
+      const d=await gasGet({action:'get_soldes'});
+      const soldes=d.soldes||[];
+      const s=soldes.find(x=>x.nom===CU.nom)||{prises:0,recuperees:0,solde:0};
+      const p=parseInt(s.prises)||0, r=parseInt(s.recuperees)||0, sol=parseInt(s.solde)||0;
+      const cls=sol>0?'s-pos':sol<0?'s-neg':'s-zero';
       el.innerHTML=`
         <div class="solde-grid">
-          <div class="solde-box"><div class="val s-neg">${fmtDuree(s.prises_h||0,s.prises_m||0)}</div><div class="lbl">Heures prises</div></div>
-          <div class="solde-box"><div class="val s-pos">${fmtDuree(s.sup_h||0,s.sup_m||0)}</div><div class="lbl">Heures sup</div></div>
+          <div class="solde-box"><div class="val s-neg">${minsToHHMM(p)}</div><div class="lbl">Heures prises</div></div>
+          <div class="solde-box"><div class="val s-pos">${minsToHHMM(r)}</div><div class="lbl">Heures récupérées</div></div>
         </div>
         <div class="solde-box" style="padding:16px">
-          <div class="val ${cls}">${sign}${fmtDuree(Math.abs(s.bilan_h||0),Math.abs(s.bilan_m||0))}</div>
+          <div class="val ${cls}">${sol>=0?'+':''}${minsToHHMM(Math.abs(sol))}</div>
           <div class="lbl">Solde total</div>
         </div>`;
-    } catch(e){ el.innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>'; }
+    }catch(e){ el.innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>'; }
   }
 }
 
-// ══ VALIDATION ═══════════════════════════════════
+// ══ VALIDATION ══════════════════════════════════════
 async function loadValidation(){
   document.getElementById('validation-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
-  try {
-    const d=await gasGet({action:'getAllDemandes'});
+  try{
+    const d=await gasGet({action:'get_demandes'});
     allValidDem=d.demandes||[];
     const services=[...new Set(allValidDem.map(x=>x.service).filter(Boolean))].sort();
     const sel=document.getElementById('valid-service-filter');
     const cur=sel.value;
     sel.innerHTML='<option value="">— Tous les services —</option>'+services.map(s=>`<option${s===cur?' selected':''}>${s}</option>`).join('');
     renderValidation();
-    updatePendingBadge(allValidDem.filter(x=>x.statut==='pending').length);
-  } catch(e){ document.getElementById('validation-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>'; }
+    const n=allValidDem.filter(x=>x.statut==='En attente').length;
+    setBadge('badge-validation',n); setBadge('badge-solde',n);
+  }catch(e){ document.getElementById('validation-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>'; }
 }
 function filterValidStatus(f,el){
   validFilter=f;
@@ -744,49 +657,42 @@ function renderValidation(){
   if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucune demande</p>';return;}
   el.innerHTML=list.map(d=>demandeCard(d,true)).join('');
 }
-async function validerDemande(id,statut){
-  try {
-    const res=await gasPost({action:'updateStatut',id,statut});
-    if(res.success){
-      toast(statut==='approved'?'✅ Validée':'❌ Refusée');
+
+async function validerDemande(id,action){
+  // action = 'valider' ou 'refuser'
+  try{
+    const res=await gasPost({action,id});
+    if(res.ok){
+      toast(action==='valider'?'✅ Validée !':'❌ Refusée');
       loadValidation();
       loadPendingCount();
-      // Rafraichir aussi la page solde si on est responsable
-      if(currentUser.role==='responsable') loadSoldePage();
-    } else { toast('Erreur : '+(res.message||'')); }
-  } catch(e){ toast('Erreur réseau'); }
+      if(CU.role==='responsable') loadSoldePage();
+    }else{ toast('Erreur : '+(res.msg||'')); }
+  }catch(e){ toast('Erreur réseau'); }
 }
 
-// ══ COMPTEUR BADGE ════════════════════════════════
-async function loadPendingCount(){
-  try {
-    const d=await gasGet({action:'getAllDemandes'});
-    const n=(d.demandes||[]).filter(x=>x.statut==='pending').length;
-    updatePendingBadge(n);
-    // Mettre à jour aussi le badge sur l'onglet solde (En attente)
-    const navSolde=document.getElementById('nav-solde');
-    if(n>0){
-      let b=navSolde.querySelector('.notif-badge');
-      if(!b){b=document.createElement('span');b.className='notif-badge';navSolde.appendChild(b);}
-      b.textContent=n; b.style.display='block';
-    }
-  } catch(e){}
-}
-function updatePendingBadge(n){
-  const b=document.getElementById('badge-validation');
+// ══ BADGE COMPTEUR ═══════════════════════════════════
+function setBadge(id,n){
+  const b=document.getElementById(id);
   if(!b)return;
-  if(n>0){b.textContent=n;b.style.display='block';}
-  else{b.style.display='none';}
+  if(n>0){b.textContent=n;b.style.display='block';}else{b.style.display='none';}
+}
+async function loadPendingCount(){
+  try{
+    const d=await gasGet({action:'get_demandes'});
+    const n=(d.demandes||[]).filter(x=>x.statut==='En attente').length;
+    setBadge('badge-validation',n); setBadge('badge-solde',n);
+  }catch(e){}
 }
 
-// ══ TABLEAU ═══════════════════════════════════════
+// ══ TABLEAU ═════════════════════════════════════════
 async function loadTableau(){
   document.getElementById('tableau-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
-  try {
-    const d=await gasGet({action:'getTableau'});
+  try{
+    const d=await gasGet({action:'get_soldes'});
     allSoldes=d.soldes||[];
     renderTableau();
-  } catch(e){ document.getElementById('tableau-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>'; }
+  }catch(e){ document.getElementById('tableau-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>'; }
 }
 function filterTableau(f,el){
   tableauFilter=f;
@@ -796,30 +702,32 @@ function filterTableau(f,el){
 }
 function renderTableau(){
   let list=allSoldes;
-  if(tableauFilter==='neg') list=list.filter(s=>s.bilan<0);
-  if(tableauFilter==='pos') list=list.filter(s=>s.bilan>0);
-  if(tableauFilter==='zero') list=list.filter(s=>s.bilan===0);
+  const fn=s=>parseInt(s.solde)||0;
+  if(tableauFilter==='neg') list=list.filter(s=>fn(s)<0);
+  if(tableauFilter==='pos') list=list.filter(s=>fn(s)>0);
+  if(tableauFilter==='zero') list=list.filter(s=>fn(s)===0);
   const el=document.getElementById('tableau-list');
   if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun résultat</p>';return;}
   el.innerHTML=list.map(s=>{
-    const cls=s.bilan>0?'s-pos':s.bilan<0?'s-neg':'s-zero';
+    const sol=fn(s);
+    const cls=sol>0?'s-pos':sol<0?'s-neg':'s-zero';
     return `<div class="agent-row">
-      <div class="agent-avatar">${s.nom.charAt(0).toUpperCase()}</div>
+      <div class="agent-avatar">${esc(s.nom).charAt(0).toUpperCase()}</div>
       <div class="agent-info"><div class="agent-name">${esc(s.nom)}</div><div class="agent-service">${esc(s.service||'')}</div></div>
-      <div class="val ${cls}" style="font-size:1rem;font-weight:700">${s.bilan>=0?'+':''}${fmtDuree(Math.abs(s.bilan_h||0),Math.abs(s.bilan_m||0))}</div>
+      <div class="val ${cls}" style="font-size:1rem;font-weight:700">${sol>=0?'+':''}${minsToHHMM(Math.abs(sol))}</div>
     </div>`;
   }).join('');
 }
 
-// ══ AGENTS ═══════════════════════════════════════
+// ══ AGENTS ══════════════════════════════════════════
 async function loadAgents(){
   document.getElementById('agents-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
-  try {
-    const d=await gasGet({action:'getAgents'});
+  try{
+    const d=await gasGet({action:'get_agents'});
     agentsCache=d.agents||[];
     document.getElementById('agents-count').textContent=agentsCache.length;
     renderAgents(agentsCache);
-  } catch(e){ document.getElementById('agents-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>'; }
+  }catch(e){ document.getElementById('agents-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>'; }
 }
 function filterAgents(){
   const q=document.getElementById('agent-search').value.toLowerCase();
@@ -830,76 +738,76 @@ function renderAgents(list){
   if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun agent</p>';return;}
   el.innerHTML=list.map(a=>`
     <div class="agent-row">
-      <div class="agent-avatar">${a.nom.charAt(0).toUpperCase()}</div>
+      <div class="agent-avatar">${esc(a.nom).charAt(0).toUpperCase()}</div>
       <div class="agent-info">
         <div class="agent-name">${esc(a.nom)}</div>
         <div class="agent-service">${esc(a.service||'')} · ${a.role==='responsable'?'Responsable':'Agent'}</div>
       </div>
     </div>`).join('');
 }
-function toggleEmailField(){
-  const isResp=document.getElementById('new-agent-role').value==='responsable';
-  document.getElementById('email-group').style.display=isResp?'block':'none';
-}
 async function addAgent(){
-  const nom=document.getElementById('new-agent-nom').value.trim();
-  const service=document.getElementById('new-agent-service').value;
-  const pin=document.getElementById('new-agent-pin').value.trim();
-  const role=document.getElementById('new-agent-role').value;
-  const email=document.getElementById('new-agent-email').value.trim();
+  const nom=document.getElementById('new-nom').value.trim();
+  const service=document.getElementById('new-service').value;
+  const pin=document.getElementById('new-pin').value.trim();
+  const role=document.getElementById('new-role').value;
+  const email=document.getElementById('new-email').value.trim();
   if(!nom||!service||pin.length!==4){toast('Nom, service et PIN (4 chiffres) obligatoires');return;}
-  try {
-    const res=await gasPost({action:'addAgent',nom,service,pin,role,email});
-    if(res.success){
+  try{
+    const res=await gasPost({action:'add_agent',nom,service,pin,role,email});
+    if(res.ok){
       toast('✅ Agent ajouté : '+nom);
-      document.getElementById('new-agent-nom').value='';
-      document.getElementById('new-agent-pin').value='';
-      document.getElementById('new-agent-email').value='';
+      document.getElementById('new-nom').value='';
+      document.getElementById('new-pin').value='';
+      document.getElementById('new-email').value='';
       loadAgents();
-    } else { toast('Erreur : '+(res.message||'')); }
-  } catch(e){ toast('Erreur réseau'); }
+    }else{ toast('Erreur : '+(res.msg||'')); }
+  }catch(e){ toast('Erreur réseau'); }
 }
 
-// ══ CARTE DEMANDE ════════════════════════════════
-function demandeCard(d, isAdmin){
+// ══ CARTE DEMANDE ════════════════════════════════════
+function demandeCard(d,isAdmin){
+  const statut=d.statut||'';
+  const cls=statut.includes('Validée')?'validee':statut.includes('Refusée')?'refusee':'';
+  const badge=statut.includes('Validée')?'<span class="badge badge-approved">✅ Validée</span>':
+              statut.includes('Refusée')?'<span class="badge badge-rejected">❌ Refusée</span>':
+              '<span class="badge badge-pending">⏳ En attente</span>';
   const obs=d.observations?`<div class="demande-obs">💬 ${esc(d.observations)}</div>`:'';
-  // Les agents ne peuvent PAS valider — boutons uniquement pour les responsables
-  const actions=(isAdmin && currentUser.role==='responsable' && d.statut==='pending')?`
+  // Boutons valider/refuser UNIQUEMENT pour les responsables
+  const actions=(isAdmin && CU.role==='responsable' && statut==='En attente')?`
     <div class="demande-actions">
-      <button class="btn btn-success btn-sm" onclick="validerDemande('${esc(d.id)}','approved')">✅ Valider</button>
-      <button class="btn btn-danger btn-sm"  onclick="validerDemande('${esc(d.id)}','rejected')">❌ Refuser</button>
+      <button class="btn btn-success btn-sm" onclick="validerDemande('${esc(d.id)}','valider')">✅ Valider</button>
+      <button class="btn btn-danger btn-sm"  onclick="validerDemande('${esc(d.id)}','refuser')">❌ Refuser</button>
     </div>`:'';
-  const duree=d.heures!==undefined?fmtDuree(d.heures,d.minutes):'';
-  const dates=d.debut?`${fmtDate(d.debut)}${d.fin&&d.fin!==d.debut?' → '+fmtDate(d.fin):''}`:fmtDate(d.date);
+  const dates=d.date_debut?(d.date_fin&&d.date_fin!==d.date_debut?d.date_debut+' → '+d.date_fin:d.date_debut):'';
   return `
-  <div class="demande-item ${d.statut}">
+  <div class="demande-item ${cls}">
     <div class="demande-header">
       <div>
-        <div class="demande-title">${d.type==='sup'?'⚡ Heures sup':'⏸️ Heures prises'}${isAdmin?' — '+esc(d.nom):''}</div>
-        <div class="demande-meta">${dates}${duree?' · '+duree:''} · ${fmtDate(d.dateCreation)}</div>
+        <div class="demande-title">${d.type==='Heures récupérées'?'⚡ Heures sup':'⏸️ Heures prises'}${isAdmin?' — '+esc(d.nom):''}</div>
+        <div class="demande-meta">${dates}${d.duree?' · '+d.duree:''}</div>
         ${isAdmin?`<div class="demande-meta" style="color:var(--text-muted)">${esc(d.service||'')}</div>`:''}
       </div>
-      ${badgeHtml(d.statut)}
+      ${badge}
     </div>
     ${obs}
     ${actions}
   </div>`;
 }
 
-// ══ ACTIVITÉ RÉCENTE ══════════════════════════════
+// ══ ACTIVITÉ RÉCENTE ════════════════════════════════
 async function loadRecentActivity(){
-  try {
-    const d=await gasGet({action:'getMesDemandes',nom:currentUser.nom,limit:3});
+  try{
+    const d=await gasGet({action:'get_demandes',nom:CU.nom});
     const list=(d.demandes||[]).slice(0,3);
     const el=document.getElementById('home-recent');
     if(!list.length){el.innerHTML='<p style="color:var(--text-muted);font-size:.85rem">Aucune demande récente</p>';return;}
     el.innerHTML=list.map(d=>demandeCard(d,false)).join('');
-  } catch(e){
+  }catch(e){
     document.getElementById('home-recent').innerHTML='<p style="color:var(--text-muted);font-size:.85rem">Chargement impossible</p>';
   }
 }
 
-// ══ DÉMARRAGE ════════════════════════════════════
+// ══ DÉMARRAGE ═══════════════════════════════════════
 initNameScreen();
 </script>
 </body>
