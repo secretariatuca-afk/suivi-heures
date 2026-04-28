@@ -172,11 +172,23 @@ textarea{resize:vertical;min-height:80px}
           <div style="font-weight:600;font-size:.88rem">Nouvelle demande</div>
           <div style="font-size:.75rem;color:var(--text-light);margin-top:2px">Heures prises ou sup</div>
         </button>
-        <button class="card" style="text-align:center;cursor:pointer" onclick="showPage('solde')">
+        <button class="card" style="text-align:center;cursor:pointer" id="home-btn-solde" onclick="showPage(CU&&CU.role==='responsable'?'validation':'solde')">
           <div style="font-size:1.8rem;margin-bottom:6px" id="home-icon-solde">💰</div>
           <div style="font-weight:600;font-size:.88rem" id="home-label-solde">Mon solde</div>
           <div style="font-size:.75rem;color:var(--text-light);margin-top:2px" id="home-desc-solde">Détail & historique</div>
         </button>
+      </div>
+      <!-- Compteur demandes en attente (responsables uniquement) -->
+      <div id="home-pending-card" style="display:none;cursor:pointer" onclick="showPage('validation')" class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:.85rem;font-weight:600;color:var(--text-light)">Demandes en attente</div>
+            <div style="font-size:.78rem;color:var(--text-muted);margin-top:2px">Cliquez pour valider</div>
+          </div>
+          <div id="home-pending-count" style="background:var(--danger);color:#fff;border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;flex-shrink:0">0</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0px" style2="display:none">
       </div>
       <div class="card">
         <h2>Activité récente</h2>
@@ -243,6 +255,71 @@ textarea{resize:vertical;min-height:80px}
       </div>
     </div>
 
+    <!-- DEMANDE POUR UN AGENT (responsables) -->
+    <div id="page-demande-agent" class="page">
+      <div class="card">
+        <h2>Demande pour un agent</h2>
+        <div class="form-group">
+          <label>Agent</label>
+          <select id="agent-pour-demande">
+            <option value="">— Sélectionnez un agent —</option>
+          </select>
+        </div>
+        <div class="type-toggle">
+          <div class="type-card selected" id="type-prises2" onclick="selectType2('prises')">
+            <div class="type-icon">⏸️</div>
+            <div class="type-label">Heures prises</div>
+            <div class="type-desc">Absence, congé</div>
+          </div>
+          <div class="type-card" id="type-sup2" onclick="selectType2('sup')">
+            <div class="type-icon">⚡</div>
+            <div class="type-label">Heures sup</div>
+            <div class="type-desc">Travail effectué</div>
+          </div>
+        </div>
+        <div id="form-prises2">
+          <div class="form-group"><label>Date de début</label><input type="date" id="prises2-debut"/></div>
+          <div class="form-group"><label>Date de fin</label><input type="date" id="prises2-fin"/></div>
+          <div class="form-group"><label>Durée</label>
+            <div class="duration-row">
+              <select id="prises2-h">
+                <option value="0">0 h</option><option value="1">1 h</option><option value="2">2 h</option>
+                <option value="3">3 h</option><option value="4">4 h</option><option value="5">5 h</option>
+                <option value="6">6 h</option><option value="7">7 h</option><option value="8" selected>8 h</option>
+              </select>
+              <select id="prises2-m">
+                <option value="0" selected>00 min</option><option value="15">15 min</option>
+                <option value="30">30 min</option><option value="45">45 min</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group"><label>💬 Observations (facultatif)</label>
+            <textarea id="prises2-obs" placeholder="Motif, modalités…" rows="3"></textarea>
+          </div>
+        </div>
+        <div id="form-sup2" style="display:none">
+          <div class="form-group"><label>Date effectuée</label><input type="date" id="sup2-date"/></div>
+          <div class="form-group"><label>Durée</label>
+            <div class="duration-row">
+              <select id="sup2-h">
+                <option value="1" selected>1 h</option><option value="2">2 h</option><option value="3">3 h</option>
+                <option value="4">4 h</option><option value="5">5 h</option><option value="6">6 h</option>
+                <option value="7">7 h</option><option value="8">8 h</option>
+              </select>
+              <select id="sup2-m">
+                <option value="0" selected>00 min</option><option value="15">15 min</option>
+                <option value="30">30 min</option><option value="45">45 min</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group"><label>💬 Observations (facultatif)</label>
+            <textarea id="sup2-obs" placeholder="Contexte, événement…" rows="3"></textarea>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btn-submit2" onclick="submitDemandeAgent()">📤 Envoyer la demande</button>
+      </div>
+    </div>
+
     <!-- MES DEMANDES -->
     <div id="page-mesdem" class="page">
       <div class="card">
@@ -278,11 +355,19 @@ textarea{resize:vertical;min-height:80px}
           <h2>Validation</h2>
           <button class="btn btn-secondary btn-sm" onclick="loadValidation()">🔄</button>
         </div>
-        <div class="form-group">
-          <label>Filtrer par service</label>
-          <select id="valid-service-filter" onchange="renderValidation()">
-            <option value="">— Tous les services —</option>
-          </select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+          <div class="form-group" style="margin:0">
+            <label>Service</label>
+            <select id="valid-service-filter" onchange="renderValidation()">
+              <option value="">— Tous —</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Agent</label>
+            <select id="valid-nom-filter" onchange="renderValidation()">
+              <option value="">— Tous —</option>
+            </select>
+          </div>
         </div>
         <div class="tabs" id="valid-tabs">
           <div class="tab active" onclick="filterValidStatus('En attente',this)">⏳ En attente</div>
@@ -298,7 +383,7 @@ textarea{resize:vertical;min-height:80px}
     <div id="page-tableau" class="page">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <h2>Tableau de bord</h2>
+          <h2>Historique des agents</h2>
           <button class="btn btn-secondary btn-sm" onclick="loadTableau()">🔄</button>
         </div>
         <div class="tabs" id="tableau-tabs">
@@ -361,6 +446,10 @@ textarea{resize:vertical;min-height:80px}
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
       Demande
     </button>
+    <button class="nav-btn" id="nav-demande-agent" onclick="showPage('demande-agent')" style="display:none">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      Dem. agent
+    </button>
     <button class="nav-btn" id="nav-mesdem" onclick="showPage('mesdem')">
       <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
       Mes dem.
@@ -377,7 +466,7 @@ textarea{resize:vertical;min-height:80px}
     </button>
     <button class="nav-btn" id="nav-tableau" onclick="showPage('tableau')" style="display:none">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-      Tableau
+      Historique
     </button>
     <button class="nav-btn" id="nav-agents" onclick="showPage('agents')" style="display:none">
       <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -490,21 +579,35 @@ function initApp(){
   document.getElementById('user-badge').textContent='🚪 '+CU.nom.split(' ')[0];
 
   if(isResp){
-    document.getElementById('nav-solde-label').textContent='En attente';
-    document.getElementById('solde-page-title').textContent='Demandes en attente';
-    document.getElementById('home-icon-solde').textContent='⏳';
-    document.getElementById('home-label-solde').textContent='En attente';
-    document.getElementById('home-desc-solde').textContent='Demandes à valider';
-    ['nav-validation','nav-tableau','nav-agents'].forEach(id=>document.getElementById(id).style.display='flex');
+    // Responsable : cacher Demande perso et Mes demandes, montrer Demande agent
+    document.getElementById('nav-demande').style.display='none';
+    document.getElementById('nav-mesdem').style.display='none';
+    document.getElementById('nav-demande-agent').style.display='flex';
+    // Fusionner En attente + Validation → un seul onglet Validation
+    document.getElementById('nav-solde').style.display='none';
+    document.getElementById('nav-validation').style.display='flex';
+    document.getElementById('nav-tableau').style.display='flex';
+    document.getElementById('nav-agents').style.display='flex';
+    // Accueil : raccourci vers validation
+    document.getElementById('home-icon-solde').textContent='✅';
+    document.getElementById('home-label-solde').textContent='Validation';
+    document.getElementById('home-desc-solde').textContent='Toutes les demandes';
   }
 
   const today=new Date().toISOString().slice(0,10);
   document.getElementById('prises-debut').value=today;
   document.getElementById('prises-fin').value=today;
   document.getElementById('sup-date').value=today;
+  document.getElementById('prises2-debut').value=today;
+  document.getElementById('prises2-fin').value=today;
+  document.getElementById('sup2-date').value=today;
 
   loadRecentActivity();
-  if(isResp) loadPendingCount();
+  if(isResp){
+    loadPendingCount();
+    // Rafraichir le compteur toutes les 2 minutes
+    setInterval(loadPendingCount, 120000);
+  }
 }
 
 // ══ NAVIGATION ══════════════════════════════════════
@@ -513,6 +616,7 @@ function showPage(name){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name)?.classList.add('active');
   document.getElementById('nav-'+name)?.classList.add('active');
+  if(name==='demande-agent') fillAgentSelector();
   if(name==='mesdem')    loadMesDemandes();
   if(name==='solde')     loadSoldePage();
   if(name==='validation')loadValidation();
@@ -641,12 +745,19 @@ function filterValidStatus(f,el){
 }
 function renderValidation(){
   const service=document.getElementById('valid-service-filter').value;
+  const nom=document.getElementById('valid-nom-filter').value;
   let list=allValidDem;
   if(service) list=list.filter(d=>d.service===service);
+  if(nom) list=list.filter(d=>d.nom===nom);
   if(validFilter!=='all') list=list.filter(d=>d.statut===validFilter);
   const el=document.getElementById('validation-list');
   if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucune demande</p>';return;}
-  el.innerHTML=list.map(d=>demandeCard(d,true)).join('');
+  // Si un agent est sélectionné, afficher son historique complet avec titre
+  if(nom){
+    el.innerHTML=`<div style="font-size:.85rem;font-weight:600;color:var(--primary);margin-bottom:10px;padding:8px 12px;background:var(--bg-input);border-radius:var(--radius-sm)">📋 Historique de ${nom} — ${list.length} demande(s)</div>`+list.map(d=>demandeCard(d,true)).join('');
+  } else {
+    el.innerHTML=list.map(d=>demandeCard(d,true)).join('');
+  }
 }
 
 async function validerDemande(id,action){
@@ -672,7 +783,22 @@ async function loadPendingCount(){
   try{
     const d=await gasGet({action:'get_demandes'});
     const n=(d.demandes||[]).filter(x=>x.statut==='En attente').length;
-    setBadge('badge-validation',n); setBadge('badge-solde',n);
+    // Badge nav Validation
+    setBadge('badge-validation',n);
+    // Badge nav Accueil
+    const navHome=document.getElementById('nav-home');
+    let bh=navHome.querySelector('.notif-badge');
+    if(!bh){bh=document.createElement('span');bh.className='notif-badge';navHome.appendChild(bh);}
+    if(n>0){bh.textContent=n;bh.style.display='block';}else{bh.style.display='none';}
+    // Carte compteur sur la page accueil
+    const card=document.getElementById('home-pending-card');
+    const counter=document.getElementById('home-pending-count');
+    if(card && counter){
+      counter.textContent=n;
+      card.style.display=n>0?'block':'none';
+      // Couleur selon urgence
+      counter.style.background=n>=5?'#c0392b':n>=2?'#e74c3c':'#e67e22';
+    }
   }catch(e){}
 }
 
@@ -796,6 +922,65 @@ async function loadRecentActivity(){
   }catch(e){
     document.getElementById('home-recent').innerHTML='<p style="color:var(--text-muted);font-size:.85rem">Chargement impossible</p>';
   }
+}
+
+// ══ DEMANDE POUR UN AGENT (responsable) ═════════════
+let currentType2 = 'prises';
+
+function selectType2(t){
+  currentType2=t;
+  document.getElementById('type-prises2').classList.toggle('selected',t==='prises');
+  document.getElementById('type-sup2').classList.toggle('selected',t==='sup');
+  document.getElementById('form-prises2').style.display=t==='prises'?'block':'none';
+  document.getElementById('form-sup2').style.display=t==='sup'?'block':'none';
+}
+
+function fillAgentSelector(){
+  const sel=document.getElementById('agent-pour-demande');
+  sel.innerHTML='<option value="">— Sélectionnez un agent —</option>';
+  [...allAgents].filter(a=>a.role!=='responsable').sort((a,b)=>a.nom.localeCompare(b.nom,'fr')).forEach(ag=>{
+    const o=document.createElement('option');
+    o.value=ag.nom+'|'+ag.service;
+    o.textContent=ag.nom+(ag.service?' — '+ag.service:'');
+    sel.appendChild(o);
+  });
+}
+
+async function submitDemandeAgent(){
+  const btn=document.getElementById('btn-submit2');
+  const agentVal=document.getElementById('agent-pour-demande').value;
+  if(!agentVal){toast('Sélectionnez un agent');return;}
+  const [nomAgent,serviceAgent]=agentVal.split('|');
+  btn.disabled=true; btn.textContent='⏳ Envoi…';
+  try{
+    let p={action:'nouvelle_demande',nom:nomAgent,service:serviceAgent};
+    if(currentType2==='prises'){
+      const debut=document.getElementById('prises2-debut').value;
+      const fin=document.getElementById('prises2-fin').value;
+      if(!debut||!fin){toast('Dates obligatoires');return;}
+      const h=parseInt(document.getElementById('prises2-h').value)||0;
+      const m=parseInt(document.getElementById('prises2-m').value)||0;
+      p.type='Heures prises'; p.date_debut=debut; p.date_fin=fin;
+      p.duree=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+      p.observations=document.getElementById('prises2-obs').value.trim();
+    }else{
+      const date=document.getElementById('sup2-date').value;
+      if(!date){toast('Date obligatoire');return;}
+      const h=parseInt(document.getElementById('sup2-h').value)||0;
+      const m=parseInt(document.getElementById('sup2-m').value)||0;
+      p.type='Heures récupérées'; p.date_debut=date; p.date_fin=date;
+      p.duree=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+      p.observations=document.getElementById('sup2-obs').value.trim();
+    }
+    const res=await gasGet(p);
+    if(res.ok){
+      toast('✅ Demande envoyée pour '+nomAgent+' !');
+      document.getElementById('prises2-obs').value='';
+      document.getElementById('sup2-obs').value='';
+      document.getElementById('agent-pour-demande').value='';
+    }else{ toast('❌ '+(res.msg||'Erreur')); }
+  }catch(e){ toast('❌ Erreur réseau'); }
+  finally{ btn.disabled=false; btn.textContent='📤 Envoyer la demande'; }
 }
 
 // ══ DÉMARRAGE ═══════════════════════════════════════
