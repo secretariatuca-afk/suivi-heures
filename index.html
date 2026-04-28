@@ -388,7 +388,7 @@ textarea{resize:vertical;min-height:80px}
 
 <script>
 // ══ CONFIG ══════════════════════════════════════════
-const GAS = 'https://script.google.com/macros/s/AKfycbxsutIsrOkkt-1QhR1X8nUPuP_QcoDDzlFiCDfOZFMUt3_1AXI1-EqbUXhvhMgJOleyPA/exec';
+const GAS = 'https://script.google.com/macros/s/AKfycbx4MHA3wODAXygE_Lb8WsrYLQ1iV34ONSH_WE41Iv65sMeYG8ULnVNf9mq9HntdJ1UfDw/exec';
 
 // ══ ÉTAT ════════════════════════════════════════════
 let CU = null; // currentUser
@@ -408,9 +408,10 @@ function minsToHHMM(m){m=parseInt(m)||0;const h=Math.floor(Math.abs(m)/60),min=M
 async function gasGet(params){
   const url=new URL(GAS);
   Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));
-  const r=await fetch(url.toString());
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  return r.json();
+  const r=await fetch(url.toString(), {redirect:'follow'});
+  const text=await r.text();
+  try{ return JSON.parse(text); }
+  catch(e){ throw new Error('Réponse invalide: '+text.slice(0,100)); }
 }
 async function gasPost(data){
   const r=await fetch(GAS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
