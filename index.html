@@ -470,10 +470,16 @@ async function initNameScreen(){
     const d=await gasGet({action:'get_agents'});
     allAgents=d.agents||[];
     document.getElementById('name-error').textContent='';
-  }catch(e){allAgents=[];document.getElementById('name-error').textContent='Erreur de connexion.';}
-  fillNameSelect(allAgents);
+    fillNameSelect(allAgents);
+  }catch(e){
+    allAgents=[];
+    document.getElementById('name-error').textContent='Erreur de connexion.';
+    document.getElementById('name-select').innerHTML='<option value="">— Erreur de chargement —</option>';
+  }
   document.getElementById('name-search').value='';
   document.getElementById('name-select').innerHTML='<option value="">— Chargement… —</option>';
+  // Vider la sélection précédente
+  selectedName='';
 }
 
 function validateName(){
