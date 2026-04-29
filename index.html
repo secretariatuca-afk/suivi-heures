@@ -124,18 +124,15 @@ textarea{resize:vertical;min-height:80px}
         style="width:80px;height:80px;border-radius:16px;background:var(--primary);padding:6px;object-fit:contain"/>
       <h2 style="margin-top:10px;color:var(--primary);font-size:1rem">CROUS de Lille — Suivi des Heures</h2>
     </div>
-    <div style="position:relative;margin-bottom:14px">
-      <input type="text" id="name-search" placeholder="🔍 Tapez votre nom…"
+    <div class="form-group">
+      <input type="text" id="name-search" placeholder="🔍 Rechercher votre nom…"
         oninput="filterNameList()"
-        style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.9rem;background:var(--bg-input)"
+        style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.9rem;background:var(--bg-input);margin-bottom:8px"
         autocomplete="off"/>
-      <div id="name-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--border);border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);max-height:220px;overflow-y:auto;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,.12)"></div>
+      <select id="name-select" size="5" style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.88rem;background:var(--bg-input);padding:4px">
+        <option value="">— Chargement… —</option>
+      </select>
     </div>
-    <div id="name-selected-display" style="display:none;background:#e8f0fe;border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:.9rem;font-weight:500;color:var(--primary);display:flex;align-items:center;justify-content:space-between">
-      <span id="name-selected-text"></span>
-      <span onclick="clearNameSelection()" style="cursor:pointer;color:var(--text-muted);font-size:1.1rem">✕</span>
-    </div>
-    <input type="hidden" id="name-select" value=""/>
     <button class="btn btn-primary" onclick="validateName()">Continuer →</button>
     <p id="name-error" style="color:var(--danger);font-size:.8rem;margin-top:8px;text-align:center;min-height:1em"></p>
   </div>
@@ -474,23 +471,9 @@ async function initNameScreen(){
     allAgents=d.agents||[];
     document.getElementById('name-error').textContent='';
   }catch(e){allAgents=[];document.getElementById('name-error').textContent='Erreur de connexion.';}
-  // Réactiver le champ de recherche
-  const searchEl2=document.getElementById('name-search');
-  if(searchEl2){
-    searchEl2.disabled=false;
-    searchEl2.placeholder='🔍 Tapez votre nom…';
-    searchEl2.focus();
-  }
-  // Réinitialiser la recherche
-  const searchEl=document.getElementById('name-search');
-  if(searchEl){
-    searchEl.value='';
-    searchEl.placeholder='Chargement…';
-    searchEl.disabled=true;
-  }
-  document.getElementById('name-select').value='';
-  const disp=document.getElementById('name-selected-display');
-  if(disp) disp.style.display='none';
+  fillNameSelect(allAgents);
+  document.getElementById('name-search').value='';
+  document.getElementById('name-select').innerHTML='<option value="">— Chargement… —</option>';
 }
 
 function validateName(){
