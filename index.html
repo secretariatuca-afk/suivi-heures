@@ -474,8 +474,20 @@ async function initNameScreen(){
     allAgents=d.agents||[];
     document.getElementById('name-error').textContent='';
   }catch(e){allAgents=[];document.getElementById('name-error').textContent='Erreur de connexion.';}
+  // Réactiver le champ de recherche
+  const searchEl2=document.getElementById('name-search');
+  if(searchEl2){
+    searchEl2.disabled=false;
+    searchEl2.placeholder='🔍 Tapez votre nom…';
+    searchEl2.focus();
+  }
   // Réinitialiser la recherche
-  document.getElementById('name-search').value='';
+  const searchEl=document.getElementById('name-search');
+  if(searchEl){
+    searchEl.value='';
+    searchEl.placeholder='Chargement…';
+    searchEl.disabled=true;
+  }
   document.getElementById('name-select').value='';
   const disp=document.getElementById('name-selected-display');
   if(disp) disp.style.display='none';
