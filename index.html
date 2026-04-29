@@ -465,21 +465,19 @@ async function initNameScreen(){
   document.getElementById('name-screen').style.display='flex';
   document.getElementById('pin-screen').style.display='none';
   document.getElementById('app').style.display='none';
-  document.getElementById('name-error').textContent='Chargement…';
+  document.getElementById('name-search').value='';
+  document.getElementById('name-select').innerHTML='<option value="">— Chargement… —</option>';
+  document.getElementById('name-error').textContent='';
+  selectedName='';
   try{
     const d=await gasGet({action:'get_agents'});
     allAgents=d.agents||[];
-    document.getElementById('name-error').textContent='';
     fillNameSelect(allAgents);
   }catch(e){
     allAgents=[];
     document.getElementById('name-error').textContent='Erreur de connexion.';
-    document.getElementById('name-select').innerHTML='<option value="">— Erreur de chargement —</option>';
+    document.getElementById('name-select').innerHTML='<option value="">— Erreur —</option>';
   }
-  document.getElementById('name-search').value='';
-  document.getElementById('name-select').innerHTML='<option value="">— Chargement… —</option>';
-  // Vider la sélection précédente
-  selectedName='';
 }
 
 function validateName(){
