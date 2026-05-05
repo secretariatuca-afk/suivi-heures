@@ -501,10 +501,6 @@ textarea{resize:vertical;min-height:80px}
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <span>Mes infos</span>
     </button>
-    <button class="nav-btn" id="nav-annuaire" onclick="showPage('annuaire')" style="display:none">
-      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="8" cy="9" r="2"/><path d="M14 9h4M14 13h4M8 13h.01"/></svg>
-      Annuaire
-    </button>
     <button class="nav-btn" id="nav-validation" onclick="showPage('validation')" style="display:none">
       <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
       Validation<span class="notif-badge" id="badge-validation"></span>
@@ -517,11 +513,15 @@ textarea{resize:vertical;min-height:80px}
       <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Agents
     </button>
+    <button class="nav-btn" id="nav-annuaire" onclick="showPage('annuaire')" style="display:none">
+      <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      Annuaire
+    </button>
   </nav>
 </div>
 
 <script>
-const GAS='https://script.google.com/macros/s/AKfycbx4MHA3wODAXygE_Lb8WsrYLQ1iV34ONSH_WE41Iv65sMeYG8ULnVNf9mq9HntdJ1UfDw/exec';
+const GAS='https://script.google.com/macros/s/AKfycbxCCaizE3vzNVCYXvaFANaqNYFh3_LWVPsmJcvEJ50tNFDY9SyL5NdXl3KltQQ_bkMcVQ/exec';
 
 let CU=null,allAgents=[],allDemandes=[],allValidDem=[],allSoldes=[],agentsCache=[];
 let mesdemFilter='all',validFilter='En attente',tableauFilter='all';
