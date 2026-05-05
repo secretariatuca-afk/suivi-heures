@@ -111,6 +111,7 @@ textarea{resize:vertical;min-height:80px}
 .tab.active{background:var(--primary-light);color:#fff;border-color:var(--primary-light)}
 @media(min-width:600px){#content{max-width:580px;margin:0 auto;padding:20px}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <div id="toast"></div>
@@ -118,7 +119,7 @@ textarea{resize:vertical;min-height:80px}
 <!-- ÉCRAN SÉLECTION NOM -->
 <div id="name-screen">
   <div class="auth-card">
-    <img class="auth-logo" src="icon-2.png" onerror="this.style.background='var(--primary)'" alt="CROUS"/>
+    <div class="auth-logo" style="display:flex;align-items:center;justify-content:center"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#1e3a5f"/><rect x="20" y="25" width="60" height="8" rx="4" fill="#7eb8f7"/><rect x="20" y="40" width="45" height="8" rx="4" fill="#fff" opacity=".9"/><rect x="20" y="55" width="50" height="8" rx="4" fill="#fff" opacity=".7"/><circle cx="72" cy="72" r="14" fill="#e74c3c"/><line x1="68" y1="72" x2="76" y2="72" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><line x1="72" y1="68" x2="72" y2="76" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg></div>
     <div class="auth-title">CROUS de Lille — Suivi des Heures</div>
     <div class="form-group">
       <input type="text" id="name-search"
@@ -137,8 +138,7 @@ textarea{resize:vertical;min-height:80px}
 
 <!-- ÉCRAN PIN -->
 <div id="pin-screen" style="display:none">
-  <img src="icon-2.png" onerror="this.style.display='none'" alt="CROUS"
-    style="width:64px;height:64px;background:#fff;border-radius:14px;padding:6px;margin-bottom:16px;object-fit:contain"/>
+  <div style="width:64px;height:64px;background:#fff;border-radius:14px;padding:6px;margin-bottom:16px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#1e3a5f"/><rect x="20" y="25" width="60" height="8" rx="4" fill="#7eb8f7"/><rect x="20" y="40" width="45" height="8" rx="4" fill="#fff" opacity=".9"/><rect x="20" y="55" width="50" height="8" rx="4" fill="#fff" opacity=".7"/><circle cx="72" cy="72" r="14" fill="#e74c3c"/><line x1="68" y1="72" x2="76" y2="72" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><line x1="72" y1="68" x2="72" y2="76" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg></div>
   <div class="pin-title" id="pin-name-label">Code PIN</div>
   <div class="pin-sub">Saisissez votre code à 4 chiffres</div>
   <div class="pin-dots">
@@ -164,30 +164,76 @@ textarea{resize:vertical;min-height:80px}
 </div>
 
 <!-- ÉCRAN CHANGEMENT PIN -->
-<div id="change-pin-screen" style="display:none;position:fixed;inset:0;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:24px;background:linear-gradient(160deg,var(--primary-dark),var(--primary))">
-  <img src="icon-2.png" onerror="this.style.display='none'" alt="CROUS"
-    style="width:64px;height:64px;background:#fff;border-radius:14px;padding:6px;margin-bottom:16px;object-fit:contain"/>
-  <div class="pin-title" id="change-pin-title">🔐 Choisissez votre nouveau PIN</div>
-  <div class="pin-sub" id="change-pin-sub">Première connexion — saisissez un nouveau code à 4 chiffres</div>
-  <div class="pin-dots" id="change-pin-dots">
-    <div class="pin-dot" id="cp0"></div><div class="pin-dot" id="cp1"></div>
-    <div class="pin-dot" id="cp2"></div><div class="pin-dot" id="cp3"></div>
+<div id="change-pin-screen" style="display:none;position:fixed;inset:0;z-index:999;background:linear-gradient(160deg,var(--primary-dark),var(--primary))">
+
+  <!-- PANNEAU 1 : saisie nouveau PIN -->
+  <div id="cp-panel-new" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:24px">
+    <div style="width:64px;height:64px;margin-bottom:16px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#1e3a5f"/><rect x="20" y="25" width="60" height="8" rx="4" fill="#7eb8f7"/><rect x="20" y="40" width="45" height="8" rx="4" fill="#fff" opacity=".9"/><rect x="20" y="55" width="50" height="8" rx="4" fill="#fff" opacity=".7"/><circle cx="72" cy="72" r="14" fill="#e74c3c"/><line x1="68" y1="72" x2="76" y2="72" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><line x1="72" y1="68" x2="72" y2="76" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+    <div class="pin-title" id="change-pin-title">🔐 Choisissez votre nouveau PIN</div>
+    <div class="pin-sub" id="change-pin-sub">Saisissez un nouveau code à 4 chiffres</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="cp0"></div><div class="pin-dot" id="cp1"></div>
+      <div class="pin-dot" id="cp2"></div><div class="pin-dot" id="cp3"></div>
+    </div>
+    <div class="pin-keypad">
+      <button class="pin-key" onclick="changePinKey(1)">1</button>
+      <button class="pin-key" onclick="changePinKey(2)">2</button>
+      <button class="pin-key" onclick="changePinKey(3)">3</button>
+      <button class="pin-key" onclick="changePinKey(4)">4</button>
+      <button class="pin-key" onclick="changePinKey(5)">5</button>
+      <button class="pin-key" onclick="changePinKey(6)">6</button>
+      <button class="pin-key" onclick="changePinKey(7)">7</button>
+      <button class="pin-key" onclick="changePinKey(8)">8</button>
+      <button class="pin-key" onclick="changePinKey(9)">9</button>
+      <button class="pin-key" onclick="changePinDel()">⌫</button>
+      <button class="pin-key" onclick="changePinKey(0)">0</button>
+      <button class="pin-key ok" onclick="changePinStep1()">✓</button>
+    </div>
+    <div id="change-pin-error" style="color:#ff6b6b;font-size:.82rem;margin-top:12px;min-height:1.2em;text-align:center"></div>
   </div>
-  <div class="pin-keypad">
-    <button class="pin-key" onclick="changePinKey(1)">1</button>
-    <button class="pin-key" onclick="changePinKey(2)">2</button>
-    <button class="pin-key" onclick="changePinKey(3)">3</button>
-    <button class="pin-key" onclick="changePinKey(4)">4</button>
-    <button class="pin-key" onclick="changePinKey(5)">5</button>
-    <button class="pin-key" onclick="changePinKey(6)">6</button>
-    <button class="pin-key" onclick="changePinKey(7)">7</button>
-    <button class="pin-key" onclick="changePinKey(8)">8</button>
-    <button class="pin-key" onclick="changePinKey(9)">9</button>
-    <button class="pin-key" onclick="changePinDel()">⌫</button>
-    <button class="pin-key" onclick="changePinKey(0)">0</button>
-    <button class="pin-key ok" onclick="changePinValidate()">✓</button>
+
+  <!-- PANNEAU 2 : confirmation PIN -->
+  <div id="cp-panel-confirm" style="display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:24px">
+    <div style="width:64px;height:64px;margin-bottom:16px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#1e3a5f"/><rect x="20" y="25" width="60" height="8" rx="4" fill="#7eb8f7"/><rect x="20" y="40" width="45" height="8" rx="4" fill="#fff" opacity=".9"/><rect x="20" y="55" width="50" height="8" rx="4" fill="#fff" opacity=".7"/><circle cx="72" cy="72" r="14" fill="#e74c3c"/><line x1="68" y1="72" x2="76" y2="72" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><line x1="72" y1="68" x2="72" y2="76" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+    <div class="pin-title">✅ Confirmez votre PIN</div>
+    <div class="pin-sub">Ressaisissez le même code pour confirmer</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="cc0"></div><div class="pin-dot" id="cc1"></div>
+      <div class="pin-dot" id="cc2"></div><div class="pin-dot" id="cc3"></div>
+    </div>
+    <div class="pin-keypad">
+      <button class="pin-key" onclick="confirmPinKey(1)">1</button>
+      <button class="pin-key" onclick="confirmPinKey(2)">2</button>
+      <button class="pin-key" onclick="confirmPinKey(3)">3</button>
+      <button class="pin-key" onclick="confirmPinKey(4)">4</button>
+      <button class="pin-key" onclick="confirmPinKey(5)">5</button>
+      <button class="pin-key" onclick="confirmPinKey(6)">6</button>
+      <button class="pin-key" onclick="confirmPinKey(7)">7</button>
+      <button class="pin-key" onclick="confirmPinKey(8)">8</button>
+      <button class="pin-key" onclick="confirmPinKey(9)">9</button>
+      <button class="pin-key" onclick="confirmPinDel()">⌫</button>
+      <button class="pin-key" onclick="confirmPinKey(0)">0</button>
+      <button class="pin-key ok" onclick="changePinStep2()">✓</button>
+    </div>
+    <div id="confirm-pin-error" style="color:#ff6b6b;font-size:.82rem;margin-top:12px;min-height:1.2em;text-align:center"></div>
+    <button onclick="retourStep1()" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:.82rem;margin-top:8px;cursor:pointer">← Recommencer</button>
   </div>
-  <div id="change-pin-error" style="color:#ff6b6b;font-size:.82rem;margin-top:12px;min-height:1.2em;text-align:center"></div>
+
+  <!-- PANNEAU 3 : succès -->
+  <div id="cp-panel-success" style="display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:32px;text-align:center">
+    <div style="font-size:5rem;margin-bottom:24px;animation:pop .4s ease">✅</div>
+    <div style="font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:10px">Code PIN modifié !</div>
+    <div style="font-size:.95rem;color:rgba(255,255,255,.8);margin-bottom:6px">Votre nouveau code PIN a bien été enregistré.</div>
+    <div style="font-size:.82rem;color:rgba(255,255,255,.6);margin-bottom:32px">Mis à jour automatiquement dans Google Sheets.</div>
+    <div style="background:rgba(255,255,255,.15);border-radius:12px;padding:16px 32px;margin-bottom:36px">
+      <div style="font-size:.72rem;color:rgba(255,255,255,.6);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Votre nouveau PIN</div>
+      <div id="success-pin-display" style="font-size:2.5rem;font-weight:700;letter-spacing:.5em;color:#fff;font-family:monospace">····</div>
+    </div>
+    <button id="btn-enter-app" style="background:#fff;color:#1e3a5f;border:none;border-radius:12px;padding:14px 40px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit">
+      Accéder à mon compte →
+    </button>
+  </div>
+
 </div>
 
 <!-- MODAL FICHE AGENT -->
@@ -204,7 +250,7 @@ textarea{resize:vertical;min-height:80px}
 <!-- APP -->
 <div id="app" style="display:none">
   <div id="header">
-    <img src="icon-2.png" onerror="this.style.display='none'" alt="CROUS"/>
+    <div style="width:44px;height:44px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#1e3a5f"/><rect x="20" y="25" width="60" height="8" rx="4" fill="#7eb8f7"/><rect x="20" y="40" width="45" height="8" rx="4" fill="#fff" opacity=".9"/><rect x="20" y="55" width="50" height="8" rx="4" fill="#fff" opacity=".7"/><circle cx="72" cy="72" r="14" fill="#e74c3c"/><line x1="68" y1="72" x2="76" y2="72" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><line x1="72" y1="68" x2="72" y2="76" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg></div>
     <div id="header-text"><h1>CROUS de Lille</h1><p id="header-subtitle">Suivi des Heures</p></div>
     <div id="user-badge" onclick="logout()">🚪 Changer</div>
   </div>
@@ -251,7 +297,16 @@ textarea{resize:vertical;min-height:80px}
 
       <!-- Récap direction (masqué pour agents) -->
       <div id="home-resp-recap" style="display:none">
-        <!-- Grille stats -->
+        <!-- Alerte sauvegarde -->
+      <div id="home-export-alert" style="display:none;background:linear-gradient(135deg,#e67e22,#d35400);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;cursor:pointer;align-items:center;gap:12px" onclick="showPage('export')">
+        <div style="font-size:1.6rem">💾</div>
+        <div>
+          <div style="color:#fff;font-weight:700;font-size:.9rem">Sauvegarde recommandée</div>
+          <div style="color:rgba(255,255,255,.85);font-size:.78rem;margin-top:2px" id="export-alert-msg">Il est temps d'exporter vos données → Appuyez ici</div>
+        </div>
+      </div>
+
+      <!-- Grille stats -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
           <div class="card" style="text-align:center;cursor:pointer;padding:14px" onclick="showPage('validation')">
             <div style="font-size:2rem;font-weight:700;color:var(--danger)" id="recap-pending">—</div>
@@ -614,6 +669,45 @@ textarea{resize:vertical;min-height:80px}
       </div>
     </div>
 
+    <!-- EXPORT -->
+    <div id="page-export" class="page">
+      <div class="card">
+        <h2>💾 Sauvegarde & Export Excel</h2>
+        <p style="font-size:.85rem;color:var(--text-light);margin-bottom:16px">Téléchargez toutes les données en fichier Excel (.xlsx) — toutes les feuilles sont incluses.</p>
+
+        <!-- Boutons export -->
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+          <button class="btn btn-primary" onclick="exporterTout()">
+            📥 Tout exporter (fichier complet)
+          </button>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button class="btn btn-secondary" onclick="exporterFeuille('demandes')" style="width:100%">📋 Demandes</button>
+            <button class="btn btn-secondary" onclick="exporterFeuille('soldes')" style="width:100%">💰 Soldes</button>
+            <button class="btn btn-secondary" onclick="exporterFeuille('annuaire')" style="width:100%">📇 Annuaire</button>
+            <button class="btn btn-secondary" onclick="exporterFeuille('ajustements')" style="width:100%">⚖️ Ajustements</button>
+          </div>
+        </div>
+
+        <!-- Statut -->
+        <div id="export-status" style="display:none;background:var(--bg-input);border-radius:var(--radius-sm);padding:14px;text-align:center">
+          <div class="spinner" style="margin:0 auto 10px"></div>
+          <div style="font-size:.85rem;color:var(--text-light)">Chargement des données…</div>
+        </div>
+
+        <!-- Info -->
+        <div style="background:#e8f4fd;border-radius:var(--radius-sm);padding:12px;font-size:.78rem;color:#1a5276;margin-top:8px">
+          ℹ️ Le fichier Excel contient les feuilles : <strong>Demandes · Soldes · Annuaire · Ajustements · Agents</strong>.<br/>
+          Les données sont extraites en temps réel depuis Google Sheets.
+        </div>
+      </div>
+
+      <!-- Historique exports -->
+      <div class="card">
+        <h2>🕐 Derniers exports</h2>
+        <div id="export-history" style="font-size:.82rem;color:var(--text-muted)">Aucun export effectué.</div>
+      </div>
+    </div>
+
     <!-- AGENTS -->
     <div id="page-agents" class="page">
       <div class="card">
@@ -693,11 +787,15 @@ textarea{resize:vertical;min-height:80px}
       <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
       Annuaire
     </button>
+    <button class="nav-btn" id="nav-export" onclick="showPage('export')" style="display:none">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export
+    </button>
   </nav>
 </div>
 
 <script>
-const GAS='https://script.google.com/macros/s/AKfycbwljCHJTpqov6ZnjuunpBE-AHwThTDczhTpjU9VpopkAFUeFx__6lCrrpeEKvE1UzYpSw/exec';
+const GAS='https://script.google.com/macros/s/AKfycbwXxkUIyOJrmht8IQyTu5oOp9E_Zp17eM9qkQUI_fV-5R4nrVe8FX1nNzWTpX2EuyM0vA/exec';
 
 let CU=null,allAgents=[],allDemandes=[],allValidDem=[],allSoldes=[],agentsCache=[];
 let mesdemFilter='all',validFilter='En attente',tableauFilter='all';
@@ -795,112 +893,88 @@ async function pinValidate(){
 function logout(){CU=null;clearAutoRefresh();initNameScreen();}
 
 // ══ CHANGEMENT DE PIN ════════════════════════════════
-let changePinBuffer='', changePinStep='new', changePinFirst='';
+let changePinBuffer='', changePinFirst='';
+let confirmPinBuffer='';
 
 function showChangePinScreen(mode){
-  changePinBuffer=''; changePinStep='new'; changePinFirst='';
-  document.getElementById('change-pin-screen').style.display='flex';
-  document.getElementById('change-pin-title').textContent= mode==='first'?'🔐 Choisissez votre PIN':'🔐 Changer mon PIN';
-  document.getElementById('change-pin-sub').textContent= mode==='first'?'1ère connexion — choisissez un code à 4 chiffres':'Entrez votre nouveau code à 4 chiffres';
+  changePinBuffer=''; changePinFirst=''; confirmPinBuffer='';
+  document.getElementById('change-pin-title').textContent=mode==='first'?'🔐 Choisissez votre PIN':'🔐 Changer mon PIN';
+  document.getElementById('change-pin-sub').textContent=mode==='first'?'1ère connexion — choisissez un code à 4 chiffres':'Saisissez un nouveau code à 4 chiffres';
   document.getElementById('change-pin-error').textContent='';
+  document.getElementById('cp-panel-new').style.display='flex';
+  document.getElementById('cp-panel-confirm').style.display='none';
+  document.getElementById('cp-panel-success').style.display='none';
+  document.getElementById('change-pin-screen').style.display='block';
   updateChangePinDots();
 }
-function changePinKey(n){if(changePinBuffer.length>=4)return;changePinBuffer+=String(n);updateChangePinDots();if(changePinBuffer.length===4)setTimeout(changePinValidate,150);}
+
+// Panneau 1
+function changePinKey(n){if(changePinBuffer.length>=4)return;changePinBuffer+=String(n);updateChangePinDots();}
 function changePinDel(){changePinBuffer=changePinBuffer.slice(0,-1);updateChangePinDots();}
 function updateChangePinDots(){for(let i=0;i<4;i++)document.getElementById('cp'+i).classList.toggle('filled',i<changePinBuffer.length);}
 
-async function changePinValidate(){
-  // Étape 1 : saisie du nouveau PIN
-  if(changePinStep==='new'){
-    if(changePinBuffer==='1234'){
-      document.getElementById('change-pin-error').textContent='❌ Le PIN 1234 n\'est pas autorisé.';
-      changePinBuffer=''; updateChangePinDots(); return;
-    }
-    if(changePinBuffer.length<4){
-      document.getElementById('change-pin-error').textContent='Saisissez 4 chiffres.';
-      return;
-    }
-    changePinFirst=changePinBuffer;
-    changePinBuffer='';
-    changePinStep='confirm';
-    // Mise à jour visuelle claire
-    document.getElementById('change-pin-title').textContent='🔐 Confirmez votre PIN';
-    document.getElementById('change-pin-sub').textContent='Ressaisissez le même code pour confirmer';
-    document.getElementById('change-pin-error').textContent='';
-    // Flash vert pour indiquer l'étape suivante
-    const dots=document.getElementById('change-pin-dots');
-    dots.style.transition='opacity .2s';
-    dots.style.opacity='0';
-    setTimeout(()=>{dots.style.opacity='1';updateChangePinDots();},200);
-    return;
+function changePinStep1(){
+  if(changePinBuffer.length<4){document.getElementById('change-pin-error').textContent='Saisissez 4 chiffres.';return;}
+  if(changePinBuffer==='1234'){document.getElementById('change-pin-error').textContent='❌ Le PIN 1234 n\'est pas autorisé.';changePinBuffer='';updateChangePinDots();return;}
+  changePinFirst=changePinBuffer;
+  changePinBuffer='';
+  document.getElementById('change-pin-error').textContent='';
+  document.getElementById('confirm-pin-error').textContent='';
+  confirmPinBuffer='';
+  updateConfirmDots();
+  document.getElementById('cp-panel-new').style.display='none';
+  document.getElementById('cp-panel-confirm').style.display='flex';
+}
+
+// Panneau 2
+function confirmPinKey(n){if(confirmPinBuffer.length>=4)return;confirmPinBuffer+=String(n);updateConfirmDots();}
+function confirmPinDel(){confirmPinBuffer=confirmPinBuffer.slice(0,-1);updateConfirmDots();}
+function updateConfirmDots(){for(let i=0;i<4;i++)document.getElementById('cc'+i).classList.toggle('filled',i<confirmPinBuffer.length);}
+
+function retourStep1(){
+  changePinBuffer=''; changePinFirst=''; confirmPinBuffer='';
+  updateChangePinDots();
+  document.getElementById('change-pin-error').textContent='';
+  document.getElementById('cp-panel-confirm').style.display='none';
+  document.getElementById('cp-panel-new').style.display='flex';
+}
+
+async function changePinStep2(){
+  if(confirmPinBuffer.length<4){document.getElementById('confirm-pin-error').textContent='Saisissez 4 chiffres.';return;}
+  if(confirmPinBuffer!==changePinFirst){
+    document.getElementById('confirm-pin-error').textContent='❌ Les codes ne correspondent pas. Recommencez.';
+    confirmPinBuffer=''; updateConfirmDots(); return;
   }
-
-  // Étape 2 : confirmation
-  if(changePinStep==='confirm'){
-    if(changePinBuffer!==changePinFirst){
-      document.getElementById('change-pin-error').textContent='❌ Les codes ne correspondent pas. Recommencez.';
-      changePinBuffer=''; changePinFirst=''; changePinStep='new';
-      document.getElementById('change-pin-title').textContent='🔐 Choisissez votre nouveau PIN';
-      document.getElementById('change-pin-sub').textContent='Saisissez un nouveau code à 4 chiffres';
-      updateChangePinDots(); return;
+  document.getElementById('confirm-pin-error').textContent='⏳ Enregistrement…';
+  try{
+    const res=await gasGet({action:'change_pin',nom:CU.nom,old_pin:CU.pin,new_pin:confirmPinBuffer});
+    if(res.ok){
+      CU.pin=confirmPinBuffer;
+      document.getElementById('success-pin-display').textContent=confirmPinBuffer;
+      document.getElementById('cp-panel-confirm').style.display='none';
+      document.getElementById('cp-panel-success').style.display='flex';
+    } else {
+      document.getElementById('confirm-pin-error').textContent='❌ Erreur : '+(res.msg||'réessayez');
+      confirmPinBuffer=''; updateConfirmDots();
     }
-
-    // Envoi au GAS
-    document.getElementById('change-pin-error').textContent='';
-    document.getElementById('change-pin-sub').textContent='⏳ Enregistrement…';
-    try{
-      const res=await gasGet({action:'change_pin',nom:CU.nom,old_pin:CU.pin,new_pin:changePinBuffer});
-      if(res.ok){
-        CU.pin=changePinBuffer;
-        const newPin=changePinBuffer;
-        // Écran de succès plein écran
-        document.getElementById('change-pin-screen').innerHTML=`
-          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px;text-align:center">
-            <div style="font-size:5rem;margin-bottom:24px;animation:pop .4s ease">✅</div>
-            <div style="font-family:'Segoe UI',sans-serif;font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:12px">
-              Code PIN modifié !
-            </div>
-            <div style="font-size:1rem;color:rgba(255,255,255,.8);margin-bottom:8px">
-              Votre nouveau code PIN a bien été enregistré.
-            </div>
-            <div style="font-size:.85rem;color:rgba(255,255,255,.6);margin-bottom:40px">
-              Il est mis à jour dans Google Sheets automatiquement.
-            </div>
-            <div style="background:rgba(255,255,255,.15);border-radius:12px;padding:16px 32px;margin-bottom:40px">
-              <div style="font-size:.75rem;color:rgba(255,255,255,.6);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Votre nouveau PIN</div>
-              <div style="font-size:2.5rem;font-weight:700;letter-spacing:.5em;color:#fff;font-family:monospace">${newPin}</div>
-            </div>
-            <button id="btn-open-app"
-              style="background:#fff;color:#1e3a5f;border:none;border-radius:12px;padding:14px 40px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit">
-              Accéder à mon compte →
-            </button>
-          </div>`;
-        document.getElementById('change-pin-screen').style.display='flex';
-        document.getElementById('app').style.display='none';
-        // Attache l'événement après le rendu du DOM
-        setTimeout(()=>{
-          const btn=document.getElementById('btn-open-app');
-          if(btn) btn.addEventListener('click',()=>{
-            document.getElementById('change-pin-screen').style.display='none';
-            document.getElementById('app').style.display='flex';
-            initApp();
-          });
-        },100);
-      } else {
-        document.getElementById('change-pin-sub').textContent='Ressaisissez le même code pour confirmer';
-        document.getElementById('change-pin-error').textContent='❌ Erreur : '+(res.msg||'réessayez');
-        changePinBuffer=''; updateChangePinDots();
-      }
-    }catch(e){
-      document.getElementById('change-pin-sub').textContent='Ressaisissez le même code pour confirmer';
-      document.getElementById('change-pin-error').textContent='❌ Erreur réseau, réessayez.';
-      changePinBuffer=''; updateChangePinDots();
-    }
+  }catch(e){
+    document.getElementById('confirm-pin-error').textContent='❌ Erreur réseau, réessayez.';
+    confirmPinBuffer=''; updateConfirmDots();
   }
 }
 
+// Bouton "Accéder à mon compte" — panneau succès
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('btn-enter-app').addEventListener('click',()=>{
+    document.getElementById('change-pin-screen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    initApp();
+  });
+});
+
 // ══ RÉCAP DIRECTION ══════════════════════════════════
 async function loadRespRecap(){
+  checkExportReminder();
   try{
     // Demandes en attente
     const d=await gasGet({action:'get_demandes'});
@@ -980,7 +1054,7 @@ function initApp(){
     document.getElementById('home-agent-recent').style.display='none';
     // Afficher onglets direction
     document.getElementById('home-resp-recap').style.display='block';
-    ['nav-ajustement','nav-annuaire','nav-validation','nav-tableau','nav-agents'].forEach(id=>{
+    ['nav-ajustement','nav-annuaire','nav-export','nav-validation','nav-tableau','nav-agents'].forEach(id=>{
       const el=document.getElementById(id); if(el) el.style.display='flex';
     });
     const sel=document.getElementById('agent-pour-demande');
@@ -1023,6 +1097,7 @@ function showPage(name){
   if(name==='coordonnees') loadCoordonnees();
   if(name==='annuaire')  loadAnnuaire();
   if(name==='ajustement') loadAjustements();
+  if(name==='export')    initExportPage();
 }
 
 // ══ TYPE DEMANDE ═════════════════════════════════════
@@ -1654,6 +1729,187 @@ async function deleteAjustement(id){
     if(res.ok){toast('🗑️ Supprimé');loadAjustements();}
     else{toast('❌ '+(res.msg||'Erreur'));}
   }catch(e){toast('❌ Erreur réseau');}
+}
+
+// ══ ALERTE EXPORT ════════════════════════════════════
+const EXPORT_REMINDER_KEY='crous_last_export_date';
+const EXPORT_REMINDER_DAYS=10;
+
+function checkExportReminder(){
+  const banner=document.getElementById('home-export-alert');
+  if(!banner)return;
+  const lastStr=localStorage.getItem(EXPORT_REMINDER_KEY);
+  const now=new Date();
+  if(!lastStr){
+    // Jamais exporté — alerte immédiate
+    banner.style.display='flex';
+    document.getElementById('export-alert-msg').textContent='Aucun export effectué — pensez à sauvegarder vos données !';
+    return;
+  }
+  const last=new Date(lastStr);
+  const diffDays=Math.floor((now-last)/(1000*60*60*24));
+  if(diffDays>=EXPORT_REMINDER_DAYS){
+    banner.style.display='flex';
+    document.getElementById('export-alert-msg').textContent=
+      'Dernier export il y a '+diffDays+' jours — pensez à sauvegarder → Appuyez ici';
+  } else {
+    banner.style.display='none';
+  }
+}
+
+function marquerExportEffectue(){
+  localStorage.setItem(EXPORT_REMINDER_KEY, new Date().toISOString());
+  checkExportReminder();
+}
+
+// ══ EXPORT EXCEL ═════════════════════════════════════
+let exportHistory=[];
+
+function initExportPage(){
+  renderExportHistory();
+}
+
+function showExportStatus(show){
+  document.getElementById('export-status').style.display=show?'block':'none';
+}
+
+function renderExportHistory(){
+  const el=document.getElementById('export-history');
+  if(!exportHistory.length){el.innerHTML='<span style="color:var(--text-muted)">Aucun export effectué.</span>';return;}
+  el.innerHTML=exportHistory.map(h=>`
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:.82rem">
+      <span>📥 ${h.nom}</span>
+      <span style="color:var(--text-muted)">${h.date}</span>
+    </div>`).join('');
+}
+
+async function exporterTout(){
+  showExportStatus(true);
+  try{
+    const [dDem,dSol,dAnn,dAjust,dAgt]=await Promise.all([
+      gasGet({action:'get_demandes'}),
+      gasGet({action:'get_soldes'}),
+      gasGet({action:'get_all_coordonnees'}),
+      gasGet({action:'get_ajustements'}),
+      gasGet({action:'get_agents'}),
+    ]);
+    const wb=XLSX.utils.book_new();
+    ajouterFeuilleAuto(wb,'Demandes',    dDem.demandes||[]);
+    ajouterFeuilleAuto(wb,'Soldes',      dSol.soldes||[]);
+    ajouterFeuilleAuto(wb,'Annuaire',    dAnn.agents||[]);
+    ajouterFeuilleAuto(wb,'Ajustements', dAjust.ajustements||[]);
+    // Agents sans PIN
+    const agentsSansPIN=(dAgt.agents||[]).map(a=>{const o={...a};delete o.pin;delete o.PIN;return o;});
+    ajouterFeuilleAuto(wb,'Agents', agentsSansPIN);
+    telecharger(wb,'CROUS_Suivi_Heures_'+dateStr()+'.xlsx');
+    logExport('Export complet');
+  }catch(e){toast('❌ Erreur : '+e.message);}
+  showExportStatus(false);
+}
+
+async function exporterFeuille(type){
+  showExportStatus(true);
+  try{
+    const wb=XLSX.utils.book_new();
+    if(type==='demandes'){
+      const d=await gasGet({action:'get_demandes'});
+      ajouterFeuilleAuto(wb,'Demandes',d.demandes||[]);
+      logExport('Demandes');
+    } else if(type==='soldes'){
+      const d=await gasGet({action:'get_soldes'});
+      ajouterFeuilleAuto(wb,'Soldes',d.soldes||[]);
+      logExport('Soldes');
+    } else if(type==='annuaire'){
+      const d=await gasGet({action:'get_all_coordonnees'});
+      ajouterFeuilleAuto(wb,'Annuaire',d.agents||[]);
+      logExport('Annuaire');
+    } else if(type==='ajustements'){
+      const d=await gasGet({action:'get_ajustements'});
+      ajouterFeuilleAuto(wb,'Ajustements',d.ajustements||[]);
+      logExport('Ajustements');
+    }
+    telecharger(wb,'CROUS_'+type+'_'+dateStr()+'.xlsx');
+  }catch(e){toast('❌ Erreur : '+e.message);}
+  showExportStatus(false);
+}
+
+// Crée une feuille automatiquement à partir des clés de l'objet
+function ajouterFeuilleAuto(wb, nom, data){
+  if(!data||!data.length){
+    const ws=XLSX.utils.aoa_to_sheet([['Aucune donnée']]);
+    XLSX.utils.book_append_sheet(wb,ws,nom);
+    return;
+  }
+  // Récupère toutes les clés uniques
+  const keys=[...new Set(data.flatMap(d=>Object.keys(d)))].filter(k=>k!=='_hasCoord');
+  // Labels lisibles
+  const labelMap={
+    'id':'ID','nom':'Nom','nom-usage':'Nom usage','nom-legal':'Nom légal',
+    'prenoms':'Prénom(s)','service':'Service','type':'Type',
+    'date_debut':'Date début','date_fin':'Date fin','duree':'Durée',
+    'observations':'Observations','statut':'Statut',
+    'created_at':'Créé le','updated_at':'Mis à jour',
+    'prises':'Heures prises (min)','recuperees':'Heures récup. (min)',
+    'solde':'Solde (min)','solde_heures':'Solde (heures)',
+    'affectation':'Affectation','naissance':'Date naissance',
+    'nationalite':'Nationalité','nss':'N° Sécu','caisse':'Caisse sécu',
+    'adresse':'Adresse','cp':'Code Postal','ville':'Ville',
+    'tel':'Téléphone','email':'Email','situation':'Situation familiale',
+    'conjoint-profession':'Prof. conjoint','nb-enfants':'Nb enfants',
+    'nb-enfants-17':'Enfants <17 ans','urgence-nom':'Contact urgence',
+    'urgence-tel':'Tél urgence','motif':'Motif','saisi_par':'Saisi par',
+    'date':'Date','role':'Rôle','Nom':'Nom','Service':'Service',
+    'PIN':'PIN','Role':'Rôle','Email Responsable':'Email',
+  };
+  const headers=keys.map(k=>labelMap[k]||k);
+  const minuteKeys=['prises','recuperees','solde'];
+  const rows=data.map(d=>keys.map(k=>{
+    let val=d[k];
+    if(val===undefined||val===null||val==='') return '';
+    // Convertit les dates ISO en format lisible
+    if(typeof val==='string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val)){
+      const date=new Date(val);
+      if(!isNaN(date)){
+        return date.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+      }
+    }
+    // Convertit les minutes en heures lisibles pour les colonnes de solde
+    if(minuteKeys.includes(k)&&val!==''&&!isNaN(parseInt(val))){
+      const mins=parseInt(val);
+      const sign=mins<0?'-':'';
+      const abs=Math.abs(mins);
+      const h=Math.floor(abs/60);
+      const m=abs%60;
+      return sign+h+'h'+(m>0?String(m).padStart(2,'0'):'00');
+    }
+    return String(val);
+  }));
+  const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
+  // Largeurs auto
+  ws['!cols']=keys.map(()=>({wch:22}));
+  // Style entête bleu
+  for(let i=0;i<keys.length;i++){
+    const cell=XLSX.utils.encode_cell({r:0,c:i});
+    if(!ws[cell])continue;
+    ws[cell].s={font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'1E3A5F'}},alignment:{horizontal:'center'}};
+  }
+  XLSX.utils.book_append_sheet(wb,ws,nom);
+}
+
+function telecharger(wb,nom){XLSX.writeFile(wb,nom);}
+
+function dateStr(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function logExport(nom){
+  const now=new Date().toLocaleString('fr-FR');
+  exportHistory.unshift({nom,date:now});
+  if(exportHistory.length>10)exportHistory.pop();
+  renderExportHistory();
+  marquerExportEffectue();
+  toast('✅ Export "'+nom+'" téléchargé !');
 }
 
 // ══ DÉMARRAGE ════════════════════════════════════════
