@@ -1678,7 +1678,7 @@ function renderAjustements(){
     const isCredit=a.type==='credit';
     const sign=isCredit?'+':'-';
     const color=isCredit?'var(--success)':'var(--danger)';
-    const valide=(a.statut==='Validé');
+    const valide=(a.statut==='Validé'||a.statut==='Validé ✅');
     const statutBadge=valide
       ?`<span style="background:#d5f5e3;color:var(--success);font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:10px">✅ Validé</span>`
       :`<span style="background:#fef9e7;color:var(--warning);font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:10px">⏳ En attente</span>`;
