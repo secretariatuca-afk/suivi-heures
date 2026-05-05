@@ -214,6 +214,15 @@ textarea{resize:vertical;min-height:80px}
           <div id="home-pending-count" class="pending-count">0</div>
         </div>
       </div>
+      <!-- Bandeau alerte fiche incomplète (agents) -->
+      <div id="home-coord-banner" onclick="showPage('coordonnees')" style="display:none;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;cursor:pointer;align-items:center;gap:12px">
+        <div style="font-size:1.6rem">⚠️</div>
+        <div>
+          <div style="color:#fff;font-weight:700;font-size:.9rem">Fiche à compléter obligatoirement</div>
+          <div style="color:rgba(255,255,255,.8);font-size:.78rem;margin-top:2px">Appuyez pour remplir vos informations →</div>
+        </div>
+      </div>
+
       <!-- Boutons rapides agents (masqués pour responsables) -->
       <div id="home-agent-buttons" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
         <button class="card" style="text-align:center;cursor:pointer" id="home-btn-1" onclick="showPage('demande')">
@@ -394,6 +403,10 @@ textarea{resize:vertical;min-height:80px}
             <button class="btn btn-secondary btn-sm" onclick="loadCoordonnees()">🔄</button>
             <button class="btn btn-primary btn-sm" id="btn-save-coord" onclick="saveCoordonnees()">💾 Enregistrer</button>
           </div>
+        </div>
+
+        <div id="coord-banner" style="display:none;background:#fff3cd;border:1.5px solid #f39c12;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;font-size:.83rem;color:#856404">
+          ⚠️ <strong>Fiche incomplète</strong> — Veuillez remplir tous les champs obligatoires marqués ci-dessous.
         </div>
 
         <div style="font-size:.78rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;padding-bottom:6px;border-bottom:1.5px solid var(--border)">Informations administratives</div>
@@ -915,6 +928,7 @@ function initApp(){
   const today=new Date().toISOString().slice(0,10);
   ['prises-debut','prises-fin','sup-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
   loadRecentActivity();
+  if(!isResp) loadCoordonnees(); // vérif fiche agent
 }
 
 // ══ NAVIGATION ═══════════════════════════════════════
@@ -1170,11 +1184,27 @@ async function loadRecentActivity(){
 
 // ══ MES COORDONNÉES ══════════════════════════════════
 const COORD_FIELDS=['affectation','nom-usage','nom-legal','prenoms','naissance','nationalite','nss','caisse','adresse','cp','ville','tel','email','situation','conjoint-profession','nb-enfants','nb-enfants-17','urgence-nom','urgence-tel'];
+const COORD_REQUIRED={
+  'affectation':'Affectation',
+  'nom-usage':'Nom d\'usage',
+  'nom-legal':'Nom légal',
+  'prenoms':'Prénom(s)',
+  'naissance':'Date et lieu de naissance',
+  'nationalite':'Nationalité',
+  'nss':'Numéro de Sécurité Sociale',
+  'adresse':'Adresse',
+  'cp':'Code Postal',
+  'ville':'Ville',
+  'tel':'Téléphone',
+  'email':'Email',
+  'situation':'Situation familiale',
+  'urgence-nom':'Contact urgence — Nom',
+  'urgence-tel':'Contact urgence — Téléphone'
+};
 
 async function loadCoordonnees(){
   const el=document.getElementById('page-coordonnees');
   if(!el)return;
-  // Pré-remplir valeurs connues
   const preData={};
   if(CU.service) preData['affectation']=CU.service;
   if(CU.nom)     preData['nom-usage']=CU.nom;
@@ -1186,16 +1216,50 @@ async function loadCoordonnees(){
       COORD_FIELDS.forEach(f=>{const e=document.getElementById('coord-'+f);if(e&&data[f]!==undefined)e.value=data[f];});
     }
   }catch(e){toast('Impossible de charger les coordonnées');}
+  checkCoordBanner();
+}
+
+function checkCoordComplete(){
+  return Object.keys(COORD_REQUIRED).every(f=>{
+    const e=document.getElementById('coord-'+f);
+    return e&&e.value.trim()!=='';
+  });
+}
+
+function checkCoordBanner(){
+  const banner=document.getElementById('coord-banner');
+  if(!banner)return;
+  const complete=checkCoordComplete();
+  banner.style.display=complete?'none':'block';
+  // Aussi afficher le bandeau sur l'accueil
+  const homeBanner=document.getElementById('home-coord-banner');
+  if(homeBanner) homeBanner.style.display=complete?'none':'flex';
 }
 
 async function saveCoordonnees(){
+  // Validation champs obligatoires
+  const missing=Object.entries(COORD_REQUIRED).filter(([f])=>{
+    const e=document.getElementById('coord-'+f);
+    return !e||e.value.trim()==='';
+  }).map(([,label])=>label);
+  if(missing.length){
+    toast('⚠️ Champs manquants : '+missing.slice(0,3).join(', ')+(missing.length>3?' …':''),4000);
+    // Highlight champs manquants
+    Object.keys(COORD_REQUIRED).forEach(f=>{
+      const e=document.getElementById('coord-'+f);
+      if(e) e.style.borderColor=e.value.trim()===''?'var(--danger)':'var(--border)';
+    });
+    return;
+  }
+  // Reset bordures
+  COORD_FIELDS.forEach(f=>{const e=document.getElementById('coord-'+f);if(e)e.style.borderColor='';});
   const btn=document.getElementById('btn-save-coord');
   if(btn){btn.disabled=true;btn.textContent='⏳ Envoi…';}
   const data={action:'save_coordonnees',nom:CU.nom};
   COORD_FIELDS.forEach(f=>{const e=document.getElementById('coord-'+f);if(e)data['coord_'+f]=e.value.trim();});
   try{
     const res=await gasGet(data);
-    if(res.ok){toast('✅ Coordonnées enregistrées');}
+    if(res.ok){toast('✅ Coordonnées enregistrées');checkCoordBanner();}
     else{toast('❌ '+(res.msg||'Erreur'));}
   }catch(e){toast('❌ Erreur réseau');}
   finally{if(btn){btn.disabled=false;btn.textContent='💾 Enregistrer';}}
