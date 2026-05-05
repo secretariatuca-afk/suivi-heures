@@ -104,6 +104,7 @@ textarea{resize:vertical;min-height:80px}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--primary-light);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pop{0%{transform:scale(0);opacity:0}70%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
 .loading-center{display:flex;justify-content:center;padding:32px}
 .tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .tab{padding:6px 12px;border-radius:20px;font-size:.78rem;font-weight:500;cursor:pointer;border:1.5px solid var(--border);background:var(--bg-card);color:var(--text-light);transition:all .15s}
@@ -809,41 +810,92 @@ function changePinDel(){changePinBuffer=changePinBuffer.slice(0,-1);updateChange
 function updateChangePinDots(){for(let i=0;i<4;i++)document.getElementById('cp'+i).classList.toggle('filled',i<changePinBuffer.length);}
 
 async function changePinValidate(){
-  if(changePinBuffer==='1234'){
-    document.getElementById('change-pin-error').textContent='Le PIN 1234 n\'est pas autorisé, choisissez-en un autre.';
-    changePinBuffer=''; updateChangePinDots(); return;
-  }
+  // Étape 1 : saisie du nouveau PIN
   if(changePinStep==='new'){
+    if(changePinBuffer==='1234'){
+      document.getElementById('change-pin-error').textContent='❌ Le PIN 1234 n\'est pas autorisé.';
+      changePinBuffer=''; updateChangePinDots(); return;
+    }
+    if(changePinBuffer.length<4){
+      document.getElementById('change-pin-error').textContent='Saisissez 4 chiffres.';
+      return;
+    }
     changePinFirst=changePinBuffer;
     changePinBuffer='';
     changePinStep='confirm';
-    document.getElementById('change-pin-sub').textContent='Confirmez votre nouveau code PIN';
+    // Mise à jour visuelle claire
+    document.getElementById('change-pin-title').textContent='🔐 Confirmez votre PIN';
+    document.getElementById('change-pin-sub').textContent='Ressaisissez le même code pour confirmer';
     document.getElementById('change-pin-error').textContent='';
-    updateChangePinDots();
+    // Flash vert pour indiquer l'étape suivante
+    const dots=document.getElementById('change-pin-dots');
+    dots.style.transition='opacity .2s';
+    dots.style.opacity='0';
+    setTimeout(()=>{dots.style.opacity='1';updateChangePinDots();},200);
     return;
   }
-  if(changePinBuffer!==changePinFirst){
-    document.getElementById('change-pin-error').textContent='Les codes ne correspondent pas, recommencez.';
-    changePinBuffer=''; changePinFirst=''; changePinStep='new';
-    document.getElementById('change-pin-sub').textContent='Entrez votre nouveau code à 4 chiffres';
-    updateChangePinDots(); return;
-  }
-  try{
-    const res=await gasGet({action:'change_pin',nom:CU.nom,old_pin:CU.pin,new_pin:changePinBuffer});
-    if(res.ok){
-      CU.pin=changePinBuffer;
-      document.getElementById('change-pin-screen').style.display='none';
-      document.getElementById('app').style.display='flex';
-      // Message de confirmation bien visible
-      setTimeout(()=>toast('✅ Votre code PIN a bien été modifié !',4000),300);
-      initApp();
-    } else {
-      document.getElementById('change-pin-error').textContent='Erreur : '+(res.msg||'réessayez');
+
+  // Étape 2 : confirmation
+  if(changePinStep==='confirm'){
+    if(changePinBuffer!==changePinFirst){
+      document.getElementById('change-pin-error').textContent='❌ Les codes ne correspondent pas. Recommencez.';
+      changePinBuffer=''; changePinFirst=''; changePinStep='new';
+      document.getElementById('change-pin-title').textContent='🔐 Choisissez votre nouveau PIN';
+      document.getElementById('change-pin-sub').textContent='Saisissez un nouveau code à 4 chiffres';
+      updateChangePinDots(); return;
+    }
+
+    // Envoi au GAS
+    document.getElementById('change-pin-error').textContent='';
+    document.getElementById('change-pin-sub').textContent='⏳ Enregistrement…';
+    try{
+      const res=await gasGet({action:'change_pin',nom:CU.nom,old_pin:CU.pin,new_pin:changePinBuffer});
+      if(res.ok){
+        CU.pin=changePinBuffer;
+        const newPin=changePinBuffer;
+        // Écran de succès plein écran
+        document.getElementById('change-pin-screen').innerHTML=`
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px;text-align:center">
+            <div style="font-size:5rem;margin-bottom:24px;animation:pop .4s ease">✅</div>
+            <div style="font-family:'Segoe UI',sans-serif;font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:12px">
+              Code PIN modifié !
+            </div>
+            <div style="font-size:1rem;color:rgba(255,255,255,.8);margin-bottom:8px">
+              Votre nouveau code PIN a bien été enregistré.
+            </div>
+            <div style="font-size:.85rem;color:rgba(255,255,255,.6);margin-bottom:40px">
+              Il est mis à jour dans Google Sheets automatiquement.
+            </div>
+            <div style="background:rgba(255,255,255,.15);border-radius:12px;padding:16px 32px;margin-bottom:40px">
+              <div style="font-size:.75rem;color:rgba(255,255,255,.6);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Votre nouveau PIN</div>
+              <div style="font-size:2.5rem;font-weight:700;letter-spacing:.5em;color:#fff;font-family:monospace">${newPin}</div>
+            </div>
+            <button id="btn-open-app"
+              style="background:#fff;color:#1e3a5f;border:none;border-radius:12px;padding:14px 40px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit">
+              Accéder à mon compte →
+            </button>
+          </div>`;
+        document.getElementById('change-pin-screen').style.display='flex';
+        document.getElementById('app').style.display='none';
+        // Attache l'événement après le rendu du DOM
+        setTimeout(()=>{
+          const btn=document.getElementById('btn-open-app');
+          if(btn) btn.addEventListener('click',()=>{
+            document.getElementById('change-pin-screen').style.display='none';
+            document.getElementById('app').style.display='flex';
+            initApp();
+          });
+        },100);
+      } else {
+        document.getElementById('change-pin-sub').textContent='Ressaisissez le même code pour confirmer';
+        document.getElementById('change-pin-error').textContent='❌ Erreur : '+(res.msg||'réessayez');
+        changePinBuffer=''; updateChangePinDots();
+      }
+    }catch(e){
+      document.getElementById('change-pin-sub').textContent='Ressaisissez le même code pour confirmer';
+      document.getElementById('change-pin-error').textContent='❌ Erreur réseau, réessayez.';
       changePinBuffer=''; updateChangePinDots();
     }
-  }catch(e){
-    document.getElementById('change-pin-error').textContent='Erreur réseau';
-    changePinBuffer=''; updateChangePinDots();
   }
 }
 
