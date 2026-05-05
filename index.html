@@ -635,8 +635,9 @@ textarea{resize:vertical;min-height:80px}
             <label>Motif</label>
             <input type="text" id="ajust-motif" placeholder="Ex : Solde initial, correction, report…"/>
           </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-primary" style="flex:1" onclick="saveAjustement()">💾 Enregistrer</button>
+          <div style="display:flex;gap:8px;flex-direction:column">
+            <button class="btn btn-primary" style="flex:1" onclick="saveAjustement(false)" id="btn-save-ajust">💾 Enregistrer</button>
+            <button class="btn btn-success" style="flex:1" onclick="saveAjustement(true)">✅ Enregistrer & Valider</button>
             <button class="btn btn-secondary" onclick="resetAjustForm()">✕ Annuler</button>
           </div>
         </div>
@@ -812,7 +813,7 @@ textarea{resize:vertical;min-height:80px}
 </div>
 
 <script>
-const GAS='https://script.google.com/macros/s/AKfycbzCK5ZCiDNTBY6JHufzUyEmCxIFZlWmVweZh84NnoCC4MvlX9bNlLQ9Izkjw-WwGZmUrA/exec';
+const GAS='https://script.google.com/macros/s/AKfycbzAZG6DsfJl0IxAmIbGhDwLEGPHusb4XpN4tIY8G02PQoyiqDWfKM2ZH0NXgkgR2oI3Bw/exec';
 
 let CU=null,allAgents=[],allDemandes=[],allValidDem=[],allSoldes=[],agentsCache=[];
 let mesdemFilter='all',validFilter='En attente',tableauFilter='all';
@@ -1740,7 +1741,7 @@ function resetAjustForm(){
   selectAjustType('credit');
 }
 
-async function saveAjustement(){
+async function saveAjustement(validerDirectement=false){
   const nom=document.getElementById('ajust-agent').value;
   const h=parseInt(document.getElementById('ajust-h').value)||0;
   const m=parseInt(document.getElementById('ajust-m').value)||0;
@@ -1761,7 +1762,13 @@ async function saveAjustement(){
       saisi_par: CU.nom
     });
     if(res.ok){
-      toast(editId?'✅ Ajustement modifié':'✅ Ajustement enregistré');
+      // Si valider directement
+      if(validerDirectement && res.id){
+        await gasGet({action:'valider_ajustement', id:res.id, nom, service:agent.service||'', type:ajustType, duree});
+        toast('✅ Ajustement enregistré et validé — solde mis à jour !');
+      } else {
+        toast(editId?'✅ Ajustement modifié':'✅ Ajustement enregistré');
+      }
       resetAjustForm();
       loadAjustements();
     } else { toast('❌ '+(res.msg||'Erreur')); }
