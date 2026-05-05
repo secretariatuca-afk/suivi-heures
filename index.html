@@ -162,6 +162,33 @@ textarea{resize:vertical;min-height:80px}
   <button style="margin-top:16px;background:none;border:none;color:rgba(255,255,255,.6);font-size:.82rem;cursor:pointer" onclick="backToNames()">← Changer de nom</button>
 </div>
 
+<!-- ÉCRAN CHANGEMENT PIN -->
+<div id="change-pin-screen" style="display:none;position:fixed;inset:0;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:24px;background:linear-gradient(160deg,var(--primary-dark),var(--primary))">
+  <img src="icon-2.png" onerror="this.style.display='none'" alt="CROUS"
+    style="width:64px;height:64px;background:#fff;border-radius:14px;padding:6px;margin-bottom:16px;object-fit:contain"/>
+  <div class="pin-title" id="change-pin-title">🔐 Choisissez votre nouveau PIN</div>
+  <div class="pin-sub" id="change-pin-sub">Première connexion — saisissez un nouveau code à 4 chiffres</div>
+  <div class="pin-dots" id="change-pin-dots">
+    <div class="pin-dot" id="cp0"></div><div class="pin-dot" id="cp1"></div>
+    <div class="pin-dot" id="cp2"></div><div class="pin-dot" id="cp3"></div>
+  </div>
+  <div class="pin-keypad">
+    <button class="pin-key" onclick="changePinKey(1)">1</button>
+    <button class="pin-key" onclick="changePinKey(2)">2</button>
+    <button class="pin-key" onclick="changePinKey(3)">3</button>
+    <button class="pin-key" onclick="changePinKey(4)">4</button>
+    <button class="pin-key" onclick="changePinKey(5)">5</button>
+    <button class="pin-key" onclick="changePinKey(6)">6</button>
+    <button class="pin-key" onclick="changePinKey(7)">7</button>
+    <button class="pin-key" onclick="changePinKey(8)">8</button>
+    <button class="pin-key" onclick="changePinKey(9)">9</button>
+    <button class="pin-key" onclick="changePinDel()">⌫</button>
+    <button class="pin-key" onclick="changePinKey(0)">0</button>
+    <button class="pin-key ok" onclick="changePinValidate()">✓</button>
+  </div>
+  <div id="change-pin-error" style="color:#ff6b6b;font-size:.82rem;margin-top:12px;min-height:1.2em;text-align:center"></div>
+</div>
+
 <!-- APP -->
 <div id="app" style="display:none">
   <div id="header">
@@ -187,7 +214,8 @@ textarea{resize:vertical;min-height:80px}
           <div id="home-pending-count" class="pending-count">0</div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <!-- Boutons rapides agents (masqués pour responsables) -->
+      <div id="home-agent-buttons" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
         <button class="card" style="text-align:center;cursor:pointer" id="home-btn-1" onclick="showPage('demande')">
           <div style="font-size:1.8rem;margin-bottom:6px">📝</div>
           <div style="font-weight:600;font-size:.88rem" id="home-label-1">Nouvelle demande</div>
@@ -199,7 +227,52 @@ textarea{resize:vertical;min-height:80px}
           <div style="font-size:.75rem;color:var(--text-light);margin-top:2px" id="home-desc-2">Détail & historique</div>
         </button>
       </div>
-      <div class="card">
+
+      <!-- Récap direction (masqué pour agents) -->
+      <div id="home-resp-recap" style="display:none">
+        <!-- Grille stats -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div class="card" style="text-align:center;cursor:pointer;padding:14px" onclick="showPage('validation')">
+            <div style="font-size:2rem;font-weight:700;color:var(--danger)" id="recap-pending">—</div>
+            <div style="font-size:.78rem;color:var(--text-light);margin-top:4px">⏳ En attente</div>
+          </div>
+          <div class="card" style="text-align:center;cursor:pointer;padding:14px" onclick="showPage('tableau')">
+            <div style="font-size:2rem;font-weight:700;color:var(--warning)" id="recap-negatifs">—</div>
+            <div style="font-size:.78rem;color:var(--text-light);margin-top:4px">⚠️ Soldes négatifs</div>
+          </div>
+          <div class="card" style="text-align:center;cursor:pointer;padding:14px" onclick="showPage('ajustement')">
+            <div style="font-size:2rem;font-weight:700;color:var(--primary-light)" id="recap-ajust">—</div>
+            <div style="font-size:.78rem;color:var(--text-light);margin-top:4px">⚖️ Ajustements</div>
+          </div>
+          <div class="card" style="text-align:center;cursor:pointer;padding:14px" onclick="showPage('annuaire')">
+            <div style="font-size:2rem;font-weight:700;color:var(--success)" id="recap-fiches">—</div>
+            <div style="font-size:.78rem;color:var(--text-light);margin-top:4px">📇 Fiches remplies</div>
+          </div>
+        </div>
+        <!-- Accès rapides direction -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+          <button class="card" style="text-align:center;cursor:pointer;padding:12px" onclick="showPage('validation')">
+            <div style="font-size:1.4rem;margin-bottom:4px">✅</div>
+            <div style="font-size:.78rem;font-weight:600">Validation</div>
+          </button>
+          <button class="card" style="text-align:center;cursor:pointer;padding:12px" onclick="showPage('ajustement')">
+            <div style="font-size:1.4rem;margin-bottom:4px">⚖️</div>
+            <div style="font-size:.78rem;font-weight:600">Ajustement</div>
+          </button>
+          <button class="card" style="text-align:center;cursor:pointer;padding:12px" onclick="showPage('tableau')">
+            <div style="font-size:1.4rem;margin-bottom:4px">👥</div>
+            <div style="font-size:.78rem;font-weight:600">Historique</div>
+          </button>
+        </div>
+        <!-- Dernières demandes -->
+        <div class="card">
+          <h2>🕐 Dernières demandes reçues</h2>
+          <div id="home-resp-recent"><div class="loading-center"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Activité récente agents -->
+      <div id="home-agent-recent" class="card">
         <h2>Activité récente</h2>
         <div id="home-recent"><div class="loading-center"><div class="spinner"></div></div></div>
       </div>
@@ -427,6 +500,75 @@ textarea{resize:vertical;min-height:80px}
         </div>
 
         <button class="btn btn-primary" onclick="saveCoordonnees()">💾 Enregistrer mes coordonnées</button>
+        <button class="btn btn-secondary" id="btn-change-pin" style="margin-top:10px;width:100%">🔐 Changer mon code PIN</button>
+      </div>
+    </div>
+
+    <!-- AJUSTEMENT SOLDES (responsables) -->
+    <div id="page-ajustement" class="page">
+      <div class="card">
+        <h2>⚖️ Ajustement des soldes</h2>
+
+        <!-- Formulaire ajout/correction -->
+        <div style="background:var(--bg-input);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px">
+          <div style="font-size:.78rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px" id="ajust-form-title">Nouvelle saisie</div>
+          <input type="hidden" id="ajust-edit-id"/>
+          <div class="form-group">
+            <label>Agent</label>
+            <select id="ajust-agent"><option value="">— Sélectionnez un agent —</option></select>
+          </div>
+          <div class="form-group">
+            <label>Type d'ajustement</label>
+            <div class="type-toggle" style="margin-bottom:0">
+              <div class="type-card selected" id="ajust-type-credit" onclick="selectAjustType('credit')">
+                <div class="type-icon">➕</div>
+                <div class="type-label">Crédit</div>
+                <div class="type-desc">Heures à récupérer</div>
+              </div>
+              <div class="type-card" id="ajust-type-debit" onclick="selectAjustType('debit')">
+                <div class="type-icon">➖</div>
+                <div class="type-label">Débit</div>
+                <div class="type-desc">Heures à rendre</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Durée</label>
+            <div class="duration-row">
+              <select id="ajust-h">
+                <option value="0">0 h</option><option value="1">1 h</option><option value="2">2 h</option>
+                <option value="3">3 h</option><option value="4">4 h</option><option value="5">5 h</option>
+                <option value="6">6 h</option><option value="7">7 h</option><option value="8" selected>8 h</option>
+                <option value="9">9 h</option><option value="10">10 h</option><option value="16">16 h</option>
+                <option value="24">24 h</option><option value="32">32 h</option><option value="40">40 h</option>
+              </select>
+              <select id="ajust-m">
+                <option value="0" selected>00 min</option><option value="15">15 min</option>
+                <option value="30">30 min</option><option value="45">45 min</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Motif</label>
+            <input type="text" id="ajust-motif" placeholder="Ex : Solde initial, correction, report…"/>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" style="flex:1" onclick="saveAjustement()">💾 Enregistrer</button>
+            <button class="btn btn-secondary" onclick="resetAjustForm()">✕ Annuler</button>
+          </div>
+        </div>
+
+        <!-- Historique des ajustements -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:.9rem;font-weight:600;color:var(--primary)">Historique des ajustements</div>
+          <button class="btn btn-secondary btn-sm" onclick="loadAjustements()">🔄</button>
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <select id="ajust-filter-agent" onchange="renderAjustements()">
+            <option value="">— Tous les agents —</option>
+          </select>
+        </div>
+        <div id="ajust-list"><div class="loading-center"><div class="spinner"></div></div></div>
       </div>
     </div>
 
@@ -501,6 +643,10 @@ textarea{resize:vertical;min-height:80px}
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <span>Mes infos</span>
     </button>
+    <button class="nav-btn" id="nav-ajustement" onclick="showPage('ajustement')" style="display:none">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Ajust.
+    </button>
     <button class="nav-btn" id="nav-validation" onclick="showPage('validation')" style="display:none">
       <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
       Validation<span class="notif-badge" id="badge-validation"></span>
@@ -521,7 +667,7 @@ textarea{resize:vertical;min-height:80px}
 </div>
 
 <script>
-const GAS='https://script.google.com/macros/s/AKfycbxCCaizE3vzNVCYXvaFANaqNYFh3_LWVPsmJcvEJ50tNFDY9SyL5NdXl3KltQQ_bkMcVQ/exec';
+const GAS='https://script.google.com/macros/s/AKfycbwljCHJTpqov6ZnjuunpBE-AHwThTDczhTpjU9VpopkAFUeFx__6lCrrpeEKvE1UzYpSw/exec';
 
 let CU=null,allAgents=[],allDemandes=[],allValidDem=[],allSoldes=[],agentsCache=[];
 let mesdemFilter='all',validFilter='En attente',tableauFilter='all';
@@ -600,9 +746,15 @@ async function pinValidate(){
     const res=await gasGet({action:'login',nom:selectedName,pin:pinBuffer});
     if(res.ok){
       CU={nom:res.nom||selectedName,service:res.service,role:res.role,pin:pinBuffer};
-      document.getElementById('pin-screen').style.display='none';
-      document.getElementById('app').style.display='flex';
-      initApp();
+      // Si PIN par défaut 1234 → forcer le changement
+      if(pinBuffer==='1234'){
+        document.getElementById('pin-screen').style.display='none';
+        showChangePinScreen('first');
+      } else {
+        document.getElementById('pin-screen').style.display='none';
+        document.getElementById('app').style.display='flex';
+        initApp();
+      }
     }else{
       document.getElementById('pin-error').textContent='Code incorrect, réessayez.';
       pinBuffer=''; updatePinDots();
@@ -610,7 +762,114 @@ async function pinValidate(){
     }
   }catch(e){document.getElementById('pin-error').textContent='Erreur de connexion.';pinBuffer='';updatePinDots();}
 }
-function logout(){CU=null;initNameScreen();}
+function logout(){CU=null;clearAutoRefresh();initNameScreen();}
+
+// ══ CHANGEMENT DE PIN ════════════════════════════════
+let changePinBuffer='', changePinStep='new', changePinFirst='';
+
+function showChangePinScreen(mode){
+  changePinBuffer=''; changePinStep='new'; changePinFirst='';
+  document.getElementById('change-pin-screen').style.display='flex';
+  document.getElementById('change-pin-title').textContent= mode==='first'?'🔐 Choisissez votre PIN':'🔐 Changer mon PIN';
+  document.getElementById('change-pin-sub').textContent= mode==='first'?'1ère connexion — choisissez un code à 4 chiffres':'Entrez votre nouveau code à 4 chiffres';
+  document.getElementById('change-pin-error').textContent='';
+  updateChangePinDots();
+}
+function changePinKey(n){if(changePinBuffer.length>=4)return;changePinBuffer+=String(n);updateChangePinDots();if(changePinBuffer.length===4)setTimeout(changePinValidate,150);}
+function changePinDel(){changePinBuffer=changePinBuffer.slice(0,-1);updateChangePinDots();}
+function updateChangePinDots(){for(let i=0;i<4;i++)document.getElementById('cp'+i).classList.toggle('filled',i<changePinBuffer.length);}
+
+async function changePinValidate(){
+  if(changePinBuffer==='1234'){
+    document.getElementById('change-pin-error').textContent='Le PIN 1234 n\'est pas autorisé, choisissez-en un autre.';
+    changePinBuffer=''; updateChangePinDots(); return;
+  }
+  if(changePinStep==='new'){
+    changePinFirst=changePinBuffer;
+    changePinBuffer='';
+    changePinStep='confirm';
+    document.getElementById('change-pin-sub').textContent='Confirmez votre nouveau code PIN';
+    document.getElementById('change-pin-error').textContent='';
+    updateChangePinDots();
+    return;
+  }
+  // Étape confirmation
+  if(changePinBuffer!==changePinFirst){
+    document.getElementById('change-pin-error').textContent='Les codes ne correspondent pas, recommencez.';
+    changePinBuffer=''; changePinFirst=''; changePinStep='new';
+    document.getElementById('change-pin-sub').textContent='Entrez votre nouveau code à 4 chiffres';
+    updateChangePinDots(); return;
+  }
+  // Sauvegarde
+  try{
+    const res=await gasGet({action:'change_pin',nom:CU.nom,old_pin:CU.pin,new_pin:changePinBuffer});
+    if(res.ok){
+      CU.pin=changePinBuffer;
+      toast('✅ PIN mis à jour !');
+      document.getElementById('change-pin-screen').style.display='none';
+      document.getElementById('app').style.display='flex';
+      initApp();
+    } else {
+      document.getElementById('change-pin-error').textContent='Erreur : '+(res.msg||'réessayez');
+      changePinBuffer=''; updateChangePinDots();
+    }
+  }catch(e){
+    document.getElementById('change-pin-error').textContent='Erreur réseau';
+    changePinBuffer=''; updateChangePinDots();
+  }
+}
+
+// ══ RÉCAP DIRECTION ══════════════════════════════════
+async function loadRespRecap(){
+  try{
+    // Demandes en attente
+    const d=await gasGet({action:'get_demandes'});
+    const demandes=d.demandes||[];
+    const pending=demandes.filter(x=>x.statut==='En attente').length;
+    document.getElementById('recap-pending').textContent=pending;
+    updateBadges(pending);
+    // Dernières demandes
+    const el=document.getElementById('home-resp-recent');
+    const last=demandes.slice(0,5);
+    if(!last.length){el.innerHTML='<p style="color:var(--text-muted);font-size:.85rem">Aucune demande</p>';}
+    else el.innerHTML=last.map(d=>demandeCard(d,true)).join('');
+  }catch(e){}
+  try{
+    // Soldes négatifs
+    const s=await gasGet({action:'get_soldes'});
+    const negatifs=(s.soldes||[]).filter(x=>(parseInt(x.solde)||0)<0).length;
+    document.getElementById('recap-negatifs').textContent=negatifs;
+  }catch(e){}
+  try{
+    // Ajustements
+    const a=await gasGet({action:'get_ajustements'});
+    document.getElementById('recap-ajust').textContent=(a.ajustements||[]).length;
+  }catch(e){}
+  try{
+    // Fiches annuaire remplies
+    const f=await gasGet({action:'get_all_coordonnees'});
+    document.getElementById('recap-fiches').textContent=(f.agents||[]).length;
+  }catch(e){}
+}
+
+// ══ AUTO-REFRESH (responsables) ══════════════════════
+let autoRefreshInterval=null;
+function startAutoRefresh(){
+  clearAutoRefresh();
+  autoRefreshInterval=setInterval(()=>{
+    loadPendingCount();
+    loadRespRecap();
+    const activePage=document.querySelector('.page.active');
+    if(activePage){
+      const id=activePage.id;
+      if(id==='page-validation') loadValidation();
+      if(id==='page-tableau')    loadTableau();
+    }
+  }, 60000);
+}
+function clearAutoRefresh(){
+  if(autoRefreshInterval){clearInterval(autoRefreshInterval);autoRefreshInterval=null;}
+}
 
 // ══ INIT APP ═════════════════════════════════════════
 function initApp(){
@@ -621,22 +880,20 @@ function initApp(){
   document.getElementById('user-badge').textContent='🚪 '+CU.nom.split(' ')[0];
 
   if(isResp){
+    // Masquer éléments agents
     document.getElementById('nav-mesdem').style.display='none';
     document.getElementById('nav-solde').style.display='none';
     document.getElementById('nav-coordonnees').style.display='none';
+    document.getElementById('nav-demande').style.display='none';
+    document.getElementById('home-agent-buttons').style.display='none';
+    document.getElementById('home-agent-recent').style.display='none';
+    // Afficher éléments direction
+    document.getElementById('home-resp-recap').style.display='block';
+    document.getElementById('nav-ajustement').style.display='flex';
     document.getElementById('nav-annuaire').style.display='flex';
     document.getElementById('nav-validation').style.display='flex';
     document.getElementById('nav-tableau').style.display='flex';
     document.getElementById('nav-agents').style.display='flex';
-    document.getElementById('nav-demande-label').textContent='Dem. agent';
-    document.getElementById('demande-title').textContent='Demande pour un agent';
-    document.getElementById('agent-selector').style.display='block';
-    document.getElementById('home-btn-1').onclick=()=>showPage('demande');
-    document.getElementById('home-btn-2').onclick=()=>showPage('validation');
-    document.getElementById('home-icon-2').textContent='✅';
-    document.getElementById('home-label-2').textContent='Validation';
-    document.getElementById('home-desc-2').textContent='Toutes les demandes';
-    // Remplir sélecteur agents pour demande
     const sel=document.getElementById('agent-pour-demande');
     sel.innerHTML='<option value="">— Sélectionnez —</option>';
     [...allAgents].filter(a=>a.role!=='responsable').sort((a,b)=>a.nom.localeCompare(b.nom,'fr')).forEach(ag=>{
@@ -646,8 +903,14 @@ function initApp(){
       sel.appendChild(o);
     });
     loadPendingCount();
-    setInterval(loadPendingCount,120000);
+    loadRespRecap();
+    startAutoRefresh();
+    fillAjustAgentSelect();
   }
+
+  // Bouton changer PIN dans Mes infos
+  const btnPin=document.getElementById('btn-change-pin');
+  if(btnPin) btnPin.onclick=()=>showChangePinScreen('change');
 
   const today=new Date().toISOString().slice(0,10);
   ['prises-debut','prises-fin','sup-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
@@ -667,6 +930,7 @@ function showPage(name){
   if(name==='agents')    loadAgents();
   if(name==='coordonnees') loadCoordonnees();
   if(name==='annuaire')  loadAnnuaire();
+  if(name==='ajustement') loadAjustements();
 }
 
 // ══ TYPE DEMANDE ═════════════════════════════════════
@@ -1014,6 +1278,123 @@ function showAgentCoord(jsonStr){
   detail.innerHTML=html;
   list.style.display='none';
   detail.style.display='block';
+}
+
+// ══ AJUSTEMENT SOLDES ════════════════════════════════
+let allAjustements=[], ajustType='credit';
+
+function selectAjustType(t){
+  ajustType=t;
+  document.getElementById('ajust-type-credit').classList.toggle('selected',t==='credit');
+  document.getElementById('ajust-type-debit').classList.toggle('selected',t==='debit');
+}
+
+function fillAjustAgentSelect(){
+  const sel=document.getElementById('ajust-agent');
+  const selF=document.getElementById('ajust-filter-agent');
+  const agents=[...allAgents].filter(a=>a.role!=='responsable').sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
+  const opts='<option value="">— Sélectionnez —</option>'+agents.map(a=>`<option value="${esc(a.nom)}">${esc(a.nom)} — ${esc(a.service||'')}</option>`).join('');
+  sel.innerHTML=opts;
+  selF.innerHTML='<option value="">— Tous les agents —</option>'+agents.map(a=>`<option value="${esc(a.nom)}">${esc(a.nom)}</option>`).join('');
+}
+
+async function loadAjustements(){
+  fillAjustAgentSelect();
+  document.getElementById('ajust-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+  try{
+    const d=await gasGet({action:'get_ajustements'});
+    allAjustements=d.ajustements||[];
+    renderAjustements();
+  }catch(e){document.getElementById('ajust-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>';}
+}
+
+function renderAjustements(){
+  const filterAgent=document.getElementById('ajust-filter-agent').value;
+  let list=allAjustements;
+  if(filterAgent) list=list.filter(a=>a.nom===filterAgent);
+  const el=document.getElementById('ajust-list');
+  if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun ajustement</p>';return;}
+  el.innerHTML=list.map(a=>{
+    const isCredit=a.type==='credit';
+    const sign=isCredit?'+':'-';
+    const color=isCredit?'var(--success)':'var(--danger)';
+    return `<div class="demande-item ${isCredit?'validee':'refusee'}" style="border-left-color:${color}">
+      <div class="demande-header">
+        <div>
+          <div class="demande-title">${esc(a.nom)} <span style="font-weight:400;color:var(--text-light)">— ${esc(a.service||'')}</span></div>
+          <div class="demande-meta">${esc(a.motif||'')} · ${esc(a.date||'')}</div>
+          <div class="demande-meta" style="color:var(--text-muted);font-size:.72rem">Saisi par ${esc(a.saisi_par||'')}</div>
+        </div>
+        <div style="font-size:1.1rem;font-weight:700;color:${color}">${sign}${esc(a.duree||'')}</div>
+      </div>
+      <div class="demande-actions">
+        <button class="btn btn-secondary btn-sm" onclick="editAjustement(${JSON.stringify(JSON.stringify(a))})">✏️ Modifier</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteAjustement('${esc(a.id)}')">🗑️ Supprimer</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editAjustement(jsonStr){
+  const a=JSON.parse(jsonStr);
+  document.getElementById('ajust-edit-id').value=a.id||'';
+  document.getElementById('ajust-agent').value=a.nom||'';
+  selectAjustType(a.type||'credit');
+  const parts=(a.duree||'0h').replace('h',' ').replace('min','').trim().split(/\s+/);
+  document.getElementById('ajust-h').value=parseInt(parts[0])||0;
+  document.getElementById('ajust-m').value=parseInt(parts[1])||0;
+  document.getElementById('ajust-motif').value=a.motif||'';
+  document.getElementById('ajust-form-title').textContent='✏️ Modifier la saisie';
+  document.getElementById('ajust-agent').disabled=true;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function resetAjustForm(){
+  document.getElementById('ajust-edit-id').value='';
+  document.getElementById('ajust-agent').value='';
+  document.getElementById('ajust-agent').disabled=false;
+  document.getElementById('ajust-h').value='8';
+  document.getElementById('ajust-m').value='0';
+  document.getElementById('ajust-motif').value='';
+  document.getElementById('ajust-form-title').textContent='Nouvelle saisie';
+  selectAjustType('credit');
+}
+
+async function saveAjustement(){
+  const nom=document.getElementById('ajust-agent').value;
+  const h=parseInt(document.getElementById('ajust-h').value)||0;
+  const m=parseInt(document.getElementById('ajust-m').value)||0;
+  const motif=document.getElementById('ajust-motif').value.trim();
+  const editId=document.getElementById('ajust-edit-id').value;
+  if(!nom){toast('Sélectionnez un agent');return;}
+  if(h===0&&m===0){toast('Saisissez une durée');return;}
+  if(!motif){toast('Indiquez un motif');return;}
+  const duree=h+'h'+(m>0?' '+m+'min':'');
+  const agent=allAgents.find(a=>a.nom===nom)||{};
+  try{
+    const res=await gasGet({
+      action: editId?'update_ajustement':'add_ajustement',
+      id: editId||'',
+      nom, service: agent.service||'',
+      type: ajustType,
+      duree, motif,
+      saisi_par: CU.nom
+    });
+    if(res.ok){
+      toast(editId?'✅ Ajustement modifié':'✅ Ajustement enregistré');
+      resetAjustForm();
+      loadAjustements();
+    } else { toast('❌ '+(res.msg||'Erreur')); }
+  }catch(e){toast('❌ Erreur réseau');}
+}
+
+async function deleteAjustement(id){
+  if(!confirm('Supprimer cet ajustement ?')) return;
+  try{
+    const res=await gasGet({action:'delete_ajustement',id});
+    if(res.ok){toast('🗑️ Supprimé');loadAjustements();}
+    else{toast('❌ '+(res.msg||'Erreur'));}
+  }catch(e){toast('❌ Erreur réseau');}
 }
 
 // ══ DÉMARRAGE ════════════════════════════════════════
