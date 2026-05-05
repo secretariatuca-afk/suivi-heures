@@ -25,7 +25,8 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none}
 input,select,textarea{font-family:inherit;font-size:1rem}
 #app{display:flex;flex-direction:column;min-height:100%}
 #header{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
-#header img{width:44px;height:44px;border-radius:8px;background:#fff;padding:2px;object-fit:contain}
+#header img,#header svg,#header>div:first-child>div{width:44px;height:44px;border-radius:8px;background:#fff;padding:2px;flex-shrink:0}
+#header svg{display:block}
 #header-text h1{font-size:.95rem;font-weight:700;line-height:1.2}
 #header-text p{font-size:.75rem;opacity:.85}
 #user-badge{margin-left:auto;background:rgba(255,255,255,.15);border-radius:20px;padding:4px 10px;font-size:.78rem;cursor:pointer;white-space:nowrap}
@@ -85,7 +86,8 @@ textarea{resize:vertical;min-height:80px}
 /* Écrans auth */
 #pin-screen,#name-screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:24px;background:linear-gradient(160deg,var(--primary-dark),var(--primary))}
 .auth-card{background:#fff;border-radius:var(--radius);padding:24px;width:100%;max-width:380px;box-shadow:0 4px 20px rgba(0,0,0,.15)}
-.auth-logo{width:72px;height:72px;border-radius:16px;padding:6px;margin:0 auto 12px;display:block;object-fit:contain;background:var(--primary)}
+.auth-logo{width:80px;height:80px;border-radius:18px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden}
+.auth-logo svg{width:80px;height:80px;border-radius:18px;display:block}
 .auth-title{color:var(--primary);font-size:1rem;font-weight:700;margin-bottom:16px;text-align:center}
 .pin-title{color:#fff;font-size:1.1rem;font-weight:700;margin-bottom:4px;text-align:center}
 .pin-sub{color:rgba(255,255,255,.7);font-size:.82rem;margin-bottom:24px;text-align:center}
@@ -711,8 +713,28 @@ textarea{resize:vertical;min-height:80px}
     <!-- AGENTS -->
     <div id="page-agents" class="page">
       <div class="card">
-        <h2>Ajouter un agent</h2>
-        <div class="form-group"><label>Nom complet</label><input type="text" id="new-nom" placeholder="Prénom Nom"/></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h2>👥 Agents (<span id="agents-count">—</span>)</h2>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-secondary btn-sm" onclick="loadAgents()">🔄</button>
+            <button class="btn btn-primary btn-sm" onclick="toggleAddAgentForm()" id="btn-toggle-add">➕ Ajouter</button>
+          </div>
+        </div>
+
+        <!-- Barre de recherche -->
+        <div style="position:relative;margin-bottom:12px">
+          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:1rem">🔍</span>
+          <input type="text" id="agent-search" placeholder="Rechercher un agent par nom…" oninput="filterAgents()" style="padding-left:34px;width:100%"/>
+        </div>
+
+        <!-- Liste agents -->
+        <div id="agents-list"><div class="loading-center"><div class="spinner"></div></div></div>
+      </div>
+
+      <!-- Formulaire ajout (masqué par défaut) -->
+      <div class="card" id="add-agent-form" style="display:none">
+        <h2>➕ Ajouter un agent</h2>
+        <div class="form-group"><label>Nom complet</label><input type="text" id="new-nom" placeholder="Prénom NOM"/></div>
         <div class="form-group"><label>Service</label>
           <select id="new-service">
             <option value="">— Sélectionnez —</option>
@@ -732,15 +754,10 @@ textarea{resize:vertical;min-height:80px}
         <div class="form-group" id="email-grp" style="display:none">
           <label>Email</label><input type="email" id="new-email" placeholder="prenom.nom@crous-lille.fr"/>
         </div>
-        <button class="btn btn-primary" onclick="addAgent()">➕ Ajouter l'agent</button>
-      </div>
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <h2>Agents (<span id="agents-count">—</span>)</h2>
-          <button class="btn btn-secondary btn-sm" onclick="loadAgents()">🔄</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" style="flex:1" onclick="addAgent()">💾 Enregistrer</button>
+          <button class="btn btn-secondary" onclick="toggleAddAgentForm()">✕ Annuler</button>
         </div>
-        <input type="text" id="agent-search" placeholder="🔍 Rechercher…" oninput="filterAgents()" style="margin-bottom:10px;width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.9rem"/>
-        <div id="agents-list"><div class="loading-center"><div class="spinner"></div></div></div>
       </div>
     </div>
 
@@ -1340,6 +1357,14 @@ async function supprimerAgent(nom){
     else toast('Erreur : '+(res.msg||''));
   }catch(e){toast('Erreur réseau');}
 }
+function toggleAddAgentForm(){
+  const form=document.getElementById('add-agent-form');
+  const btn=document.getElementById('btn-toggle-add');
+  const visible=form.style.display!=='none';
+  form.style.display=visible?'none':'block';
+  btn.textContent=visible?'➕ Ajouter':'✕ Fermer';
+}
+
 async function addAgent(){
   const nom=document.getElementById('new-nom').value.trim();
   const service=document.getElementById('new-service').value;
@@ -1646,31 +1671,52 @@ function renderAjustements(){
   const filterAgent=document.getElementById('ajust-filter-agent').value;
   let list=allAjustements;
   if(filterAgent) list=list.filter(a=>a.nom===filterAgent);
+  window._ajustData=list;
   const el=document.getElementById('ajust-list');
   if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun ajustement</p>';return;}
-  el.innerHTML=list.map(a=>{
+  el.innerHTML=list.map((a,i)=>{
     const isCredit=a.type==='credit';
     const sign=isCredit?'+':'-';
     const color=isCredit?'var(--success)':'var(--danger)';
-    return `<div class="demande-item ${isCredit?'validee':'refusee'}" style="border-left-color:${color}">
+    const valide=(a.statut==='Validé');
+    const statutBadge=valide
+      ?`<span style="background:#d5f5e3;color:var(--success);font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:10px">✅ Validé</span>`
+      :`<span style="background:#fef9e7;color:var(--warning);font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:10px">⏳ En attente</span>`;
+    return `<div class="demande-item ${valide?'validee':''}" style="border-left-color:${valide?'var(--success)':color}">
       <div class="demande-header">
-        <div>
+        <div style="flex:1">
           <div class="demande-title">${esc(a.nom)} <span style="font-weight:400;color:var(--text-light)">— ${esc(a.service||'')}</span></div>
           <div class="demande-meta">${esc(a.motif||'')} · ${esc(a.date||'')}</div>
           <div class="demande-meta" style="color:var(--text-muted);font-size:.72rem">Saisi par ${esc(a.saisi_par||'')}</div>
+          <div style="margin-top:4px">${statutBadge}</div>
         </div>
-        <div style="font-size:1.1rem;font-weight:700;color:${color}">${sign}${esc(a.duree||'')}</div>
+        <div style="font-size:1.1rem;font-weight:700;color:${color};flex-shrink:0">${sign}${esc(a.duree||'')}</div>
       </div>
       <div class="demande-actions">
-        <button class="btn btn-secondary btn-sm" onclick="editAjustement(${JSON.stringify(JSON.stringify(a))})">✏️ Modifier</button>
+        ${!valide?`<button class="btn btn-success btn-sm" onclick="validerAjustement('${esc(a.id)}',${i})">✅ Valider</button>`:''}
+        <button class="btn btn-secondary btn-sm" onclick="editAjustementIdx(${i})">✏️ Modifier</button>
         <button class="btn btn-danger btn-sm" onclick="deleteAjustement('${esc(a.id)}')">🗑️ Supprimer</button>
       </div>
     </div>`;
   }).join('');
 }
 
-function editAjustement(jsonStr){
-  const a=JSON.parse(jsonStr);
+function editAjustementIdx(i){ editAjustement(window._ajustData[i]); }
+
+async function validerAjustement(id, i){
+  const a=window._ajustData[i];
+  if(!confirm('Valider cet ajustement pour '+a.nom+' ?\nLe solde sera mis à jour automatiquement.')) return;
+  try{
+    const res=await gasGet({action:'valider_ajustement', id, nom:a.nom, service:a.service||'', type:a.type, duree:a.duree});
+    if(res.ok){
+      toast('✅ Ajustement validé — solde mis à jour !');
+      loadAjustements();
+    } else { toast('❌ '+(res.msg||'Erreur')); }
+  }catch(e){ toast('❌ Erreur réseau'); }
+}
+
+function editAjustement(a){
+  if(typeof a==='string') a=JSON.parse(a);
   document.getElementById('ajust-edit-id').value=a.id||'';
   document.getElementById('ajust-agent').value=a.nom||'';
   selectAjustType(a.type||'credit');
