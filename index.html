@@ -189,6 +189,17 @@ textarea{resize:vertical;min-height:80px}
   <div id="change-pin-error" style="color:#ff6b6b;font-size:.82rem;margin-top:12px;min-height:1.2em;text-align:center"></div>
 </div>
 
+<!-- MODAL FICHE AGENT -->
+<div id="modal-agent" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:#fff;border-radius:var(--radius);padding:20px;width:100%;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-weight:700;color:var(--primary)">👤 Fiche agent</div>
+      <button onclick="document.getElementById('modal-agent').style.display='none'" style="background:none;font-size:1.2rem;color:var(--text-muted)">✕</button>
+    </div>
+    <div id="modal-agent-content"></div>
+  </div>
+</div>
+
 <!-- APP -->
 <div id="app" style="display:none">
   <div id="header">
@@ -440,7 +451,8 @@ textarea{resize:vertical;min-height:80px}
 
         <div class="form-group">
           <label>Numéro de Sécurité Sociale (15 chiffres)</label>
-          <input type="text" id="coord-nss" maxlength="17" placeholder="_ _ _ _ _ _ _ _ _ _ _ _ _ _ _" oninput="formatNSS(this)"/>
+          <input type="text" id="coord-nss" maxlength="21" placeholder="1 23 45 67 891 234 56" oninput="formatNSS(this)"
+            style="font-size:1.1rem;font-weight:600;letter-spacing:.12em;font-family:monospace;width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-input)"/>
         </div>
         <div class="form-group">
           <label>Caisse de sécurité sociale</label>
@@ -591,6 +603,10 @@ textarea{resize:vertical;min-height:80px}
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <h2>📇 Annuaire des agents</h2>
           <button class="btn btn-secondary btn-sm" onclick="loadAnnuaire()">🔄</button>
+        </div>
+        <div style="position:relative;margin-bottom:12px">
+          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:1rem">🔍</span>
+          <input type="text" id="annuaire-search" placeholder="Rechercher un agent…" oninput="filterAnnuaire()" style="padding-left:34px;width:100%"/>
         </div>
         <div id="annuaire-list"></div>
         <div id="annuaire-detail" style="display:none"></div>
@@ -806,21 +822,20 @@ async function changePinValidate(){
     updateChangePinDots();
     return;
   }
-  // Étape confirmation
   if(changePinBuffer!==changePinFirst){
     document.getElementById('change-pin-error').textContent='Les codes ne correspondent pas, recommencez.';
     changePinBuffer=''; changePinFirst=''; changePinStep='new';
     document.getElementById('change-pin-sub').textContent='Entrez votre nouveau code à 4 chiffres';
     updateChangePinDots(); return;
   }
-  // Sauvegarde
   try{
     const res=await gasGet({action:'change_pin',nom:CU.nom,old_pin:CU.pin,new_pin:changePinBuffer});
     if(res.ok){
       CU.pin=changePinBuffer;
-      toast('✅ PIN mis à jour !');
       document.getElementById('change-pin-screen').style.display='none';
       document.getElementById('app').style.display='flex';
+      // Message de confirmation bien visible
+      setTimeout(()=>toast('✅ Votre code PIN a bien été modifié !',4000),300);
       initApp();
     } else {
       document.getElementById('change-pin-error').textContent='Erreur : '+(res.msg||'réessayez');
@@ -892,21 +907,30 @@ function initApp(){
   document.getElementById('header-subtitle').textContent=CU.service||'Suivi des Heures';
   document.getElementById('user-badge').textContent='🚪 '+CU.nom.split(' ')[0];
 
+  // Masquer TOUS les onglets direction par défaut
+  ['nav-ajustement','nav-validation','nav-tableau','nav-agents','nav-annuaire'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display='none';
+  });
+  // Afficher onglets agents par défaut
+  ['nav-demande','nav-mesdem','nav-solde','nav-coordonnees'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display='flex';
+  });
+  document.getElementById('home-agent-buttons').style.display='grid';
+  document.getElementById('home-agent-recent').style.display='block';
+  document.getElementById('home-resp-recap').style.display='none';
+
   if(isResp){
-    // Masquer éléments agents
-    document.getElementById('nav-mesdem').style.display='none';
-    document.getElementById('nav-solde').style.display='none';
-    document.getElementById('nav-coordonnees').style.display='none';
-    document.getElementById('nav-demande').style.display='none';
+    // Masquer onglets agents
+    ['nav-demande','nav-mesdem','nav-solde','nav-coordonnees'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.style.display='none';
+    });
     document.getElementById('home-agent-buttons').style.display='none';
     document.getElementById('home-agent-recent').style.display='none';
-    // Afficher éléments direction
+    // Afficher onglets direction
     document.getElementById('home-resp-recap').style.display='block';
-    document.getElementById('nav-ajustement').style.display='flex';
-    document.getElementById('nav-annuaire').style.display='flex';
-    document.getElementById('nav-validation').style.display='flex';
-    document.getElementById('nav-tableau').style.display='flex';
-    document.getElementById('nav-agents').style.display='flex';
+    ['nav-ajustement','nav-annuaire','nav-validation','nav-tableau','nav-agents'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.style.display='flex';
+    });
     const sel=document.getElementById('agent-pour-demande');
     sel.innerHTML='<option value="">— Sélectionnez —</option>';
     [...allAgents].filter(a=>a.role!=='responsable').sort((a,b)=>a.nom.localeCompare(b.nom,'fr')).forEach(ag=>{
@@ -925,10 +949,12 @@ function initApp(){
   const btnPin=document.getElementById('btn-change-pin');
   if(btnPin) btnPin.onclick=()=>showChangePinScreen('change');
 
+  // Toujours démarrer sur l'accueil
+  showPage('home');
+
   const today=new Date().toISOString().slice(0,10);
   ['prises-debut','prises-fin','sup-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
-  loadRecentActivity();
-  if(!isResp) loadCoordonnees(); // vérif fiche agent
+  if(!isResp){loadRecentActivity();loadCoordonnees();}
 }
 
 // ══ NAVIGATION ═══════════════════════════════════════
@@ -1126,11 +1152,66 @@ async function loadAgents(){
   try{const d=await gasGet({action:'get_agents'});agentsCache=d.agents||[];document.getElementById('agents-count').textContent=agentsCache.length;renderAgents(agentsCache);}
   catch(e){document.getElementById('agents-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>';}
 }
-function filterAgents(){const q=document.getElementById('agent-search').value.toLowerCase();renderAgents(agentsCache.filter(a=>a.nom.toLowerCase().includes(q)||(a.service||'').toLowerCase().includes(q)));}
+function filterAgents(){const q=document.getElementById('agent-search').value.toLowerCase();renderAgents(agentsCache.filter(a=>(a.nom||'').toLowerCase().includes(q)||(a.service||'').toLowerCase().includes(q)));}
+
 function renderAgents(list){
   const el=document.getElementById('agents-list');
   if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun agent</p>';return;}
-  el.innerHTML=list.map(a=>`<div class="agent-row"><div class="agent-avatar">${esc(a.nom).charAt(0).toUpperCase()}</div><div class="agent-info"><div class="agent-name">${esc(a.nom)}</div><div class="agent-service">${esc(a.service||'')} · ${a.role==='responsable'?'Responsable':'Agent'}</div></div></div>`).join('');
+  window._agentsData=list;
+  el.innerHTML=list.map((a,i)=>`
+    <div class="agent-row" style="flex-wrap:wrap;gap:6px">
+      <div class="agent-avatar">${esc(a.nom||'?').charAt(0).toUpperCase()}</div>
+      <div class="agent-info" style="flex:1">
+        <div class="agent-name">${esc(a.nom||'')}</div>
+        <div class="agent-service">${esc(a.service||'')} · ${a.role==='responsable'?'Responsable':'Agent'}</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn btn-secondary btn-sm" onclick="voirFicheAgentIdx(${i})">👁 Fiche</button>
+        <button class="btn btn-danger btn-sm" onclick="supprimerAgent('${esc(a.nom)}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+function voirFicheAgentIdx(i){
+  voirFicheAgent(window._agentsData[i]);
+}
+
+function voirFicheAgent(a){
+  if(typeof a==='string') a=JSON.parse(a);
+  const pin=a.pin||a.PIN||a['PIN']||'—';
+  const service=a.service||a['Service']||'';
+  const role=(a.role||a['Role']||'agent')==='responsable'?'Responsable':'Agent';
+  const email=a.email||a['Email Responsable']||'';
+  document.getElementById('modal-agent-content').innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div class="agent-avatar" style="width:52px;height:52px;font-size:1.4rem;flex-shrink:0">${(a.nom||'?').charAt(0).toUpperCase()}</div>
+      <div>
+        <div style="font-weight:700;font-size:1rem;color:var(--primary)">${esc(a.nom||'')}</div>
+        <div style="font-size:.8rem;color:var(--text-light)">${esc(service)} · ${role}</div>
+      </div>
+    </div>
+    <div style="background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;text-align:center">
+      <div style="font-size:.72rem;color:rgba(255,255,255,.7);margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase">Code PIN</div>
+      <div style="font-size:2rem;font-weight:700;letter-spacing:.5em;color:#fff;font-family:monospace">${esc(pin)}</div>
+    </div>
+    ${email?`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:.85rem;display:flex;gap:8px">
+      <span style="color:var(--text-light)">📧 Email</span>
+      <span style="font-weight:500;word-break:break-all">${esc(email)}</span>
+    </div>`:''}
+    <div style="padding:8px 0;font-size:.85rem;display:flex;gap:8px">
+      <span style="color:var(--text-light)">🏢 Service</span>
+      <span style="font-weight:500">${esc(service)||'—'}</span>
+    </div>`;
+  document.getElementById('modal-agent').style.display='flex';
+}
+
+async function supprimerAgent(nom){
+  if(!confirm('Supprimer l\'agent "'+nom+'" ?\nCette action est irréversible.')) return;
+  try{
+    const res=await gasGet({action:'delete_agent',nom});
+    if(res.ok){toast('🗑️ Agent supprimé');loadAgents();}
+    else toast('Erreur : '+(res.msg||''));
+  }catch(e){toast('Erreur réseau');}
 }
 async function addAgent(){
   const nom=document.getElementById('new-nom').value.trim();
@@ -1266,46 +1347,92 @@ async function saveCoordonnees(){
 }
 
 function formatNSS(input){
+  // Ne garde que les chiffres
   let v=input.value.replace(/\D/g,'');
-  if(v.length>15)v=v.slice(0,15);
+  if(v.length>15) v=v.slice(0,15);
+  // Format : X XX XX XX XXX XXX XX  (1-2-2-2-3-3-2)
   let fmt='';
-  if(v.length>0) fmt+=v.slice(0,1);
-  if(v.length>1) fmt+=' '+v.slice(1,3);
-  if(v.length>3) fmt+=' '+v.slice(3,5);
-  if(v.length>5) fmt+=' '+v.slice(5,7);
-  if(v.length>7) fmt+=' '+v.slice(7,10);
+  if(v.length>0)  fmt+=v.slice(0,1);
+  if(v.length>1)  fmt+=' '+v.slice(1,3);
+  if(v.length>3)  fmt+=' '+v.slice(3,5);
+  if(v.length>5)  fmt+=' '+v.slice(5,7);
+  if(v.length>7)  fmt+=' '+v.slice(7,10);
   if(v.length>10) fmt+=' '+v.slice(10,13);
   if(v.length>13) fmt+=' '+v.slice(13,15);
   input.value=fmt;
+  // Bordure verte si 15 chiffres complets
+  input.style.borderColor=v.length===15?'var(--success)':'var(--border)';
 }
 
 // ══ ANNUAIRE (responsables) ═══════════════════════════
+let allAnnuaireAgents=[];
+
 async function loadAnnuaire(){
   const list=document.getElementById('annuaire-list');
   const detail=document.getElementById('annuaire-detail');
   if(!list)return;
   detail.style.display='none';
+  list.style.display='block';
   list.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
-    const d=await gasGet({action:'get_all_coordonnees'});
-    const agents=d.agents||[];
-    if(!agents.length){list.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucune fiche remplie</p>';return;}
-    list.innerHTML=agents.map(a=>`
-      <div class="agent-row" style="cursor:pointer" onclick="showAgentCoord(${JSON.stringify(JSON.stringify(a))})">
-        <div class="agent-avatar">${(a.nom||'?').charAt(0).toUpperCase()}</div>
-        <div class="agent-info">
-          <div class="agent-name">${esc(a.nom||'')}</div>
-          <div class="agent-service">${esc(a.affectation||a.service||'')} <span style="color:var(--primary-light);font-size:.7rem">▶ fiche</span></div>
-        </div>
-        <div style="font-size:.7rem;color:var(--text-muted)">${a.tel?'📞':''} ${a.email?'✉️':''}</div>
-      </div>`).join('');
+    // Charge agents + coordonnées en parallèle
+    const [da, dc] = await Promise.all([
+      gasGet({action:'get_agents'}),
+      gasGet({action:'get_all_coordonnees'})
+    ]);
+    const agents = (da.agents||[]).filter(a=>(a.role||'agent')!=='responsable');
+    const coordMap = {};
+    (dc.agents||[]).forEach(c=>{ if(c.nom) coordMap[c.nom]=c; });
+    // Fusionne : chaque agent + ses coordonnées si disponibles
+    allAnnuaireAgents = agents.map(a=>({...coordMap[a.nom]||{}, ...a, _hasCoord:!!coordMap[a.nom]}));
+    if(!allAnnuaireAgents.length){
+      list.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun agent</p>';return;
+    }
+    renderAnnuaire(allAnnuaireAgents);
   }catch(e){list.innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>';}
 }
 
-function showAgentCoord(jsonStr){
-  const a=JSON.parse(jsonStr);
+function filterAnnuaire(){
+  const q=(document.getElementById('annuaire-search').value||'').toLowerCase();
+  const filtered=allAnnuaireAgents.filter(a=>
+    (a.nom||'').toLowerCase().includes(q)||
+    (a.affectation||a.service||'').toLowerCase().includes(q)||
+    (a.tel||'').includes(q)||
+    (a['nom-usage']||'').toLowerCase().includes(q)
+  );
+  renderAnnuaire(filtered);
+}
+
+function renderAnnuaire(agents){
+  const list=document.getElementById('annuaire-list');
+  if(!agents.length){list.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun résultat</p>';return;}
+  // Stocke les données dans un tableau global pour éviter les bugs d'apostrophes
+  window._annuaireData=agents;
+  list.innerHTML=agents.map((a,i)=>`
+    <div class="agent-row" style="cursor:pointer" onclick="showAgentCoordIdx(${i})">
+      <div class="agent-avatar">${(a.nom||'?').charAt(0).toUpperCase()}</div>
+      <div class="agent-info">
+        <div class="agent-name">${esc(a.nom||'')}</div>
+        <div class="agent-service">${esc(a.affectation||a.service||'')}
+          <span style="color:var(--primary-light);font-size:.7rem"> ▶ voir fiche</span>
+        </div>
+        <div style="font-size:.72rem;margin-top:2px">
+          ${a._hasCoord
+            ? `<span style="color:var(--success)">✅ Fiche remplie</span>${a.tel?' · 📞 '+esc(a.tel):''}`
+            : `<span style="color:var(--danger)">⚠️ Fiche non remplie</span>`}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function showAgentCoordIdx(i){
+  showAgentCoord(window._annuaireData[i]);
+}
+
+function showAgentCoord(a){
   const detail=document.getElementById('annuaire-detail');
   const list=document.getElementById('annuaire-list');
+  const searchBox=document.getElementById('annuaire-search');
   const labels={
     'affectation':'Affectation','nom-usage':'Nom d\'usage','nom-legal':'Nom légal',
     'prenoms':'Prénom(s)','naissance':'Date & lieu de naissance','nationalite':'Nationalité',
@@ -1314,33 +1441,49 @@ function showAgentCoord(jsonStr){
     'conjoint-profession':'Profession conjoint','nb-enfants':'Nb enfants',
     'nb-enfants-17':'Enfants < 17 ans','urgence-nom':'Contact urgence','urgence-tel':'Tél urgence'
   };
-  let html=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('annuaire-detail').style.display='none';document.getElementById('annuaire-list').style.display='block'">← Retour</button>
-    <div>
-      <div style="font-weight:700;font-size:1rem;color:var(--primary)">${esc(a.nom||'')}</div>
-      <div style="font-size:.78rem;color:var(--text-light)">${esc(a.affectation||a.service||'')}</div>
-    </div>
-  </div>`;
   const sections=[
-    {title:'Informations administratives',keys:['affectation','nom-usage','nom-legal','prenoms','naissance','nationalite']},
-    {title:'Sécurité sociale',keys:['nss','caisse']},
-    {title:'Coordonnées',keys:['adresse','cp','ville','tel','email']},
-    {title:'Situation familiale',keys:['situation','conjoint-profession','nb-enfants','nb-enfants-17']},
-    {title:'Contact urgence',keys:['urgence-nom','urgence-tel']},
+    {title:'📋 Informations administratives',keys:['affectation','nom-usage','nom-legal','prenoms','naissance','nationalite']},
+    {title:'🏥 Sécurité sociale',keys:['nss','caisse']},
+    {title:'📍 Coordonnées',keys:['adresse','cp','ville','tel','email']},
+    {title:'👨‍👩‍👧 Situation familiale',keys:['situation','conjoint-profession','nb-enfants','nb-enfants-17']},
+    {title:'🚨 Contact urgence',keys:['urgence-nom','urgence-tel']},
   ];
-  sections.forEach(s=>{
-    const rows=s.keys.filter(k=>a[k]);
-    if(!rows.length)return;
-    html+=`<div style="font-size:.75rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px;padding-bottom:5px;border-bottom:1.5px solid var(--border)">${s.title}</div>`;
-    rows.forEach(k=>{
-      html+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg-input);font-size:.85rem">
-        <span style="color:var(--text-light);flex-shrink:0;margin-right:8px">${labels[k]||k}</span>
-        <span style="font-weight:500;text-align:right">${esc(a[k])}</span>
-      </div>`;
+
+  let html=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <button class="btn btn-secondary btn-sm" onclick="
+        document.getElementById('annuaire-detail').style.display='none';
+        document.getElementById('annuaire-list').style.display='block';
+        document.getElementById('annuaire-search').style.display='block';">← Retour</button>
+      <div>
+        <div style="font-weight:700;font-size:1rem;color:var(--primary)">${esc(a.nom||'')}</div>
+        <div style="font-size:.78rem;color:var(--text-light)">${esc(a.affectation||a.service||'')}</div>
+      </div>
+    </div>`;
+
+  if(!a._hasCoord){
+    html+=`<div style="background:#fff3cd;border:1.5px solid #f39c12;border-radius:var(--radius-sm);padding:14px;text-align:center;color:#856404">
+      ⚠️ Cet agent n'a pas encore rempli sa fiche "Mes infos"
+    </div>`;
+  } else {
+    sections.forEach(s=>{
+      const rows=s.keys.filter(k=>a[k]);
+      if(!rows.length)return;
+      html+=`<div style="font-size:.75rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px;padding-bottom:5px;border-bottom:1.5px solid var(--border)">${s.title}</div>`;
+      rows.forEach(k=>{
+        let val=esc(a[k]);
+        if(k==='nss'&&val.replace(/\s/g,'').length>5) val=val.slice(0,4)+' *** *** ** **';
+        html+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg-input);font-size:.85rem">
+          <span style="color:var(--text-light);flex-shrink:0;margin-right:8px">${labels[k]||k}</span>
+          <span style="font-weight:500;text-align:right">${val}</span>
+        </div>`;
+      });
     });
-  });
-  detail.innerHTML=html;
+  }
+
+  if(searchBox) searchBox.style.display='none';
   list.style.display='none';
+  detail.innerHTML=html;
   detail.style.display='block';
 }
 
