@@ -973,7 +973,7 @@ textarea{resize:vertical;min-height:80px}
 </div>
 
 <script>
-const GAS='https://script.google.com/macros/s/AKfycbxsuYn9qPgXp3nb1Y3GrFz0WYnulIaWcLQEronKk03ZyYkA8dULpQuhiD-5tZq7P2AacA/exec';
+const GAS='https://script.google.com/macros/s/AKfycbzs6LJDQkuB-ldm4qd0ux3ZHmZo7VKLRZPjRbh1ArDSF2__j3VAZ6H4IVhJDC7IqSLIzA/exec';
 
 let CU=null,allAgents=[],allDemandes=[],allValidDem=[],allSoldes=[],agentsCache=[];
 let mesdemFilter='all',validFilter='En attente',tableauFilter='all';
@@ -1507,27 +1507,27 @@ async function loadSolde(){
   const el=document.getElementById('solde-content');
   el.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
-    // Charge soldes ET ajustements validés en parallèle
-    const [dSol, dAjust] = await Promise.all([
-      gasGet({action:'get_soldes'}),
+    const [dDem, dAjust] = await Promise.all([
+      gasGet({action:'get_demandes', nom:CU.nom}),
       gasGet({action:'get_ajustements'})
     ]);
 
-    // Solde de base depuis la feuille Soldes
-    const s=(dSol.soldes||[]).find(x=>(x.nom||x['Nom']||'')===CU.nom)||{};
-    let p=parseInt(s.prises||s['Heures prises (min)'])||0;
-    let r=parseInt(s.recuperees||s['Heures récup. (min)'])||0;
+    // Calcule depuis les demandes validées
+    let prises=0, recup=0;
+    const demValidees=(dDem.demandes||[]).filter(d=>d.statut==='Validée ✅'||d.statut==='Validée');
+    demValidees.forEach(d=>{
+      const mins=dureeToMinsFront(d.duree||'');
+      const t=(d.type||'').toLowerCase().trim();
+      // "Heures prises" = heures d'absence (débit du solde)
+      // "Heures récupérées" = heures sup effectuées (crédit du solde)
+      if(t==='heures prises' || t.includes('pris')) prises+=mins;
+      else recup+=mins;
+    });
 
-    // Calcul solde de base
-    let solBase=r-p;
-
-    // Ajustements validés de cet agent
+    // Ajustements validés
     const ajusts=(dAjust.ajustements||[]).filter(a=>
-      (a.statut==='Validé'||a.statut==='Validé ✅') &&
-      (a.nom||'')=== CU.nom
+      (a.statut==='Validé'||a.statut==='Validé ✅') && (a.nom||'')===CU.nom
     );
-
-    // Calcule le total des ajustements en minutes
     let ajustTotal=0;
     ajusts.forEach(a=>{
       const mins=dureeToMinsFront(a.duree||'');
@@ -1535,19 +1535,51 @@ async function loadSolde(){
       else ajustTotal-=mins;
     });
 
-    const sol=solBase+ajustTotal;
+    const sol=(recup-prises)+ajustTotal;
     const cls=sol>0?'s-pos':sol<0?'s-neg':'s-zero';
 
-    // Détail des ajustements
+    // Détail demandes validées
+    let demDetail='';
+    if(demValidees.length){
+      const fmt=v=>{
+        if(!v) return '';
+        const d=new Date(v);
+        if(isNaN(d)||d.getFullYear()<2000) return '';
+        return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+      };
+      demDetail=`<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
+        <div style="font-size:.78rem;font-weight:700;color:var(--primary);margin-bottom:6px">📋 Demandes validées</div>
+        ${demValidees.map(d=>{
+          const d1=fmt(d.date_debut),d2=fmt(d.date_fin);
+          const dates=d1?(d2&&d2!==d1?d1+' → '+d2:d1):'';
+          const typeLabel=(d.type||'').toLowerCase().includes('pris')?'⏸️':'⚡';
+          const mins=dureeToMinsFront(d.duree||'');
+          const isP=(d.type||'').toLowerCase().includes('pris');
+          return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:.82rem">
+            <div>
+              <div>${typeLabel} ${dates||'—'}</div>
+              ${d.observations?`<div style="color:var(--text-muted);font-size:.75rem">💬 ${esc(d.observations)}</div>`:''}
+            </div>
+            <span style="font-weight:700;color:${isP?'var(--danger)':'var(--success)'}">
+              ${isP?'-':'+'}${minsToHHMM(mins)}
+            </span>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }
+
+    // Détail ajustements
     let ajustDetail='';
     if(ajusts.length){
-      ajustDetail=`<div style="margin-top:10px;font-size:.78rem;color:var(--text-light);border-top:1px solid var(--border);padding-top:8px">
-        <div style="font-weight:600;margin-bottom:4px;color:var(--primary)">⚖️ Ajustements validés :</div>
+      ajustDetail=`<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
+        <div style="font-size:.78rem;font-weight:700;color:var(--primary);margin-bottom:6px">⚖️ Ajustements validés</div>
         ${ajusts.map(a=>{
           const isC=a.type==='credit';
-          return `<div style="display:flex;justify-content:space-between;padding:3px 0">
-            <span>${esc(a.motif||'Ajustement')} · ${esc(a.date||'')}</span>
-            <span style="font-weight:700;color:${isC?'var(--success)':'var(--danger)'}">${isC?'+':'-'}${esc(a.duree||'')}</span>
+          return `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:.82rem">
+            <span style="color:var(--text-light)">${esc(a.motif||'Ajustement')}</span>
+            <span style="font-weight:700;color:${isC?'var(--success)':'var(--danger)'}">
+              ${isC?'+':'-'}${esc(a.duree||'')}
+            </span>
           </div>`;
         }).join('')}
       </div>`;
@@ -1555,10 +1587,10 @@ async function loadSolde(){
 
     el.innerHTML=`
       <div class="solde-grid">
-        <div class="solde-box"><div class="val s-neg">${minsToHHMM(p)}</div><div class="lbl">Heures prises</div></div>
-        <div class="solde-box"><div class="val s-pos">${minsToHHMM(r)}</div><div class="lbl">Heures récupérées</div></div>
+        <div class="solde-box"><div class="val s-neg">${minsToHHMM(prises)}</div><div class="lbl">Heures prises</div></div>
+        <div class="solde-box"><div class="val s-pos">${minsToHHMM(recup)}</div><div class="lbl">Heures récupérées</div></div>
       </div>
-      ${ajustTotal!==0?`<div class="solde-box" style="padding:10px 14px;margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+      ${ajustTotal!==0?`<div class="solde-box" style="padding:10px 14px;margin-top:8px;display:flex;justify-content:space-between">
         <span style="font-size:.85rem;color:var(--text-light)">⚖️ Ajustements</span>
         <span style="font-weight:700;color:${ajustTotal>=0?'var(--success)':'var(--danger)'}">
           ${ajustTotal>=0?'+':''}${minsToHHMM(ajustTotal)}
@@ -1568,7 +1600,7 @@ async function loadSolde(){
         <div class="val ${cls}" style="font-size:1.8rem">${sol>=0?'+':''}${minsToHHMM(sol)}</div>
         <div class="lbl">Solde total</div>
       </div>
-      ${ajustDetail}`;
+      ${demDetail}${ajustDetail}`;
   }catch(e){el.innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>';}
 }
 
@@ -2592,12 +2624,13 @@ function showSoldeDirFiche(i){
     </div>`;
 
   if(ajusts.length){
+    const fmtD=v=>{if(!v)return'';const d=new Date(v);return isNaN(d)||d.getFullYear()<2000?String(v):d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});};
     html+=`<div style="background:var(--bg-input);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px">
       <div style="font-size:.78rem;font-weight:700;color:var(--primary);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">⚖️ Ajustements validés</div>`;
     ajusts.forEach(a=>{
       const isC=a.type==='credit';
       html+=`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:.84rem">
-        <span style="color:var(--text-light)">${esc(a.motif||'Ajustement')} · ${esc(a.date||'')}</span>
+        <span style="color:var(--text-light)">${esc(a.motif||'Ajustement')} · ${fmtD(a.date)}</span>
         <span style="font-weight:700;color:${isC?'var(--success)':'var(--danger)'}">${isC?'+':'-'}${esc(a.duree||'')}</span>
       </div>`;
     });
