@@ -890,7 +890,7 @@ if('serviceWorker' in navigator) navigator.serviceWorker.register('/suivi-heures
 
 function toast(m,d=2800){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function minsToHHMM(m){m=parseInt(m)||0;const h=Math.floor(Math.abs(m)/60),min=Math.abs(m)%60;return(m<0?'-':'')+(h>0?h+'h':'')+(min>0?String(min).padStart(2,'0')+' min':h>0?'':'0h');}
+function minsToHHMM(m){m=parseInt(m)||0;const sign=m<0?'-':'';const abs=Math.abs(m);const h=Math.floor(abs/60);const min=abs%60;return sign+String(h).padStart(2,'0')+'h'+String(min).padStart(2,'0');}
 
 async function gasGet(p){
   const url=new URL(GAS);
