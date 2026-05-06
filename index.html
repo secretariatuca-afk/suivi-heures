@@ -1702,7 +1702,13 @@ function renderAjustements(){
   }).join('');
 }
 
-function editAjustementIdx(i){ editAjustement(window._ajustData[i]); }
+function editAjustementIdx(i){
+  if(!window._ajustData || !window._ajustData[i]){toast('Erreur : rechargez la page');return;}
+  editAjustement(window._ajustData[i]);
+  // Scroll vers le formulaire
+  document.getElementById('page-ajustement').scrollTop=0;
+  document.getElementById('content').scrollTop=0;
+}
 
 async function validerAjustement(id, i){
   const a=window._ajustData[i];
