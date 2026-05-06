@@ -384,25 +384,16 @@ textarea{resize:vertical;min-height:80px}
           </div>
         </div>
 
-        <!-- Compteurs -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-          <div class="card" style="text-align:center;cursor:pointer;padding:16px" onclick="showPage('validation')">
-            <div style="font-size:2rem;font-weight:700;color:var(--danger)" id="recap-pending">—</div>
-            <div style="font-size:.78rem;color:var(--text-light);margin-top:4px">⏳ En attente</div>
-          </div>
-          <div class="card" style="text-align:center;cursor:pointer;padding:16px" onclick="showPage('validation')">
-            <div style="font-size:2rem;font-weight:700;color:var(--warning)" id="recap-negatifs">—</div>
-            <div style="font-size:.78rem;color:var(--text-light);margin-top:4px">⚠️ Soldes négatifs</div>
-          </div>
-          <div class="card" style="text-align:center;cursor:pointer;padding:16px" onclick="showPage('ajustement')">
-            <div style="font-size:2rem;font-weight:700;color:var(--primary-light)" id="recap-ajust">—</div>
-            <div style="font-size:.78rem;color:var(--text-light);margin-top:4px">⚖️ Ajustements</div>
-          </div>
-          <div class="card" style="text-align:center;cursor:pointer;padding:16px" onclick="showPage('annuaire')">
-            <div style="font-size:2rem;font-weight:700;color:var(--success)" id="recap-fiches">—</div>
-            <div style="font-size:.78rem;color:var(--text-light);margin-top:4px">📇 Fiches remplies</div>
-          </div>
+        <!-- 1 seul compteur : demandes en attente -->
+        <div class="card" style="text-align:center;cursor:pointer;padding:20px" onclick="showPage('validation')">
+          <div style="font-size:3rem;font-weight:700;color:var(--danger)" id="recap-pending">—</div>
+          <div style="font-size:.9rem;color:var(--text-light);margin-top:6px">⏳ Demandes en attente de validation</div>
+          <div style="font-size:.76rem;color:var(--primary-light);margin-top:4px">Appuyez pour valider →</div>
         </div>
+        <!-- Compteurs cachés pour compatibilité -->
+        <div style="display:none" id="recap-negatifs"></div>
+        <div style="display:none" id="recap-ajust"></div>
+        <div style="display:none" id="recap-fiches"></div>
 
         <!-- Sommaire des onglets — ordre nav : Ajust · Suivi · Soldes · Code PIN · Annuaire · Export -->
         <div class="card" style="margin-bottom:14px">
@@ -487,6 +478,10 @@ textarea{resize:vertical;min-height:80px}
             <div class="type-icon">⚡</div><div class="type-label">Heures sup</div><div class="type-desc">Travail effectué</div>
           </div>
         </div>
+        <!-- Note journée braderie -->
+        <div style="background:#fef9e7;border:1.5px solid #f39c12;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;font-size:.8rem;color:#856404">
+          💡 <strong>Journée de braderie</strong> = saisir <strong>0h00</strong> comme durée et indiquer "Braderie" dans les observations.
+        </div>
         <div id="form-prises">
           <div class="form-group"><label>Date de début</label><input type="date" id="prises-debut"/></div>
           <div class="form-group"><label>Date de fin</label><input type="date" id="prises-fin"/></div>
@@ -514,6 +509,11 @@ textarea{resize:vertical;min-height:80px}
 
     <!-- MES DEMANDES -->
     <div id="page-mesdem" class="page">
+      <!-- Bandeau fiche incomplète -->
+      <div id="mesdem-coord-banner" onclick="showPage('coordonnees')" style="display:none;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:var(--radius);padding:12px 16px;margin-bottom:12px;cursor:pointer;display:none;align-items:center;gap:10px">
+        <div style="font-size:1.3rem">⚠️</div>
+        <div style="color:#fff;font-size:.83rem;font-weight:600">Merci de remplir votre fiche de coordonnées → Mes infos</div>
+      </div>
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
           <h2>Mes demandes</h2>
@@ -973,7 +973,7 @@ textarea{resize:vertical;min-height:80px}
 </div>
 
 <script>
-const GAS='https://script.google.com/macros/s/AKfycbz0rxuoUljGUIoTB0MppSfQfXRkRjNgmzHj5cTQSLKtGCxH2sF0uaBQqTUFLvQFNZDl-w/exec';
+const GAS='https://script.google.com/macros/s/AKfycbwyg9JXQv_bSeDJJxiGK0YHZkWtv79fI1S9Ma1mLOu_0sV424FMmEcZTgtHGJzKSNnjrA/exec';
 
 let CU=null,allAgents=[],allDemandes=[],allValidDem=[],allSoldes=[],agentsCache=[];
 let mesdemFilter='all',validFilter='En attente',tableauFilter='all';
@@ -1838,13 +1838,25 @@ async function addAgent(){
 }
 
 // ══ CARTE DEMANDE ════════════════════════════════════
+function fmtDuree(v){
+  if(!v||v==='') return '';
+  const s=String(v).trim();
+  // Format HH:MM → 00h00
+  if(/^\d{1,2}:\d{2}$/.test(s)){
+    const [h,m]=s.split(':');
+    return String(parseInt(h)).padStart(2,'0')+'h'+String(parseInt(m)).padStart(2,'0');
+  }
+  // Déjà au format 00h00 ou Xh
+  if(/\d+h/.test(s)) return s;
+  return s;
+}
+
 function demandeCard(d,isAdmin){
   const statut=d.statut||'';
   const cls=statut.includes('Validée')?'validee':statut.includes('Refusée')?'refusee':'';
   const badge=statut.includes('Validée')?'<span class="badge badge-approved">✅ Validée</span>':
               statut.includes('Refusée')?'<span class="badge badge-rejected">❌ Refusée</span>':
               '<span class="badge badge-pending">⏳ En attente</span>';
-  const obs=d.observations?`<div class="demande-obs">💬 ${esc(d.observations)}</div>`:'';
   const actions=(isAdmin&&CU.role==='responsable'&&statut==='En attente')?`
     <div class="demande-actions">
       <button class="btn btn-success btn-sm" onclick="validerDemande('${esc(d.id)}','valider')">✅ Valider</button>
@@ -1852,23 +1864,29 @@ function demandeCard(d,isAdmin){
     </div>`:'';
   const fmt=v=>{
     if(!v||v==='') return '';
-    if(/^\d{4}-\d{2}-\d{2}T/.test(String(v))){
-      const d=new Date(v);
-      if(isNaN(d)||d.getFullYear()<2000) return ''; // ignore dates aberrantes
-      return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const sv=String(v);
+    if(/^\d{4}-\d{2}-\d{2}T/.test(sv)){
+      const dt=new Date(v);
+      if(isNaN(dt)||dt.getFullYear()<2000) return '';
+      return dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
     }
-    return v;
+    // Date format DD/MM/YYYY déjà ok
+    if(/^\d{2}\/\d{2}\/\d{4}$/.test(sv)) return sv;
+    return '';
   };
   const d1=fmt(d.date_debut), d2=fmt(d.date_fin);
-  const dates=d1?(d2&&d2!==d1?d1+' → '+d2:d1):'';
+  const dates=d1?(d2&&d2!==d1&&d2!==''?d1+' → '+d2:d1):'';
+  const dureeAff=fmtDuree(d.duree);
+  const typeLabel=d.type&&d.type.toLowerCase().includes('r')&&d.type.toLowerCase().includes('cup')?'⚡ Heures sup':'⏸️ Heures prises';
+
   return `<div class="demande-item ${cls}">
     <div class="demande-header">
       <div style="flex:1">
-        <div class="demande-title">${d.type==='Heures récupérées'?'⚡ Heures sup':'⏸️ Heures prises'}${isAdmin?' — <strong>'+esc(d.nom)+'</strong>':''}</div>
+        <div class="demande-title">${typeLabel}${isAdmin?' — <strong>'+esc(d.nom||'')+'</strong>':''}</div>
         ${dates?`<div class="demande-meta">📅 ${dates}</div>`:''}
-        ${d.duree?`<div class="demande-meta" style="font-weight:600;color:var(--primary)">⏱ ${esc(d.duree)}</div>`:''}
+        ${dureeAff?`<div class="demande-meta" style="font-weight:600;color:var(--primary)">⏱ ${esc(dureeAff)}</div>`:''}
         ${d.observations?`<div class="demande-meta">💬 ${esc(d.observations)}</div>`:''}
-        ${isAdmin?`<div class="demande-meta" style="color:var(--text-muted);font-size:.75rem">🏢 ${esc(d.service||'')}</div>`:''}
+        ${isAdmin&&d.service?`<div class="demande-meta" style="color:var(--text-muted);font-size:.75rem">🏢 ${esc(d.service)}</div>`:''}
       </div>${badge}
     </div>${actions}
   </div>`;
@@ -1934,9 +1952,10 @@ function checkCoordBanner(){
   if(!banner)return;
   const complete=checkCoordComplete();
   banner.style.display=complete?'none':'block';
-  // Aussi afficher le bandeau sur l'accueil
   const homeBanner=document.getElementById('home-coord-banner');
   if(homeBanner) homeBanner.style.display=complete?'none':'flex';
+  const mesdemBanner=document.getElementById('mesdem-coord-banner');
+  if(mesdemBanner) mesdemBanner.style.display=complete?'none':'flex';
 }
 
 async function saveCoordonnees(){
@@ -2288,27 +2307,31 @@ async function deleteAjustement(id){
 
 // ══ ALERTE EXPORT ════════════════════════════════════
 const EXPORT_REMINDER_KEY='crous_last_export_date';
-const EXPORT_REMINDER_DAYS=10;
+const EXPORT_REMINDER_DAYS=7;
 
 function checkExportReminder(){
   const banner=document.getElementById('home-export-alert');
-  if(!banner)return;
+  if(!banner) return;
   const lastStr=localStorage.getItem(EXPORT_REMINDER_KEY);
   const now=new Date();
   if(!lastStr){
-    // Jamais exporté — alerte immédiate
     banner.style.display='flex';
     document.getElementById('export-alert-msg').textContent='Aucun export effectué — pensez à sauvegarder vos données !';
     return;
   }
   const last=new Date(lastStr);
   const diffDays=Math.floor((now-last)/(1000*60*60*24));
+  const reste=EXPORT_REMINDER_DAYS-diffDays;
   if(diffDays>=EXPORT_REMINDER_DAYS){
     banner.style.display='flex';
     document.getElementById('export-alert-msg').textContent=
-      'Dernier export il y a '+diffDays+' jours — pensez à sauvegarder → Appuyez ici';
+      '⚠️ Dernier export il y a '+diffDays+' jours — Sauvegardez maintenant → Appuyez ici';
   } else {
-    banner.style.display='none';
+    // Affiche toujours avec décompte
+    banner.style.display='flex';
+    document.getElementById('export-alert-msg').textContent=
+      'Prochain export recommandé dans '+reste+' jour'+(reste>1?'s':'')+' (dernier : il y a '+diffDays+' j)';
+    banner.style.background='linear-gradient(135deg,#1e8449,#148f77)';
   }
 }
 
