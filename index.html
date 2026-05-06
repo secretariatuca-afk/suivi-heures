@@ -432,6 +432,11 @@ textarea{resize:vertical;min-height:80px}
           <h2>Validation</h2>
           <button class="btn btn-secondary btn-sm" onclick="loadValidation()">🔄</button>
         </div>
+        <!-- Recherche + filtres -->
+        <div style="position:relative;margin-bottom:8px">
+          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%)">🔍</span>
+          <input type="text" id="valid-search" placeholder="Rechercher un agent…" oninput="renderValidation()" style="padding-left:34px;width:100%"/>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
           <div><label>Service</label><select id="valid-service-filter" onchange="renderValidation()"><option value="">— Tous —</option></select></div>
           <div><label>Agent</label><select id="valid-nom-filter" onchange="renderValidation()"><option value="">— Tous —</option></select></div>
@@ -452,6 +457,13 @@ textarea{resize:vertical;min-height:80px}
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
           <h2>Historique des agents</h2>
           <button class="btn btn-secondary btn-sm" onclick="loadTableau()">🔄</button>
+        </div>
+        <!-- Barre de recherche -->
+        <div style="position:relative;margin-bottom:10px">
+          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%)">🔍</span>
+          <select id="tableau-agent-filter" onchange="filterTableauAgent()" style="padding-left:34px;width:100%">
+            <option value="">— Tous les agents —</option>
+          </select>
         </div>
         <div class="tabs" id="tableau-tabs">
           <div class="tab active" onclick="filterTableau('all',this)">Tous</div>
@@ -589,66 +601,64 @@ textarea{resize:vertical;min-height:80px}
 
     <!-- AJUSTEMENT SOLDES (responsables) -->
     <div id="page-ajustement" class="page">
-      <div class="card">
-        <h2>⚖️ Ajustement des soldes</h2>
 
-        <!-- Formulaire ajout/correction -->
-        <div style="background:var(--bg-input);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px">
-          <div style="font-size:.78rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px" id="ajust-form-title">Nouvelle saisie</div>
-          <input type="hidden" id="ajust-edit-id"/>
-          <div class="form-group">
-            <label>Agent</label>
-            <select id="ajust-agent"><option value="">— Sélectionnez un agent —</option></select>
-          </div>
-          <div class="form-group">
-            <label>Type d'ajustement</label>
-            <div class="type-toggle" style="margin-bottom:0">
-              <div class="type-card selected" id="ajust-type-credit" onclick="selectAjustType('credit')">
-                <div class="type-icon">➕</div>
-                <div class="type-label">Crédit</div>
-                <div class="type-desc">Heures à récupérer</div>
-              </div>
-              <div class="type-card" id="ajust-type-debit" onclick="selectAjustType('debit')">
-                <div class="type-icon">➖</div>
-                <div class="type-label">Débit</div>
-                <div class="type-desc">Heures à rendre</div>
-              </div>
+      <!-- FORMULAIRE NOUVELLE SAISIE -->
+      <div class="card" id="ajust-form-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h2 id="ajust-form-title">⚖️ Nouvelle saisie</h2>
+          <button class="btn btn-secondary btn-sm" onclick="resetAjustForm()">✕</button>
+        </div>
+        <input type="hidden" id="ajust-edit-id"/>
+        <div class="form-group">
+          <label>Agent</label>
+          <select id="ajust-agent"><option value="">— Sélectionnez un agent —</option></select>
+        </div>
+        <div class="form-group">
+          <label>Type d'ajustement</label>
+          <div class="type-toggle" style="margin-bottom:0">
+            <div class="type-card selected" id="ajust-type-credit" onclick="selectAjustType('credit')">
+              <div class="type-icon">➕</div><div class="type-label">Crédit</div><div class="type-desc">Heures à récupérer</div>
             </div>
-          </div>
-          <div class="form-group">
-            <label>Durée</label>
-            <div class="duration-row">
-              <select id="ajust-h">
-                <option value="0">0 h</option><option value="1">1 h</option><option value="2">2 h</option>
-                <option value="3">3 h</option><option value="4">4 h</option><option value="5">5 h</option>
-                <option value="6">6 h</option><option value="7">7 h</option><option value="8" selected>8 h</option>
-                <option value="9">9 h</option><option value="10">10 h</option><option value="16">16 h</option>
-                <option value="24">24 h</option><option value="32">32 h</option><option value="40">40 h</option>
-              </select>
-              <select id="ajust-m">
-                <option value="0" selected>00 min</option><option value="15">15 min</option>
-                <option value="30">30 min</option><option value="45">45 min</option>
-              </select>
+            <div class="type-card" id="ajust-type-debit" onclick="selectAjustType('debit')">
+              <div class="type-icon">➖</div><div class="type-label">Débit</div><div class="type-desc">Heures à rendre</div>
             </div>
-          </div>
-          <div class="form-group">
-            <label>Motif</label>
-            <input type="text" id="ajust-motif" placeholder="Ex : Solde initial, correction, report…"/>
-          </div>
-          <div style="display:flex;gap:8px;flex-direction:column">
-            <button class="btn btn-primary" style="flex:1" onclick="saveAjustement(false)" id="btn-save-ajust">💾 Enregistrer</button>
-            <button class="btn btn-success" style="flex:1" onclick="saveAjustement(true)">✅ Enregistrer & Valider</button>
-            <button class="btn btn-secondary" onclick="resetAjustForm()">✕ Annuler</button>
           </div>
         </div>
+        <div class="form-group">
+          <label>Durée</label>
+          <div class="duration-row">
+            <select id="ajust-h">
+              <option value="0">0 h</option><option value="1">1 h</option><option value="2">2 h</option>
+              <option value="3">3 h</option><option value="4">4 h</option><option value="5">5 h</option>
+              <option value="6">6 h</option><option value="7">7 h</option><option value="8" selected>8 h</option>
+              <option value="9">9 h</option><option value="10">10 h</option><option value="16">16 h</option>
+              <option value="24">24 h</option><option value="32">32 h</option><option value="40">40 h</option>
+            </select>
+            <select id="ajust-m">
+              <option value="0" selected>00 min</option><option value="15">15 min</option>
+              <option value="30">30 min</option><option value="45">45 min</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Motif</label>
+          <input type="text" id="ajust-motif" placeholder="Ex : Solde initial, correction, report…"/>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-success" style="flex:1" onclick="saveAjustement(true)">✅ Valider</button>
+          <button class="btn btn-secondary" style="flex:1" onclick="resetAjustForm()">✕ Annuler</button>
+        </div>
+      </div>
 
-        <!-- Historique des ajustements -->
+      <!-- HISTORIQUE -->
+      <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <div style="font-size:.9rem;font-weight:600;color:var(--primary)">Historique des ajustements</div>
+          <h2>📋 Historique des ajustements</h2>
           <button class="btn btn-secondary btn-sm" onclick="loadAjustements()">🔄</button>
         </div>
-        <div class="form-group" style="margin-bottom:10px">
-          <select id="ajust-filter-agent" onchange="renderAjustements()">
+        <div style="position:relative;margin-bottom:10px">
+          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%)">🔍</span>
+          <select id="ajust-filter-agent" onchange="renderAjustements()" style="padding-left:34px;width:100%">
             <option value="">— Tous les agents —</option>
           </select>
         </div>
@@ -798,8 +808,8 @@ textarea{resize:vertical;min-height:80px}
       Historique
     </button>
     <button class="nav-btn" id="nav-agents" onclick="showPage('agents')" style="display:none">
-      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Agents
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Code PIN
     </button>
     <button class="nav-btn" id="nav-annuaire" onclick="showPage('annuaire')" style="display:none">
       <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
@@ -813,7 +823,7 @@ textarea{resize:vertical;min-height:80px}
 </div>
 
 <script>
-const GAS='https://script.google.com/macros/s/AKfycbyxOsC3DnC5UnVw4It8A_saN5kTAm8-g60o4WUGyROJj2tNH04ZHYkCKfz0A1drQycyoQ/exec';
+const GAS='https://script.google.com/macros/s/AKfycbw8kYzU7Nn_TtNB9bf5u6hVHUSnVoG0vQXlAV5JDyRY3lh_8GDvfTDZ0XNa4YjAH9ut7g/exec';
 
 let CU=null,allAgents=[],allDemandes=[],allValidDem=[],allSoldes=[],agentsCache=[];
 let mesdemFilter='all',validFilter='En attente',tableauFilter='all';
@@ -1191,18 +1201,23 @@ async function loadSolde(){
   el.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
     const d=await gasGet({action:'get_soldes'});
-    const s=(d.soldes||[]).find(x=>x.nom===CU.nom)||{prises:0,recuperees:0,solde:0};
-    const p=parseInt(s.prises)||0,r=parseInt(s.recuperees)||0,sol=parseInt(s.solde)||0;
+    // Cherche le solde de l'agent (insensible à la casse des clés)
+    const s=(d.soldes||[]).find(x=>(x.nom||x['Nom']||x['NOM']||'')===CU.nom)||{};
+    const p=parseInt(s.prises||s['Heures prises (min)'])||0;
+    const r=parseInt(s.recuperees||s['Heures récup. (min)'])||0;
+    const sol=parseInt(s.solde||s['Solde (min)'])||(r-p);
+    const solH=s.solde_heures||s['Solde (heures)']||minsToHHMM(sol);
     const cls=sol>0?'s-pos':sol<0?'s-neg':'s-zero';
-    el.innerHTML=`<div class="solde-grid">
-      <div class="solde-box"><div class="val s-neg">${minsToHHMM(p)}</div><div class="lbl">Heures prises</div></div>
-      <div class="solde-box"><div class="val s-pos">${minsToHHMM(r)}</div><div class="lbl">Heures récupérées</div></div>
-    </div>
-    <div class="solde-box" style="padding:16px;text-align:center">
-      <div class="val ${cls}">${sol>=0?'+':''}${minsToHHMM(Math.abs(sol))}</div>
-      <div class="lbl">Solde total</div>
-    </div>`;
-  }catch(e){el.innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>';}
+    el.innerHTML=`
+      <div class="solde-grid">
+        <div class="solde-box"><div class="val s-neg">${minsToHHMM(p)}</div><div class="lbl">Heures prises</div></div>
+        <div class="solde-box"><div class="val s-pos">${minsToHHMM(r)}</div><div class="lbl">Heures récupérées</div></div>
+      </div>
+      <div class="solde-box" style="padding:16px;text-align:center;margin-top:8px">
+        <div class="val ${cls}" style="font-size:1.8rem">${sol>=0?'+':''}${solH}</div>
+        <div class="lbl">Solde total</div>
+      </div>`;
+  }catch(e){el.innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>';}
 }
 
 // ══ VALIDATION ═══════════════════════════════════════
@@ -1227,10 +1242,12 @@ function filterValidStatus(f,el){validFilter=f;document.querySelectorAll('#valid
 function renderValidation(){
   const service=document.getElementById('valid-service-filter').value;
   const nom=document.getElementById('valid-nom-filter').value;
+  const search=(document.getElementById('valid-search')?.value||'').toLowerCase();
   let list=allValidDem;
-  if(service)list=list.filter(d=>d.service===service);
-  if(nom)list=list.filter(d=>d.nom===nom);
-  if(validFilter!=='all')list=list.filter(d=>d.statut===validFilter);
+  if(service) list=list.filter(d=>d.service===service);
+  if(nom) list=list.filter(d=>d.nom===nom);
+  if(search) list=list.filter(d=>(d.nom||'').toLowerCase().includes(search)||(d.service||'').toLowerCase().includes(search));
+  if(validFilter!=='all') list=list.filter(d=>d.statut===validFilter);
   const el=document.getElementById('validation-list');
   if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucune demande</p>';return;}
   let html=nom?`<div style="font-size:.85rem;font-weight:600;color:var(--primary);margin-bottom:10px;padding:8px 12px;background:var(--bg-input);border-radius:var(--radius-sm)">📋 Historique de ${esc(nom)} — ${list.length} demande(s)</div>`:'';
@@ -1259,24 +1276,44 @@ async function loadPendingCount(){
 // ══ HISTORIQUE ═══════════════════════════════════════
 async function loadTableau(){
   document.getElementById('tableau-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
-  try{const d=await gasGet({action:'get_soldes'});allSoldes=d.soldes||[];renderTableau();}
+  try{
+    const d=await gasGet({action:'get_soldes'});
+    allSoldes=d.soldes||[];
+    // Peupler le select agent
+    const sel=document.getElementById('tableau-agent-filter');
+    if(sel){
+      const noms=[...new Set(allSoldes.map(s=>s.nom||s['Nom']||'').filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
+      sel.innerHTML='<option value="">— Tous les agents —</option>'+noms.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+    }
+    renderTableau();
+  }
   catch(e){document.getElementById('tableau-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>';}
 }
+function filterTableauAgent(){renderTableau();}
 function filterTableau(f,el){tableauFilter=f;document.querySelectorAll('#tableau-tabs .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderTableau();}
 function renderTableau(){
   let list=allSoldes;
-  const fn=s=>parseInt(s.solde)||0;
+  const agentFilter=(document.getElementById('tableau-agent-filter')?.value||'');
+  const fn=s=>parseInt(s.solde||s['Solde'])||0;
+  if(agentFilter) list=list.filter(s=>(s.nom||s['Nom']||'')=== agentFilter);
   if(tableauFilter==='neg')list=list.filter(s=>fn(s)<0);
   if(tableauFilter==='pos')list=list.filter(s=>fn(s)>0);
   if(tableauFilter==='zero')list=list.filter(s=>fn(s)===0);
   const el=document.getElementById('tableau-list');
   if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun résultat</p>';return;}
   el.innerHTML=list.map(s=>{
-    const sol=fn(s),cls=sol>0?'s-pos':sol<0?'s-neg':'s-zero';
-    return `<div class="agent-row" style="cursor:pointer" onclick="voirHistoriqueAgent('${esc(s.nom)}')">
-      <div class="agent-avatar">${esc(s.nom).charAt(0).toUpperCase()}</div>
-      <div class="agent-info"><div class="agent-name">${esc(s.nom)}</div><div class="agent-service">${esc(s.service||'')} <span style="color:var(--primary-light);font-size:.7rem">▶ historique</span></div></div>
-      <div class="val ${cls}" style="font-size:1rem;font-weight:700">${sol>=0?'+':''}${minsToHHMM(Math.abs(sol))}</div>
+    const nom=s.nom||s['Nom']||'';
+    const service=s.service||s['Service']||'';
+    const sol=fn(s);
+    const cls=sol>0?'s-pos':sol<0?'s-neg':'s-zero';
+    const soldeH=s.solde_heures||minsToHHMM(Math.abs(sol));
+    return `<div class="agent-row" style="cursor:pointer" onclick="voirHistoriqueAgent('${esc(nom)}')">
+      <div class="agent-avatar">${esc(nom).charAt(0).toUpperCase()}</div>
+      <div class="agent-info">
+        <div class="agent-name">${esc(nom)}</div>
+        <div class="agent-service">${esc(service)} <span style="color:var(--primary-light);font-size:.7rem">▶ historique</span></div>
+      </div>
+      <div class="val ${cls}" style="font-size:1rem;font-weight:700">${sol>=0?'+':''}${soldeH}</div>
     </div>`;
   }).join('');
 }
@@ -1747,7 +1784,7 @@ function resetAjustForm(){
   selectAjustType('credit');
 }
 
-async function saveAjustement(validerDirectement=false){
+async function saveAjustement(validerDirectement=true){
   const nom=document.getElementById('ajust-agent').value;
   const h=parseInt(document.getElementById('ajust-h').value)||0;
   const m=parseInt(document.getElementById('ajust-m').value)||0;
@@ -1759,25 +1796,25 @@ async function saveAjustement(validerDirectement=false){
   const duree=h+'h'+(m>0?' '+m+'min':'');
   const agent=allAgents.find(a=>a.nom===nom)||{};
   try{
-    const res=await gasGet({
-      action: editId?'update_ajustement':'add_ajustement',
-      id: editId||'',
-      nom, service: agent.service||'',
-      type: ajustType,
-      duree, motif,
-      saisi_par: CU.nom
-    });
-    if(res.ok){
-      // Si valider directement
-      if(validerDirectement && res.id){
-        await gasGet({action:'valider_ajustement', id:res.id, nom, service:agent.service||'', type:ajustType, duree});
-        toast('✅ Ajustement enregistré et validé — solde mis à jour !');
-      } else {
-        toast(editId?'✅ Ajustement modifié':'✅ Ajustement enregistré');
-      }
-      resetAjustForm();
-      loadAjustements();
-    } else { toast('❌ '+(res.msg||'Erreur')); }
+    if(editId){
+      // Modification
+      const res=await gasGet({action:'update_ajustement',id:editId,nom,service:agent.service||'',type:ajustType,duree,motif,saisi_par:CU.nom});
+      if(res.ok){toast('✅ Ajustement modifié');resetAjustForm();loadAjustements();}
+      else toast('❌ '+(res.msg||'Erreur'));
+    } else {
+      // Nouvelle saisie — enregistre ET valide directement
+      const res=await gasGet({action:'add_ajustement',nom,service:agent.service||'',type:ajustType,duree,motif,saisi_par:CU.nom});
+      if(res.ok){
+        // Valider directement
+        const id=res.id||res.newId||'';
+        if(id){
+          await gasGet({action:'valider_ajustement',id,nom,service:agent.service||'',type:ajustType,duree});
+        }
+        toast('✅ Ajustement validé — solde mis à jour !');
+        resetAjustForm();
+        loadAjustements();
+      } else toast('❌ '+(res.msg||'Erreur'));
+    }
   }catch(e){toast('❌ Erreur réseau');}
 }
 
