@@ -1398,7 +1398,12 @@ function initApp(){
   const today=new Date().toISOString().slice(0,10);
   ['prises-debut','prises-fin','sup-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
   if(!isResp){loadRecentActivity();loadCoordonnees();loadMesDemandes();}
-  if(isResp){checkExportReminder();}
+  if(isResp){
+    // Masquer définitivement le bandeau fiche pour les responsables
+    const hb=document.getElementById('home-coord-banner');
+    if(hb) hb.style.display='none';
+    checkExportReminder();
+  }
 }
 
 // ══ NAVIGATION ═══════════════════════════════════════
@@ -1892,12 +1897,12 @@ function demandeCard(d,isAdmin){
   const fmt=v=>{
     if(!v||v==='') return '';
     const sv=String(v);
-    if(/^\d{4}-\d{2}-\d{2}T/.test(sv)){
-      const dt=new Date(v);
+    // Format YYYY-MM-DD (avec ou sans T)
+    if(/^\d{4}-\d{2}-\d{2}/.test(sv)){
+      const dt=new Date(sv.slice(0,10)+'T12:00:00');
       if(isNaN(dt)||dt.getFullYear()<2000) return '';
       return dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
     }
-    // Date format DD/MM/YYYY déjà ok
     if(/^\d{2}\/\d{2}\/\d{4}$/.test(sv)) return sv;
     return '';
   };
