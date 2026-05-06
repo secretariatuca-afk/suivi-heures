@@ -261,19 +261,13 @@ textarea{resize:vertical;min-height:80px}
 
     <!-- ACCUEIL -->
     <div id="page-home" class="page active">
-      <div class="card">
-        <h2>👋 Bonjour, <span id="welcome-name"></span></h2>
-        <p style="font-size:.85rem;color:var(--text-light);margin-top:4px" id="welcome-service"></p>
+
+      <!-- Carte bienvenue -->
+      <div class="card" style="background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;padding:18px">
+        <div style="font-size:1.1rem;font-weight:700">👋 Bonjour, <span id="welcome-name"></span></div>
+        <div style="font-size:.82rem;opacity:.85;margin-top:3px" id="welcome-service"></div>
       </div>
-      <div id="home-pending-card" class="pending-card" onclick="showPage('validation')">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <div>
-            <div class="pending-label">Demandes en attente</div>
-            <div class="pending-sub">Appuyez pour valider →</div>
-          </div>
-          <div id="home-pending-count" class="pending-count">0</div>
-        </div>
-      </div>
+
       <!-- Bandeau alerte fiche incomplète (agents) -->
       <div id="home-coord-banner" onclick="showPage('coordonnees')" style="display:none;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;cursor:pointer;align-items:center;gap:12px">
         <div style="font-size:1.6rem">⚠️</div>
@@ -283,65 +277,100 @@ textarea{resize:vertical;min-height:80px}
         </div>
       </div>
 
-      <!-- Boutons rapides agents (masqués pour responsables) -->
-      <div id="home-agent-buttons" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-        <button class="card" style="text-align:center;cursor:pointer" id="home-btn-1" onclick="showPage('demande')">
-          <div style="font-size:1.8rem;margin-bottom:6px">📝</div>
-          <div style="font-weight:600;font-size:.88rem" id="home-label-1">Nouvelle demande</div>
-          <div style="font-size:.75rem;color:var(--text-light);margin-top:2px">Heures prises ou sup</div>
-        </button>
-        <button class="card" style="text-align:center;cursor:pointer" id="home-btn-2" onclick="showPage('solde')">
-          <div style="font-size:1.8rem;margin-bottom:6px" id="home-icon-2">💰</div>
-          <div style="font-weight:600;font-size:.88rem" id="home-label-2">Mon solde</div>
-          <div style="font-size:.75rem;color:var(--text-light);margin-top:2px" id="home-desc-2">Détail & historique</div>
-        </button>
-      </div>
-
-      <!-- Récap direction (masqué pour agents) -->
-      <div id="home-resp-recap" style="display:none">
-        <!-- Alerte sauvegarde -->
-      <div id="home-export-alert" style="display:none;background:linear-gradient(135deg,#e67e22,#d35400);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;cursor:pointer;align-items:center;gap:12px" onclick="showPage('export')">
-        <div style="font-size:1.6rem">💾</div>
-        <div>
-          <div style="color:#fff;font-weight:700;font-size:.9rem">Sauvegarde recommandée</div>
-          <div style="color:rgba(255,255,255,.85);font-size:.78rem;margin-top:2px" id="export-alert-msg">Il est temps d'exporter vos données → Appuyez ici</div>
+      <!-- ══ VUE AGENT ══ -->
+      <div id="home-agent-buttons">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <button class="card" style="text-align:center;cursor:pointer;padding:18px 10px" onclick="showPage('demande')">
+            <div style="font-size:2rem;margin-bottom:8px">📝</div>
+            <div style="font-weight:700;font-size:.88rem;color:var(--primary)">Nouvelle demande</div>
+            <div style="font-size:.74rem;color:var(--text-light);margin-top:3px">Heures prises ou sup</div>
+          </button>
+          <button class="card" style="text-align:center;cursor:pointer;padding:18px 10px" onclick="showPage('solde')">
+            <div style="font-size:2rem;margin-bottom:8px">💰</div>
+            <div style="font-weight:700;font-size:.88rem;color:var(--primary)">Mon solde</div>
+            <div style="font-size:.74rem;color:var(--text-light);margin-top:3px">Détail & historique</div>
+          </button>
+          <button class="card" style="text-align:center;cursor:pointer;padding:18px 10px" onclick="showPage('mesdem')">
+            <div style="font-size:2rem;margin-bottom:8px">📋</div>
+            <div style="font-weight:700;font-size:.88rem;color:var(--primary)">Mes demandes</div>
+            <div style="font-size:.74rem;color:var(--text-light);margin-top:3px">Suivi & statuts</div>
+          </button>
+          <button class="card" style="text-align:center;cursor:pointer;padding:18px 10px" onclick="showPage('coordonnees')">
+            <div style="font-size:2rem;margin-bottom:8px">👤</div>
+            <div style="font-weight:700;font-size:.88rem;color:var(--primary)">Mes infos</div>
+            <div style="font-size:.74rem;color:var(--text-light);margin-top:3px">Fiche personnelle</div>
+          </button>
+        </div>
+        <div class="card">
+          <h2>🕐 Activité récente</h2>
+          <div id="home-recent"><div class="loading-center"><div class="spinner"></div></div></div>
         </div>
       </div>
 
-      <!-- Grille stats -->
+      <!-- ══ VUE DIRECTION ══ -->
+      <div id="home-resp-recap" style="display:none">
+
+        <!-- Alerte sauvegarde -->
+        <div id="home-export-alert" style="display:none;background:linear-gradient(135deg,#e67e22,#d35400);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;cursor:pointer;align-items:center;gap:12px" onclick="showPage('export')">
+          <div style="font-size:1.6rem">💾</div>
+          <div>
+            <div style="color:#fff;font-weight:700;font-size:.9rem">Sauvegarde recommandée</div>
+            <div style="color:rgba(255,255,255,.85);font-size:.78rem;margin-top:2px" id="export-alert-msg">Il est temps d'exporter vos données → Appuyez ici</div>
+          </div>
+        </div>
+
+        <!-- Compteurs -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-          <div class="card" style="text-align:center;cursor:pointer;padding:14px" onclick="showPage('validation')">
+          <div class="card" style="text-align:center;cursor:pointer;padding:16px" onclick="showPage('validation')">
             <div style="font-size:2rem;font-weight:700;color:var(--danger)" id="recap-pending">—</div>
             <div style="font-size:.78rem;color:var(--text-light);margin-top:4px">⏳ En attente</div>
           </div>
-          <div class="card" style="text-align:center;cursor:pointer;padding:14px" onclick="showPage('tableau')">
+          <div class="card" style="text-align:center;cursor:pointer;padding:16px" onclick="showPage('validation')">
             <div style="font-size:2rem;font-weight:700;color:var(--warning)" id="recap-negatifs">—</div>
             <div style="font-size:.78rem;color:var(--text-light);margin-top:4px">⚠️ Soldes négatifs</div>
           </div>
-          <div class="card" style="text-align:center;cursor:pointer;padding:14px" onclick="showPage('ajustement')">
+          <div class="card" style="text-align:center;cursor:pointer;padding:16px" onclick="showPage('ajustement')">
             <div style="font-size:2rem;font-weight:700;color:var(--primary-light)" id="recap-ajust">—</div>
             <div style="font-size:.78rem;color:var(--text-light);margin-top:4px">⚖️ Ajustements</div>
           </div>
-          <div class="card" style="text-align:center;cursor:pointer;padding:14px" onclick="showPage('annuaire')">
+          <div class="card" style="text-align:center;cursor:pointer;padding:16px" onclick="showPage('annuaire')">
             <div style="font-size:2rem;font-weight:700;color:var(--success)" id="recap-fiches">—</div>
             <div style="font-size:.78rem;color:var(--text-light);margin-top:4px">📇 Fiches remplies</div>
           </div>
         </div>
-        <!-- Accès rapides direction -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-          <button class="card" style="text-align:center;cursor:pointer;padding:12px" onclick="showPage('validation')">
-            <div style="font-size:1.4rem;margin-bottom:4px">✅</div>
-            <div style="font-size:.78rem;font-weight:600">Validation</div>
-          </button>
-          <button class="card" style="text-align:center;cursor:pointer;padding:12px" onclick="showPage('ajustement')">
-            <div style="font-size:1.4rem;margin-bottom:4px">⚖️</div>
-            <div style="font-size:.78rem;font-weight:600">Ajustement</div>
-          </button>
-          <button class="card" style="text-align:center;cursor:pointer;padding:12px" onclick="showPage('tableau')">
-            <div style="font-size:1.4rem;margin-bottom:4px">👥</div>
-            <div style="font-size:.78rem;font-weight:600">Historique</div>
-          </button>
+
+        <!-- Sommaire des onglets -->
+        <div class="card" style="margin-bottom:14px">
+          <h2 style="margin-bottom:14px">📌 Accès rapide</h2>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button onclick="showPage('validation')" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-input);border-radius:var(--radius-sm);border:1.5px solid var(--border);text-align:left;width:100%">
+              <span style="font-size:1.3rem;width:32px;text-align:center">✅</span>
+              <div><div style="font-weight:600;font-size:.88rem;color:var(--primary)">Suivi & Validation</div><div style="font-size:.74rem;color:var(--text-light)">Demandes agents · Soldes · Historique</div></div>
+              <span style="margin-left:auto;color:var(--text-muted)">›</span>
+            </button>
+            <button onclick="showPage('ajustement')" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-input);border-radius:var(--radius-sm);border:1.5px solid var(--border);text-align:left;width:100%">
+              <span style="font-size:1.3rem;width:32px;text-align:center">⚖️</span>
+              <div><div style="font-weight:600;font-size:.88rem;color:var(--primary)">Ajustement des soldes</div><div style="font-size:.74rem;color:var(--text-light)">Créditer ou débiter un agent</div></div>
+              <span style="margin-left:auto;color:var(--text-muted)">›</span>
+            </button>
+            <button onclick="showPage('annuaire')" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-input);border-radius:var(--radius-sm);border:1.5px solid var(--border);text-align:left;width:100%">
+              <span style="font-size:1.3rem;width:32px;text-align:center">📇</span>
+              <div><div style="font-weight:600;font-size:.88rem;color:var(--primary)">Annuaire</div><div style="font-size:.74rem;color:var(--text-light)">Fiches personnelles des agents</div></div>
+              <span style="margin-left:auto;color:var(--text-muted)">›</span>
+            </button>
+            <button onclick="showPage('agents')" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-input);border-radius:var(--radius-sm);border:1.5px solid var(--border);text-align:left;width:100%">
+              <span style="font-size:1.3rem;width:32px;text-align:center">🔐</span>
+              <div><div style="font-weight:600;font-size:.88rem;color:var(--primary)">Code PIN</div><div style="font-size:.74rem;color:var(--text-light)">Gestion des agents et codes PIN</div></div>
+              <span style="margin-left:auto;color:var(--text-muted)">›</span>
+            </button>
+            <button onclick="showPage('export')" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-input);border-radius:var(--radius-sm);border:1.5px solid var(--border);text-align:left;width:100%">
+              <span style="font-size:1.3rem;width:32px;text-align:center">💾</span>
+              <div><div style="font-weight:600;font-size:.88rem;color:var(--primary)">Export Excel</div><div style="font-size:.74rem;color:var(--text-light)">Télécharger toutes les données</div></div>
+              <span style="margin-left:auto;color:var(--text-muted)">›</span>
+            </button>
+          </div>
         </div>
+
         <!-- Dernières demandes -->
         <div class="card">
           <h2>🕐 Dernières demandes reçues</h2>
@@ -349,11 +378,8 @@ textarea{resize:vertical;min-height:80px}
         </div>
       </div>
 
-      <!-- Activité récente agents -->
-      <div id="home-agent-recent" class="card">
-        <h2>Activité récente</h2>
-        <div id="home-recent"><div class="loading-center"><div class="spinner"></div></div></div>
-      </div>
+      <!-- Activité récente agents (masquée pour direction) -->
+      <div id="home-agent-recent" style="display:none"></div>
     </div>
 
     <!-- DEMANDE AGENT -->
@@ -425,21 +451,19 @@ textarea{resize:vertical;min-height:80px}
       </div>
     </div>
 
-    <!-- VALIDATION -->
+    <!-- VALIDATION & HISTORIQUE (fusionnés) -->
     <div id="page-validation" class="page">
+
+      <!-- SECTION VALIDATION DES DEMANDES -->
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <h2>Validation</h2>
+          <h2>✅ Validation des demandes</h2>
           <button class="btn btn-secondary btn-sm" onclick="loadValidation()">🔄</button>
         </div>
-        <!-- Recherche + filtres -->
-        <div style="position:relative;margin-bottom:8px">
-          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%)">🔍</span>
-          <input type="text" id="valid-search" placeholder="Rechercher un agent…" oninput="renderValidation()" style="padding-left:34px;width:100%"/>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-          <div><label>Service</label><select id="valid-service-filter" onchange="renderValidation()"><option value="">— Tous —</option></select></div>
-          <div><label>Agent</label><select id="valid-nom-filter" onchange="renderValidation()"><option value="">— Tous —</option></select></div>
+        <div class="form-group" style="margin-bottom:12px;position:relative">
+          <label>Rechercher un agent</label>
+          <input type="text" id="valid-nom-filter" placeholder="Tapez un nom d'agent…" autocomplete="off" style="width:100%"/>
+          <div id="valid-agent-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--primary-light);border-radius:var(--radius-sm);box-shadow:var(--shadow);z-index:50;max-height:180px;overflow-y:auto"></div>
         </div>
         <div class="tabs" id="valid-tabs">
           <div class="tab active" onclick="filterValidStatus('En attente',this)">⏳ En attente</div>
@@ -449,19 +473,15 @@ textarea{resize:vertical;min-height:80px}
         </div>
         <div id="validation-list"><div class="loading-center"><div class="spinner"></div></div></div>
       </div>
-    </div>
 
-    <!-- HISTORIQUE -->
-    <div id="page-tableau" class="page">
-      <div class="card">
+      <!-- SECTION SOLDES & AJUSTEMENTS -->
+      <div class="card" style="margin-top:0">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <h2>Historique des agents</h2>
+          <h2>📊 Soldes & Ajustements</h2>
           <button class="btn btn-secondary btn-sm" onclick="loadTableau()">🔄</button>
         </div>
-        <!-- Barre de recherche -->
-        <div style="position:relative;margin-bottom:10px">
-          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%)">🔍</span>
-          <select id="tableau-agent-filter" onchange="filterTableauAgent()" style="padding-left:34px;width:100%">
+        <div class="form-group" style="margin-bottom:10px">
+          <select id="tableau-agent-filter" onchange="filterTableauAgent()" style="width:100%">
             <option value="">— Tous les agents —</option>
           </select>
         </div>
@@ -474,6 +494,8 @@ textarea{resize:vertical;min-height:80px}
         <div id="tableau-list"><div class="loading-center"><div class="spinner"></div></div></div>
       </div>
     </div>
+
+    <!-- PAGE TABLEAU SUPPRIMÉE — fusionnée dans validation -->
 
     <!-- MES COORDONNÉES -->
     <div id="page-coordonnees" class="page">
@@ -657,10 +679,8 @@ textarea{resize:vertical;min-height:80px}
           <button class="btn btn-secondary btn-sm" onclick="loadAjustements()">🔄</button>
         </div>
         <div style="position:relative;margin-bottom:10px">
-          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%)">🔍</span>
-          <select id="ajust-filter-agent" onchange="renderAjustements()" style="padding-left:34px;width:100%">
-            <option value="">— Tous les agents —</option>
-          </select>
+          <input type="text" id="ajust-filter-agent" placeholder="🔍 Tapez un nom d'agent…" autocomplete="off" style="width:100%"/>
+          <div id="ajust-agent-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--primary-light);border-radius:var(--radius-sm);box-shadow:var(--shadow);z-index:50;max-height:180px;overflow-y:auto"></div>
         </div>
         <div id="ajust-list"><div class="loading-center"><div class="spinner"></div></div></div>
       </div>
@@ -721,29 +741,22 @@ textarea{resize:vertical;min-height:80px}
       </div>
     </div>
 
-    <!-- AGENTS -->
+    <!-- AGENTS / CODE PIN -->
     <div id="page-agents" class="page">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <h2>👥 Agents (<span id="agents-count">—</span>)</h2>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-secondary btn-sm" onclick="loadAgents()">🔄</button>
-            <button class="btn btn-primary btn-sm" onclick="toggleAddAgentForm()" id="btn-toggle-add">➕ Ajouter</button>
-          </div>
+          <h2>🔐 Code PIN (<span id="agents-count">—</span>)</h2>
+          <button class="btn btn-secondary btn-sm" onclick="loadAgents()">🔄</button>
         </div>
-
-        <!-- Barre de recherche -->
         <div style="position:relative;margin-bottom:12px">
           <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:1rem">🔍</span>
           <input type="text" id="agent-search" placeholder="Rechercher un agent par nom…" oninput="filterAgents()" style="padding-left:34px;width:100%"/>
         </div>
-
-        <!-- Liste agents -->
         <div id="agents-list"><div class="loading-center"><div class="spinner"></div></div></div>
       </div>
 
-      <!-- Formulaire ajout (masqué par défaut) -->
-      <div class="card" id="add-agent-form" style="display:none">
+      <!-- Formulaire ajout — toujours visible -->
+      <div class="card" id="add-agent-form">
         <h2>➕ Ajouter un agent</h2>
         <div class="form-group"><label>Nom complet</label><input type="text" id="new-nom" placeholder="Prénom NOM"/></div>
         <div class="form-group"><label>Service</label>
@@ -765,10 +778,7 @@ textarea{resize:vertical;min-height:80px}
         <div class="form-group" id="email-grp" style="display:none">
           <label>Email</label><input type="email" id="new-email" placeholder="prenom.nom@crous-lille.fr"/>
         </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" style="flex:1" onclick="addAgent()">💾 Enregistrer</button>
-          <button class="btn btn-secondary" onclick="toggleAddAgentForm()">✕ Annuler</button>
-        </div>
+        <button class="btn btn-primary" onclick="addAgent()">💾 Ajouter l'agent</button>
       </div>
     </div>
 
@@ -801,11 +811,7 @@ textarea{resize:vertical;min-height:80px}
     </button>
     <button class="nav-btn" id="nav-validation" onclick="showPage('validation')" style="display:none">
       <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-      Validation<span class="notif-badge" id="badge-validation"></span>
-    </button>
-    <button class="nav-btn" id="nav-tableau" onclick="showPage('tableau')" style="display:none">
-      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Historique
+      Suivi<span class="notif-badge" id="badge-validation"></span>
     </button>
     <button class="nav-btn" id="nav-agents" onclick="showPage('agents')" style="display:none">
       <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -823,7 +829,7 @@ textarea{resize:vertical;min-height:80px}
 </div>
 
 <script>
-const GAS='https://script.google.com/macros/s/AKfycbw8kYzU7Nn_TtNB9bf5u6hVHUSnVoG0vQXlAV5JDyRY3lh_8GDvfTDZ0XNa4YjAH9ut7g/exec';
+const GAS='https://script.google.com/macros/s/AKfycbyfmFaEEVjdb36Mr7pTQ3nX0aM1ap8dHEuGPXWJaYwejZ2KCwPQyNe_Jo1WLVVO1tRZIw/exec';
 
 let CU=null,allAgents=[],allDemandes=[],allValidDem=[],allSoldes=[],agentsCache=[];
 let mesdemFilter='all',validFilter='En attente',tableauFilter='all';
@@ -1044,13 +1050,60 @@ function startAutoRefresh(){
     const activePage=document.querySelector('.page.active');
     if(activePage){
       const id=activePage.id;
-      if(id==='page-validation') loadValidation();
-      if(id==='page-tableau')    loadTableau();
+      if(id==='page-validation') { loadValidation(); loadTableau(); }
     }
   }, 60000);
 }
 function clearAutoRefresh(){
   if(autoRefreshInterval){clearInterval(autoRefreshInterval);autoRefreshInterval=null;}
+}
+
+// ══ AUTOCOMPLÉTION AGENT ═════════════════════════════
+let _validAgentNames=[];
+let _ajustAgentNames=[];
+
+function buildSuggestionBox(input, box, names, onSelect){
+  if(!input||!box) return;
+  const q=(input.value||'').toLowerCase().trim();
+  const matches=q ? names.filter(n=>n.toLowerCase().includes(q)) : [...names];
+  if(!matches.length){ box.style.display='none'; return; }
+  box.innerHTML='';
+  matches.slice(0,12).forEach(n=>{
+    const div=document.createElement('div');
+    div.textContent=n;
+    div.style.cssText='padding:10px 14px;cursor:pointer;font-size:.88rem;border-bottom:1px solid var(--border);background:#fff';
+    div.onmousedown=e=>{ e.preventDefault(); input.value=n; box.style.display='none'; onSelect(n); };
+    div.onmouseover=()=>{ div.style.background='var(--bg-input)'; };
+    div.onmouseout=()=>{ div.style.background='#fff'; };
+    box.appendChild(div);
+  });
+  box.style.display='block';
+}
+
+function setupAgentAutocomplete(inputId, boxId, getNames, onSelect){
+  const input=document.getElementById(inputId);
+  const box=document.getElementById(boxId);
+  if(!input||!box) return;
+  input.oninput=()=>{ buildSuggestionBox(input,box,getNames(),onSelect); onSelect(null); };
+  input.onfocus=()=>buildSuggestionBox(input,box,getNames(),onSelect);
+  input.onblur=()=>setTimeout(()=>{ box.style.display='none'; },200);
+  input.onkeydown=e=>{ if(e.key==='Escape'||e.key==='Delete'){ input.value=''; box.style.display='none'; onSelect(''); } };
+}
+
+function initValidAutocomplete(){
+  setupAgentAutocomplete(
+    'valid-nom-filter','valid-agent-suggestions',
+    ()=>_validAgentNames,
+    (nom)=>renderValidation()
+  );
+}
+
+function initAjustAutocomplete(){
+  setupAgentAutocomplete(
+    'ajust-filter-agent','ajust-agent-suggestions',
+    ()=>_ajustAgentNames,
+    (nom)=>renderAjustements()
+  );
 }
 
 // ══ INIT APP ═════════════════════════════════════════
@@ -1062,15 +1115,15 @@ function initApp(){
   document.getElementById('user-badge').textContent='🚪 '+CU.nom.split(' ')[0];
 
   // Masquer TOUS les onglets direction par défaut
-  ['nav-ajustement','nav-validation','nav-tableau','nav-agents','nav-annuaire'].forEach(id=>{
+  ['nav-ajustement','nav-validation','nav-agents','nav-annuaire','nav-export'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.style.display='none';
   });
   // Afficher onglets agents par défaut
   ['nav-demande','nav-mesdem','nav-solde','nav-coordonnees'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.style.display='flex';
   });
-  document.getElementById('home-agent-buttons').style.display='grid';
-  document.getElementById('home-agent-recent').style.display='block';
+  document.getElementById('home-agent-buttons').style.display='block';
+  document.getElementById('home-agent-recent').style.display='none';
   document.getElementById('home-resp-recap').style.display='none';
 
   if(isResp){
@@ -1082,7 +1135,7 @@ function initApp(){
     document.getElementById('home-agent-recent').style.display='none';
     // Afficher onglets direction
     document.getElementById('home-resp-recap').style.display='block';
-    ['nav-ajustement','nav-annuaire','nav-export','nav-validation','nav-tableau','nav-agents'].forEach(id=>{
+    ['nav-ajustement','nav-annuaire','nav-export','nav-validation','nav-agents'].forEach(id=>{
       const el=document.getElementById(id); if(el) el.style.display='flex';
     });
     const sel=document.getElementById('agent-pour-demande');
@@ -1117,15 +1170,14 @@ function showPage(name){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name)?.classList.add('active');
   document.getElementById('nav-'+name)?.classList.add('active');
-  if(name==='mesdem')    loadMesDemandes();
-  if(name==='solde')     loadSolde();
-  if(name==='validation')loadValidation();
-  if(name==='tableau')   loadTableau();
-  if(name==='agents')    loadAgents();
+  if(name==='mesdem')     loadMesDemandes();
+  if(name==='solde')      loadSolde();
+  if(name==='validation') { loadValidation(); loadTableau(); }
+  if(name==='agents')     loadAgents();
   if(name==='coordonnees') loadCoordonnees();
-  if(name==='annuaire')  loadAnnuaire();
+  if(name==='annuaire')   loadAnnuaire();
   if(name==='ajustement') loadAjustements();
-  if(name==='export')    initExportPage();
+  if(name==='export')     initExportPage();
 }
 
 // ══ TYPE DEMANDE ═════════════════════════════════════
@@ -1200,57 +1252,137 @@ async function loadSolde(){
   const el=document.getElementById('solde-content');
   el.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
-    const d=await gasGet({action:'get_soldes'});
-    // Cherche le solde de l'agent (insensible à la casse des clés)
-    const s=(d.soldes||[]).find(x=>(x.nom||x['Nom']||x['NOM']||'')===CU.nom)||{};
-    const p=parseInt(s.prises||s['Heures prises (min)'])||0;
-    const r=parseInt(s.recuperees||s['Heures récup. (min)'])||0;
-    const sol=parseInt(s.solde||s['Solde (min)'])||(r-p);
-    const solH=s.solde_heures||s['Solde (heures)']||minsToHHMM(sol);
+    // Charge soldes ET ajustements validés en parallèle
+    const [dSol, dAjust] = await Promise.all([
+      gasGet({action:'get_soldes'}),
+      gasGet({action:'get_ajustements'})
+    ]);
+
+    // Solde de base depuis la feuille Soldes
+    const s=(dSol.soldes||[]).find(x=>(x.nom||x['Nom']||'')===CU.nom)||{};
+    let p=parseInt(s.prises||s['Heures prises (min)'])||0;
+    let r=parseInt(s.recuperees||s['Heures récup. (min)'])||0;
+
+    // Calcul solde de base
+    let solBase=r-p;
+
+    // Ajustements validés de cet agent
+    const ajusts=(dAjust.ajustements||[]).filter(a=>
+      (a.statut==='Validé'||a.statut==='Validé ✅') &&
+      (a.nom||'')=== CU.nom
+    );
+
+    // Calcule le total des ajustements en minutes
+    let ajustTotal=0;
+    ajusts.forEach(a=>{
+      const mins=dureeToMinsFront(a.duree||'');
+      if(a.type==='credit') ajustTotal+=mins;
+      else ajustTotal-=mins;
+    });
+
+    const sol=solBase+ajustTotal;
     const cls=sol>0?'s-pos':sol<0?'s-neg':'s-zero';
+
+    // Détail des ajustements
+    let ajustDetail='';
+    if(ajusts.length){
+      ajustDetail=`<div style="margin-top:10px;font-size:.78rem;color:var(--text-light);border-top:1px solid var(--border);padding-top:8px">
+        <div style="font-weight:600;margin-bottom:4px;color:var(--primary)">⚖️ Ajustements validés :</div>
+        ${ajusts.map(a=>{
+          const isC=a.type==='credit';
+          return `<div style="display:flex;justify-content:space-between;padding:3px 0">
+            <span>${esc(a.motif||'Ajustement')} · ${esc(a.date||'')}</span>
+            <span style="font-weight:700;color:${isC?'var(--success)':'var(--danger)'}">${isC?'+':'-'}${esc(a.duree||'')}</span>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }
+
     el.innerHTML=`
       <div class="solde-grid">
         <div class="solde-box"><div class="val s-neg">${minsToHHMM(p)}</div><div class="lbl">Heures prises</div></div>
         <div class="solde-box"><div class="val s-pos">${minsToHHMM(r)}</div><div class="lbl">Heures récupérées</div></div>
       </div>
+      ${ajustTotal!==0?`<div class="solde-box" style="padding:10px 14px;margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:.85rem;color:var(--text-light)">⚖️ Ajustements</span>
+        <span style="font-weight:700;color:${ajustTotal>=0?'var(--success)':'var(--danger)'}">
+          ${ajustTotal>=0?'+':''}${minsToHHMM(ajustTotal)}
+        </span>
+      </div>`:''}
       <div class="solde-box" style="padding:16px;text-align:center;margin-top:8px">
-        <div class="val ${cls}" style="font-size:1.8rem">${sol>=0?'+':''}${solH}</div>
+        <div class="val ${cls}" style="font-size:1.8rem">${sol>=0?'+':''}${minsToHHMM(sol)}</div>
         <div class="lbl">Solde total</div>
-      </div>`;
+      </div>
+      ${ajustDetail}`;
   }catch(e){el.innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>';}
+}
+
+// Convertit "Xh Ymin" ou "Xh" en minutes (côté front)
+function dureeToMinsFront(duree){
+  if(!duree) return 0;
+  if(duree.includes(':')){
+    const p=duree.split(':');
+    return parseInt(p[0]||0)*60+parseInt(p[1]||0);
+  }
+  const h=parseInt((duree.match(/(\d+)h/)||[])[1]||0);
+  const m=parseInt((duree.match(/(\d+)\s*min/)||[])[1]||0);
+  return h*60+m;
 }
 
 // ══ VALIDATION ═══════════════════════════════════════
 async function loadValidation(){
   document.getElementById('validation-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
-    const d=await gasGet({action:'get_demandes'});
-    allValidDem=d.demandes||[];
-    const services=[...new Set(allValidDem.map(x=>x.service).filter(Boolean))].sort();
-    const selS=document.getElementById('valid-service-filter');
-    const curS=selS.value;
-    selS.innerHTML='<option value="">— Tous —</option>'+services.map(s=>'<option'+(s===curS?' selected':'')+'>'+s+'</option>').join('');
-    const noms=[...new Set(allValidDem.map(x=>x.nom).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
-    const selN=document.getElementById('valid-nom-filter');
-    const curN=selN.value;
-    selN.innerHTML='<option value="">— Tous —</option>'+noms.map(n=>'<option'+(n===curN?' selected':'')+'>'+n+'</option>').join('');
+    const [dDem, dAjust] = await Promise.all([
+      gasGet({action:'get_demandes'}),
+      gasGet({action:'get_ajustements'})
+    ]);
+    allValidDem=dDem.demandes||[];
+    window._ajustValides=(dAjust.ajustements||[]).filter(a=>a.statut==='Validé'||a.statut==='Validé ✅');
+    // Peupler autocomplétion
+    _validAgentNames=[...new Set(allValidDem.map(x=>x.nom||x['Nom']||'').filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
+    initValidAutocomplete();
+
     renderValidation();
     updateBadges(allValidDem.filter(x=>x.statut==='En attente').length);
   }catch(e){document.getElementById('validation-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>';}
+  loadTableau();
 }
+
 function filterValidStatus(f,el){validFilter=f;document.querySelectorAll('#valid-tabs .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderValidation();}
+
 function renderValidation(){
-  const service=document.getElementById('valid-service-filter').value;
-  const nom=document.getElementById('valid-nom-filter').value;
-  const search=(document.getElementById('valid-search')?.value||'').toLowerCase();
+  const nom=(document.getElementById('valid-nom-filter')?.value||'').trim();
   let list=allValidDem;
-  if(service) list=list.filter(d=>d.service===service);
-  if(nom) list=list.filter(d=>d.nom===nom);
-  if(search) list=list.filter(d=>(d.nom||'').toLowerCase().includes(search)||(d.service||'').toLowerCase().includes(search));
+  if(nom) list=list.filter(d=>(d.nom||d['Nom']||'').toLowerCase().includes(nom.toLowerCase()));
   if(validFilter!=='all') list=list.filter(d=>d.statut===validFilter);
   const el=document.getElementById('validation-list');
-  if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucune demande</p>';return;}
-  let html=nom?`<div style="font-size:.85rem;font-weight:600;color:var(--primary);margin-bottom:10px;padding:8px 12px;background:var(--bg-input);border-radius:var(--radius-sm)">📋 Historique de ${esc(nom)} — ${list.length} demande(s)</div>`:'';
+
+  let html='';
+  // Si un agent est sélectionné, affiche aussi ses ajustements validés
+  if(nom && window._ajustValides){
+    const ajusts=window._ajustValides.filter(a=>a.nom===nom);
+    if(ajusts.length){
+      html+=`<div style="font-size:.78rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:6px 10px;background:var(--bg-input);border-radius:var(--radius-sm)">⚖️ Ajustements validés</div>`;
+      html+=ajusts.map(a=>{
+        const isCredit=a.type==='credit';
+        return `<div class="demande-item validee" style="border-left-color:${isCredit?'var(--success)':'var(--danger)'}">
+          <div class="demande-header">
+            <div>
+              <div class="demande-title">⚖️ Ajustement ${isCredit?'Crédit':'Débit'}</div>
+              <div class="demande-meta">${esc(a.motif||'')} · ${esc(a.date||'')}</div>
+              <div class="demande-meta" style="font-size:.72rem;color:var(--text-muted)">Saisi par ${esc(a.saisi_par||'')}</div>
+            </div>
+            <div style="font-weight:700;color:${isCredit?'var(--success)':'var(--danger)'}">${isCredit?'+':'-'}${esc(a.duree||'')}</div>
+          </div>
+        </div>`;
+      }).join('');
+      html+=`<div style="font-size:.78rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px;padding:6px 10px;background:var(--bg-input);border-radius:var(--radius-sm)">📋 Demandes — ${list.length} enregistrement(s)</div>`;
+    }
+  }
+
+  if(!list.length && !html){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucune demande</p>';return;}
+  if(!list.length){el.innerHTML=html||'<p style="color:var(--text-muted);padding:12px;text-align:center">Aucune demande</p>';return;}
   html+=list.map(d=>demandeCard(d,true)).join('');
   el.innerHTML=html;
 }
@@ -1294,38 +1426,52 @@ function filterTableau(f,el){tableauFilter=f;document.querySelectorAll('#tableau
 function renderTableau(){
   let list=allSoldes;
   const agentFilter=(document.getElementById('tableau-agent-filter')?.value||'');
-  const fn=s=>parseInt(s.solde||s['Solde'])||0;
-  if(agentFilter) list=list.filter(s=>(s.nom||s['Nom']||'')=== agentFilter);
-  if(tableauFilter==='neg')list=list.filter(s=>fn(s)<0);
-  if(tableauFilter==='pos')list=list.filter(s=>fn(s)>0);
-  if(tableauFilter==='zero')list=list.filter(s=>fn(s)===0);
+  // Normalise les données pour gérer Nom/nom, Service/service etc.
+  list=list.map(s=>({
+    nom:     s.nom||s['Nom']||s['NOM']||'',
+    service: s.service||s['Service']||'',
+    solde:   parseInt(s.solde||s['Solde (min)']||s['Solde'])||0,
+    solde_heures: s.solde_heures||s['Solde (heures)']||''
+  })).filter(s=>s.nom);
+
+  if(agentFilter) list=list.filter(s=>s.nom===agentFilter);
+  if(tableauFilter==='neg')  list=list.filter(s=>s.solde<0);
+  if(tableauFilter==='pos')  list=list.filter(s=>s.solde>0);
+  if(tableauFilter==='zero') list=list.filter(s=>s.solde===0);
+
+  // Peupler le select filtre
+  const sel=document.getElementById('tableau-agent-filter');
+  if(sel && sel.options.length<=1){
+    const noms=[...new Set(allSoldes.map(s=>s.nom||s['Nom']||'').filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
+    sel.innerHTML='<option value="">— Tous les agents —</option>'+noms.map(n=>`<option value="${esc(n)}"${n===agentFilter?' selected':''}>${esc(n)}</option>`).join('');
+  }
+
   const el=document.getElementById('tableau-list');
   if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun résultat</p>';return;}
   el.innerHTML=list.map(s=>{
-    const nom=s.nom||s['Nom']||'';
-    const service=s.service||s['Service']||'';
-    const sol=fn(s);
+    const sol=s.solde;
     const cls=sol>0?'s-pos':sol<0?'s-neg':'s-zero';
-    const soldeH=s.solde_heures||minsToHHMM(Math.abs(sol));
-    return `<div class="agent-row" style="cursor:pointer" onclick="voirHistoriqueAgent('${esc(nom)}')">
-      <div class="agent-avatar">${esc(nom).charAt(0).toUpperCase()}</div>
+    const solH=s.solde_heures||minsToHHMM(Math.abs(sol));
+    const sign=sol>0?'+':sol<0?'-':'';
+    return `<div class="agent-row" style="cursor:pointer" onclick="voirHistoriqueAgent('${esc(s.nom)}')">
+      <div class="agent-avatar">${s.nom.charAt(0).toUpperCase()}</div>
       <div class="agent-info">
-        <div class="agent-name">${esc(nom)}</div>
-        <div class="agent-service">${esc(service)} <span style="color:var(--primary-light);font-size:.7rem">▶ historique</span></div>
+        <div class="agent-name">${esc(s.nom)}</div>
+        <div class="agent-service">${esc(s.service)} <span style="color:var(--primary-light);font-size:.7rem">▶ historique</span></div>
       </div>
-      <div class="val ${cls}" style="font-size:1rem;font-weight:700">${sol>=0?'+':''}${soldeH}</div>
+      <div class="val ${cls}" style="font-size:1rem;font-weight:700">${sign}${solH}</div>
     </div>`;
   }).join('');
 }
 function voirHistoriqueAgent(nom){
-  showPage('validation');
-  setTimeout(()=>{
-    document.getElementById('valid-nom-filter').value=nom;
-    validFilter='all';
-    document.querySelectorAll('#valid-tabs .tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('#valid-tabs .tab')[1].classList.add('active');
-    renderValidation();
-  },400);
+  document.getElementById('valid-nom-filter').value=nom;
+  validFilter='all';
+  document.querySelectorAll('#valid-tabs .tab').forEach(t=>t.classList.remove('active'));
+  const tabs=document.querySelectorAll('#valid-tabs .tab');
+  if(tabs[1]) tabs[1].classList.add('active');
+  renderValidation();
+  // Scroll vers la section validation
+  document.getElementById('validation-list').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 // ══ AGENTS ═══════════════════════════════════════════
@@ -1570,11 +1716,29 @@ async function loadAnnuaire(){
       gasGet({action:'get_agents'}),
       gasGet({action:'get_all_coordonnees'})
     ]);
-    const agents = (da.agents||[]).filter(a=>(a.role||'agent')!=='responsable');
-    const coordMap = {};
-    (dc.agents||[]).forEach(c=>{ if(c.nom) coordMap[c.nom]=c; });
-    // Fusionne : chaque agent + ses coordonnées si disponibles
-    allAnnuaireAgents = agents.map(a=>({...coordMap[a.nom]||{}, ...a, _hasCoord:!!coordMap[a.nom]}));
+    const agents = (da.agents||[]).filter(a=>{
+      const role=(a.role||a['Role']||'agent').toLowerCase();
+      return role!=='responsable';
+    }).map(a=>({
+      nom:     a.nom||a['Nom']||'',
+      service: a.service||a['Service']||'',
+      role:    (a.role||a['Role']||'agent').toLowerCase(),
+      pin:     a.pin||a['PIN']||'',
+      email:   a.email||a['Email Responsable']||''
+    }));
+
+    const coordMap={};
+    (dc.agents||[]).forEach(c=>{
+      const n=c.nom||c['Nom']||'';
+      if(n) coordMap[n]=c;
+    });
+
+    allAnnuaireAgents=agents.map(a=>({
+      ...coordMap[a.nom]||{},
+      ...a,
+      nom: a.nom, // s'assure que nom est toujours la clé minuscule
+      _hasCoord: !!coordMap[a.nom]
+    }));
     if(!allAnnuaireAgents.length){
       list.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun agent</p>';return;
     }
@@ -1583,27 +1747,30 @@ async function loadAnnuaire(){
 }
 
 function filterAnnuaire(){
-  const q=(document.getElementById('annuaire-search').value||'').toLowerCase();
-  const filtered=allAnnuaireAgents.filter(a=>
-    (a.nom||'').toLowerCase().includes(q)||
-    (a.affectation||a.service||'').toLowerCase().includes(q)||
-    (a.tel||'').includes(q)||
-    (a['nom-usage']||'').toLowerCase().includes(q)
-  );
+  const q=(document.getElementById('annuaire-search').value||'').toLowerCase().trim();
+  if(!q){ renderAnnuaire(allAnnuaireAgents); return; }
+  const filtered=allAnnuaireAgents.filter(a=>{
+    const nom=(a.nom||a['Nom']||'').toLowerCase();
+    const aff=(a.affectation||a.service||a['Service']||'').toLowerCase();
+    const tel=(a.tel||'').toLowerCase();
+    const nomUsage=(a['nom-usage']||'').toLowerCase();
+    return nom.includes(q)||aff.includes(q)||tel.includes(q)||nomUsage.includes(q);
+  });
   renderAnnuaire(filtered);
 }
 
 function renderAnnuaire(agents){
   const list=document.getElementById('annuaire-list');
   if(!agents.length){list.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun résultat</p>';return;}
-  // Stocke les données dans un tableau global pour éviter les bugs d'apostrophes
   window._annuaireData=agents;
-  list.innerHTML=agents.map((a,i)=>`
-    <div class="agent-row" style="cursor:pointer" onclick="showAgentCoordIdx(${i})">
-      <div class="agent-avatar">${(a.nom||'?').charAt(0).toUpperCase()}</div>
+  list.innerHTML=agents.map((a,i)=>{
+    const nom=a.nom||a['Nom']||'';
+    const service=a.affectation||a.service||a['Service']||'';
+    return `<div class="agent-row" style="cursor:pointer" onclick="showAgentCoordIdx(${i})">
+      <div class="agent-avatar">${(nom||'?').charAt(0).toUpperCase()}</div>
       <div class="agent-info">
-        <div class="agent-name">${esc(a.nom||'')}</div>
-        <div class="agent-service">${esc(a.affectation||a.service||'')}
+        <div class="agent-name">${esc(nom)}</div>
+        <div class="agent-service">${esc(service)}
           <span style="color:var(--primary-light);font-size:.7rem"> ▶ voir fiche</span>
         </div>
         <div style="font-size:.72rem;margin-top:2px">
@@ -1612,7 +1779,8 @@ function renderAnnuaire(agents){
             : `<span style="color:var(--danger)">⚠️ Fiche non remplie</span>`}
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function showAgentCoordIdx(i){
@@ -1688,11 +1856,11 @@ function selectAjustType(t){
 
 function fillAjustAgentSelect(){
   const sel=document.getElementById('ajust-agent');
-  const selF=document.getElementById('ajust-filter-agent');
+  if(!sel) return;
   const agents=[...allAgents].filter(a=>a.role!=='responsable').sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
-  const opts='<option value="">— Sélectionnez —</option>'+agents.map(a=>`<option value="${esc(a.nom)}">${esc(a.nom)} — ${esc(a.service||'')}</option>`).join('');
-  sel.innerHTML=opts;
-  selF.innerHTML='<option value="">— Tous les agents —</option>'+agents.map(a=>`<option value="${esc(a.nom)}">${esc(a.nom)}</option>`).join('');
+  sel.innerHTML='<option value="">— Sélectionnez —</option>'+agents.map(a=>`<option value="${esc(a.nom)}">${esc(a.nom)} — ${esc(a.service||'')}</option>`).join('');
+  // Peupler autocomplétion filtre
+  _ajustAgentNames=agents.map(a=>a.nom).filter(Boolean);
 }
 
 async function loadAjustements(){
@@ -1701,14 +1869,18 @@ async function loadAjustements(){
   try{
     const d=await gasGet({action:'get_ajustements'});
     allAjustements=d.ajustements||[];
+    // Peupler aussi depuis les ajustements existants
+    const fromAjust=[...new Set((allAjustements).map(a=>a.nom).filter(Boolean))];
+    _ajustAgentNames=[...new Set([..._ajustAgentNames,...fromAjust])].sort((a,b)=>a.localeCompare(b,'fr'));
+    initAjustAutocomplete();
     renderAjustements();
   }catch(e){document.getElementById('ajust-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>';}
 }
 
 function renderAjustements(){
-  const filterAgent=document.getElementById('ajust-filter-agent').value;
+  const q=(document.getElementById('ajust-filter-agent')?.value||'').toLowerCase().trim();
   let list=allAjustements;
-  if(filterAgent) list=list.filter(a=>a.nom===filterAgent);
+  if(q) list=list.filter(a=>(a.nom||'').toLowerCase().includes(q));
   window._ajustData=list;
   const el=document.getElementById('ajust-list');
   if(!list.length){el.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun ajustement</p>';return;}
