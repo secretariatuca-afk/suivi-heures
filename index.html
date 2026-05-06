@@ -1473,19 +1473,7 @@ async function loadMesDemandes(){
   document.getElementById('mesdem-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
     const d=await gasGet({action:'get_demandes',nom:CU.nom});
-    allDemandes=(d.demandes||[]).map(x=>({
-      id:        x.id||x['id']||'',
-      nom:       x.nom||x['nom']||x['Nom']||'',
-      service:   x.service||x['service']||x['Service']||'',
-      type:      x.type||x['type']||x['Type']||'',
-      date_debut:x.date_debut||x['date_debut']||'',
-      date_fin:  x.date_fin||x['date_fin']||'',
-      duree:     x.duree||x['duree']||x['Durée']||'',
-      observations:x.observations||x['observations']||'',
-      statut:    x.statut||x['statut']||x['Statut']||'',
-      created_at:x.created_at||x['created_at']||''
-    }));
-    // Mise à jour badge accueil
+    allDemandes=d.demandes||[];
     const nbAttente=allDemandes.filter(d=>d.statut==='En attente').length;
     const badge=document.getElementById('home-agent-pending-badge');
     const txt=document.getElementById('home-agent-pending-txt');
@@ -1514,7 +1502,7 @@ async function loadSolde(){
 
     // Calcule depuis les demandes validées
     let prises=0, recup=0;
-    const demValidees=(dDem.demandes||[]).filter(d=>d.statut==='Validée ✅'||d.statut==='Validée');
+    const demValidees=(dDem.demandes||[]).map(remapDemande).filter(d=>d.statut==='Validée ✅'||d.statut==='Validée');
     demValidees.forEach(d=>{
       const mins=dureeToMinsFront(d.duree||'');
       const t=(d.type||'').toLowerCase().trim();
@@ -1925,10 +1913,12 @@ function demandeCard(d,isAdmin){
 }
 
 // ══ ACTIVITÉ RÉCENTE ═════════════════════════════════
+function remapDemande(x){ return x; }
+
 async function loadRecentActivity(){
   try{
     const d=await gasGet({action:'get_demandes',nom:CU.nom});
-    const list=(d.demandes||[]).slice(0,3);
+    const list=(d.demandes||[]).slice(0,3).map(remapDemande);
     const el=document.getElementById('home-recent');
     if(!list.length){el.innerHTML='<p style="color:var(--text-muted);font-size:.85rem">Aucune demande récente</p>';return;}
     el.innerHTML=list.map(d=>demandeCard(d,false)).join('');
