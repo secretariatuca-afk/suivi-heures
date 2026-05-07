@@ -184,7 +184,6 @@ textarea{resize:vertical;min-height:80px}
         <label style="font-size:.82rem;color:var(--text-light);margin-bottom:6px">Votre nom</label>
         <input type="text" id="name-search"
           placeholder="🔍 Tapez votre nom…"
-          oninput="filterAgentsList(this.value)"
           autocomplete="off"
           style="-webkit-appearance:none;appearance:none;font-size:1rem;padding:12px 14px"/>
         <!-- Suggestions autocomplète -->
@@ -1038,19 +1037,6 @@ async function initNameScreen(){
   document.getElementById('name-error').textContent='';
   selectedName='';
 
-  // Restaure le nom mémorisé si case cochée
-  const saved=localStorage.getItem('crous_remember_name');
-  const cb=document.getElementById('remember-me');
-  if(saved){
-    cb.checked=true;
-    document.getElementById('name-search').value=saved;
-    selectedName=saved; // Sélection directe sans avoir besoin de la liste
-  } else {
-    document.getElementById('name-search').value='';
-    cb.checked=false;
-  }
-
-  // Setup blur pour fermer suggestions
   const input=document.getElementById('name-search');
   input.onblur=()=>setTimeout(()=>{
     const box=document.getElementById('name-suggestions');
@@ -1059,20 +1045,44 @@ async function initNameScreen(){
   input.onfocus=()=>{ if(input.value) filterAgentsList(input.value); };
   input.onkeydown=e=>{ if(e.key==='Enter') validateName(); };
 
+  // Charge les agents d'abord
   try{
     const d=await gasGet({action:'get_agents'});
     allAgents=d.agents||[];
-    // Si nom mémorisé ET case cochée → on peut valider directement
-    if(selectedName && document.getElementById('remember-me').checked){
-      const found=allAgents.find(a=>a.nom.toLowerCase()===selectedName.toLowerCase());
-      if(found) selectedName=found.nom;
-    }
-    // Mise à jour de la liste si quelque chose est tapé
-    const q=document.getElementById('name-search').value;
-    if(q) filterAgentsList(q);
   }catch(e){
     document.getElementById('name-error').textContent='Impossible de charger les agents.';
+    return;
   }
+
+  // Attache oninput APRES chargement des agents
+  input.oninput=()=>filterAgentsList(input.value);
+
+  // Restaure le nom mémorisé APRES chargement des agents
+  const saved=localStorage.getItem('crous_remember_name');
+  const cb=document.getElementById('remember-me');
+  if(saved){
+    cb.checked=true;
+    input.value=saved;
+    // Vérifie que l'agent existe toujours
+    const found=allAgents.find(a=>a.nom.toLowerCase()===saved.toLowerCase());
+    if(found){
+      selectedName=found.nom;
+      // Passe directement au PIN
+      setTimeout(()=>validateName(),100);
+    } else {
+      // Agent introuvable → on efface
+      localStorage.removeItem('crous_remember_name');
+      input.value='';
+      cb.checked=false;
+    }
+  } else {
+    input.value='';
+    cb.checked=false;
+  }
+
+  // Mise à jour de la liste si quelque chose est tapé
+  const q=input.value;
+  if(q) filterAgentsList(q);
 }
 
 function validateName(){
