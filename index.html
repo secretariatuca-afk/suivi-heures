@@ -2300,8 +2300,9 @@ function showAgentCoord(a){
   list.style.display='none';
   detail.innerHTML=html;
   detail.style.display='block';
-  // Scroll vers le haut de la card
-  detail.closest('.card')?.scrollIntoView({behavior:'smooth', block:'start'});
+  // Scroll vers le haut du conteneur principal
+  const content=document.getElementById('content');
+  if(content) content.scrollTop=0;
 }
 
 // ══ AJUSTEMENT SOLDES ════════════════════════════════
