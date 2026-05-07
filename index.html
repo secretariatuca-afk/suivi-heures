@@ -487,7 +487,7 @@ textarea{resize:vertical;min-height:80px}
           <div class="form-group"><label>Date de fin</label><input type="date" id="prises-fin"/></div>
           <div class="form-group"><label>Durée</label>
             <div class="duration-row">
-              <select id="prises-h"><option value="0">0 h</option><option value="1">1 h</option><option value="2">2 h</option><option value="3">3 h</option><option value="4">4 h</option><option value="5">5 h</option><option value="6">6 h</option><option value="7">7 h</option><option value="8" selected>8 h</option></select>
+              <select id="prises-h"><option value="0">0 h</option><option value="1">1 h</option><option value="2">2 h</option><option value="3">3 h</option><option value="4">4 h</option><option value="5">5 h</option><option value="6">6 h</option><option value="7">7 h</option><option value="8" selected>8 h</option><option value="9">9 h</option><option value="10">10 h</option><option value="11">11 h</option><option value="12">12 h</option></select>
               <select id="prises-m"><option value="0" selected>00 min</option><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option></select>
             </div>
           </div>
@@ -497,7 +497,7 @@ textarea{resize:vertical;min-height:80px}
           <div class="form-group"><label>Date effectuée</label><input type="date" id="sup-date"/></div>
           <div class="form-group"><label>Durée</label>
             <div class="duration-row">
-              <select id="sup-h"><option value="1" selected>1 h</option><option value="2">2 h</option><option value="3">3 h</option><option value="4">4 h</option><option value="5">5 h</option><option value="6">6 h</option><option value="7">7 h</option><option value="8">8 h</option></select>
+              <select id="sup-h"><option value="1" selected>1 h</option><option value="2">2 h</option><option value="3">3 h</option><option value="4">4 h</option><option value="5">5 h</option><option value="6">6 h</option><option value="7">7 h</option><option value="8">8 h</option><option value="9">9 h</option><option value="10">10 h</option><option value="11">11 h</option><option value="12">12 h</option></select>
               <select id="sup-m"><option value="0" selected>00 min</option><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option></select>
             </div>
           </div>
@@ -1452,7 +1452,7 @@ async function submitDemande(){
       const h=parseInt(document.getElementById('prises-h').value)||0;
       const m=parseInt(document.getElementById('prises-m').value)||0;
       p.type='Heures prises';p.date_debut=debut;p.date_fin=fin;
-      p.duree=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+      p.duree=String(h).padStart(2,'0')+'h'+String(m).padStart(2,'0');
       p.observations=document.getElementById('prises-obs').value.trim();
     }else{
       const date=document.getElementById('sup-date').value;
@@ -1460,7 +1460,7 @@ async function submitDemande(){
       const h=parseInt(document.getElementById('sup-h').value)||0;
       const m=parseInt(document.getElementById('sup-m').value)||0;
       p.type='Heures récupérées';p.date_debut=date;p.date_fin=date;
-      p.duree=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+      p.duree=String(h).padStart(2,'0')+'h'+String(m).padStart(2,'0');
       p.observations=document.getElementById('sup-obs').value.trim();
     }
     const res=await gasGet(p);
