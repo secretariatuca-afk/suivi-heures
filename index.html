@@ -995,11 +995,42 @@ function dureeToMinsFront(duree){
   return 0;
 }
 
-async function gasGet(p){
+// ══ CACHE SYSTÈME ════════════════════════════════════
+const _cache={};
+const _CACHE_TTL=60000; // 60 secondes
+
+async function gasGet(p, useCache=false){
   const url=new URL(GAS);
   Object.entries(p).forEach(([k,v])=>url.searchParams.set(k,v));
+  const key=url.toString();
+
+  // Si cache demandé et données fraîches disponibles → retour immédiat
+  if(useCache && _cache[key] && (Date.now()-_cache[key].ts < _CACHE_TTL)){
+    return _cache[key].data;
+  }
+
   const r=await fetch(url.toString(),{redirect:'follow'});
-  return r.json();
+  const data=await r.json();
+  _cache[key]=({data, ts:Date.now()});
+  return data;
+}
+
+function invalidateCache(action){
+  // Supprime les entrées cache liées à cette action
+  Object.keys(_cache).forEach(k=>{ if(k.includes(action)) delete _cache[k]; });
+}
+
+// Prefetch toutes les données au login
+async function prefetchAll(){
+  if(!CU) return;
+  const actions=[
+    {action:'get_demandes', nom:CU.nom},
+    {action:'get_soldes'},
+    {action:'get_ajustements'},
+    {action:'get_agents'},
+  ];
+  // Charge tout en parallèle silencieusement
+  await Promise.allSettled(actions.map(p=>gasGet(p, false)));
 }
 
 // ══ ÉCRAN NOM ════════════════════════════════════════
@@ -1058,7 +1089,7 @@ async function initNameScreen(){
 
   // Charge les agents d'abord
   try{
-    const d=await gasGet({action:'get_agents'});
+    const d=await gasGet({action:'get_agents'}, true);
     allAgents=d.agents||[];
   }catch(e){
     document.getElementById('name-error').textContent='Impossible de charger les agents.';
@@ -1239,7 +1270,7 @@ async function loadRespRecap(){
   checkExportReminder();
   try{
     // Demandes en attente
-    const d=await gasGet({action:'get_demandes'});
+    const d=await gasGet({action:'get_demandes'}, true);
     const demandes=d.demandes||[];
     const pending=demandes.filter(x=>x.statut==='En attente').length;
     document.getElementById('recap-pending').textContent=pending;
@@ -1252,13 +1283,13 @@ async function loadRespRecap(){
   }catch(e){}
   try{
     // Soldes négatifs
-    const s=await gasGet({action:'get_soldes'});
+    const s=await gasGet({action:'get_soldes'}, true);
     const negatifs=(s.soldes||[]).filter(x=>(parseInt(x.solde)||0)<0).length;
     document.getElementById('recap-negatifs').textContent=negatifs;
   }catch(e){}
   try{
     // Ajustements
-    const a=await gasGet({action:'get_ajustements'});
+    const a=await gasGet({action:'get_ajustements'}, true);
     document.getElementById('recap-ajust').textContent=(a.ajustements||[]).length;
   }catch(e){}
   try{
@@ -1378,13 +1409,15 @@ function initAjustAutocomplete(){
 // ══ INIT APP ═════════════════════════════════════════
 function initApp(){
   const isResp=(CU.role==='responsable');
-  // Affiche le prénom (dernier mot du nom complet)
   const parts=CU.nom.trim().split(' ');
   const prenom=parts[parts.length-1];
   document.getElementById('welcome-name').textContent=prenom;
   document.getElementById('welcome-service').textContent=CU.service||'';
   document.getElementById('header-subtitle').textContent=CU.service||'Suivi des Heures';
   document.getElementById('user-badge').textContent='🚪 '+CU.nom.split(' ')[0];
+
+  // Prefetch silencieux dès le login
+  prefetchAll();
 
   // Masquer TOUS les onglets direction par défaut
   ['nav-ajustement','nav-validation','nav-agents','nav-annuaire','nav-export','nav-solde-dir'].forEach(id=>{
@@ -1504,6 +1537,7 @@ async function submitDemande(){
     const res=await gasGet(p);
     if(res.ok){
       toast('✅ Demande envoyée'+(isResp?' pour '+nomAgent:'')+'!');
+      invalidateCache('get_demandes');
       document.getElementById('prises-obs').value='';
       document.getElementById('sup-obs').value='';
       if(isResp)document.getElementById('agent-pour-demande').value='';
@@ -1563,8 +1597,8 @@ async function loadSolde(){
   el.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
     const [dSol,dAjust,dDem]=await Promise.all([
-      gasGet({action:'get_soldes'}),
-      gasGet({action:'get_ajustements'}),
+      gasGet({action:'get_soldes'}, true),
+      gasGet({action:'get_ajustements'}, true),
       gasGet({action:'get_demandes',nom:CU.nom})
     ]);
     const s=(dSol.soldes||[]).find(x=>String(x.nom).trim()===String(CU.nom).trim())||{};
@@ -1623,8 +1657,8 @@ async function loadValidation(){
   document.getElementById('validation-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
     const [dDem, dAjust] = await Promise.all([
-      gasGet({action:'get_demandes'}),
-      gasGet({action:'get_ajustements'})
+      gasGet({action:'get_demandes'}, true),
+      gasGet({action:'get_ajustements'}, true)
     ]);
     allValidDem=dDem.demandes||[];
     window._ajustValides=(dAjust.ajustements||[]).filter(a=>a.statut==='Validé'||a.statut==='Validé ✅');
@@ -1689,7 +1723,14 @@ function renderValidation(){
 async function validerDemande(id,action){
   try{
     const res=await gasGet({action,id});
-    if(res.ok){toast(action==='valider'?'✅ Validée !':'❌ Refusée');loadValidation();loadPendingCount();}
+    if(res.ok){
+      toast(action==='valider'?'✅ Validée !':'❌ Refusée');
+      // Invalide le cache pour forcer rechargement
+      invalidateCache('get_demandes');
+      invalidateCache('get_soldes');
+      loadValidation();
+      loadPendingCount();
+    }
     else{toast('Erreur : '+(res.msg||''));}
   }catch(e){toast('Erreur réseau');}
 }
@@ -1702,14 +1743,14 @@ function updateBadges(n){
   if(card&&counter){counter.textContent=n;card.style.display=n>0?'block':'none';}
 }
 async function loadPendingCount(){
-  try{const d=await gasGet({action:'get_demandes'});updateBadges((d.demandes||[]).filter(x=>x.statut==='En attente').length);}catch(e){}
+  try{const d=await gasGet({action:'get_demandes'}, true);updateBadges((d.demandes||[]).filter(x=>x.statut==='En attente').length);}catch(e){}
 }
 
 // ══ HISTORIQUE ═══════════════════════════════════════
 async function loadTableau(){
   document.getElementById('tableau-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
-    const d=await gasGet({action:'get_soldes'});
+    const d=await gasGet({action:'get_soldes'}, true);
     allSoldes=d.soldes||[];
     // Peupler le select agent
     const sel=document.getElementById('tableau-agent-filter');
@@ -1777,7 +1818,7 @@ function voirHistoriqueAgent(nom){
 // ══ AGENTS ═══════════════════════════════════════════
 async function loadAgents(){
   document.getElementById('agents-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
-  try{const d=await gasGet({action:'get_agents'});agentsCache=d.agents||[];document.getElementById('agents-count').textContent=agentsCache.length;renderAgents(agentsCache);}
+  try{const d=await gasGet({action:'get_agents'}, true);agentsCache=d.agents||[];document.getElementById('agents-count').textContent=agentsCache.length;renderAgents(agentsCache);}
   catch(e){document.getElementById('agents-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>';}
 }
 function filterAgents(){const q=document.getElementById('agent-search').value.toLowerCase();renderAgents(agentsCache.filter(a=>(a.nom||'').toLowerCase().includes(q)||(a.service||'').toLowerCase().includes(q)));}
@@ -2057,7 +2098,7 @@ async function loadAnnuaire(){
   try{
     // Charge agents + coordonnées en parallèle
     const [da, dc] = await Promise.all([
-      gasGet({action:'get_agents'}),
+      gasGet({action:'get_agents'}, true),
       gasGet({action:'get_all_coordonnees'})
     ]);
     const agents = (da.agents||[]).filter(a=>{
@@ -2212,7 +2253,7 @@ async function loadAjustements(){
   fillAjustAgentSelect();
   document.getElementById('ajust-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
-    const d=await gasGet({action:'get_ajustements'});
+    const d=await gasGet({action:'get_ajustements'}, true);
     allAjustements=d.ajustements||[];
     // Peupler aussi depuis les ajustements existants
     const fromAjust=[...new Set((allAjustements).map(a=>a.nom).filter(Boolean))];
@@ -2409,11 +2450,11 @@ async function exporterTout(){
   showExportStatus(true);
   try{
     const [dDem,dSol,dAnn,dAjust,dAgt]=await Promise.all([
-      gasGet({action:'get_demandes'}),
-      gasGet({action:'get_soldes'}),
+      gasGet({action:'get_demandes'}, true),
+      gasGet({action:'get_soldes'}, true),
       gasGet({action:'get_all_coordonnees'}),
-      gasGet({action:'get_ajustements'}),
-      gasGet({action:'get_agents'}),
+      gasGet({action:'get_ajustements'}, true),
+      gasGet({action:'get_agents'}, true),
     ]);
     const wb=XLSX.utils.book_new();
     ajouterFeuilleAuto(wb,'Demandes',    dDem.demandes||[]);
@@ -2434,11 +2475,11 @@ async function exporterFeuille(type){
   try{
     const wb=XLSX.utils.book_new();
     if(type==='demandes'){
-      const d=await gasGet({action:'get_demandes'});
+      const d=await gasGet({action:'get_demandes'}, true);
       ajouterFeuilleAuto(wb,'Demandes',d.demandes||[]);
       logExport('Demandes');
     } else if(type==='soldes'){
-      const d=await gasGet({action:'get_soldes'});
+      const d=await gasGet({action:'get_soldes'}, true);
       ajouterFeuilleAuto(wb,'Soldes',d.soldes||[]);
       logExport('Soldes');
     } else if(type==='annuaire'){
@@ -2446,7 +2487,7 @@ async function exporterFeuille(type){
       ajouterFeuilleAuto(wb,'Annuaire',d.agents||[]);
       logExport('Annuaire');
     } else if(type==='ajustements'){
-      const d=await gasGet({action:'get_ajustements'});
+      const d=await gasGet({action:'get_ajustements'}, true);
       ajouterFeuilleAuto(wb,'Ajustements',d.ajustements||[]);
       logExport('Ajustements');
     }
@@ -2542,9 +2583,9 @@ async function loadSoldeDir(){
   document.getElementById('solde-dir-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
     const [dSol, dAjust, dAgt] = await Promise.all([
-      gasGet({action:'get_soldes'}),
-      gasGet({action:'get_ajustements'}),
-      gasGet({action:'get_agents'})
+      gasGet({action:'get_soldes'}, true),
+      gasGet({action:'get_ajustements'}, true),
+      gasGet({action:'get_agents'}, true)
     ]);
 
     // Normalise soldes
