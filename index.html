@@ -914,9 +914,12 @@ textarea{resize:vertical;min-height:80px}
       </div>
       <span id="nav-demande-label">Demande</span>
     </button>
-    <button class="nav-btn" id="nav-mesdem" onclick="showPage('mesdem')">
-      <div style="width:28px;height:28px;border-radius:7px;background:#fef9e7;display:flex;align-items:center;justify-content:center;margin-bottom:2px">
-        <svg viewBox="0 0 24 24" width="16" height="16" stroke="#f39c12" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    <button class="nav-btn" id="nav-mesdem" onclick="showPage('mesdem');clearNotifMesdem()">
+      <div style="position:relative;width:28px;height:28px;margin-bottom:2px">
+        <div style="width:28px;height:28px;border-radius:7px;background:#fef9e7;display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="#f39c12" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div id="notif-mesdem" style="display:none;position:absolute;top:-3px;right:-3px;width:10px;height:10px;background:#e74c3c;border-radius:50%;border:2px solid #fff"></div>
       </div>
       Mes dem.
     </button>
@@ -1509,12 +1512,35 @@ async function submitDemande(){
   finally{btn.disabled=false;btn.textContent='📤 Envoyer la demande';}
 }
 
+const NOTIF_KEY='crous_seen_statuts';
+
+function checkNotifMesdem(demandes){
+  if(!demandes||!demandes.length) return;
+  const seen=JSON.parse(localStorage.getItem(NOTIF_KEY)||'{}');
+  const hasNew=demandes.some(d=>{
+    const isDecided=d.statut==='Validée ✅'||d.statut==='Validée'||d.statut==='Refusée ❌'||d.statut==='Refusée';
+    return isDecided && seen[d.id]!==d.statut;
+  });
+  const dot=document.getElementById('notif-mesdem');
+  if(dot) dot.style.display=hasNew?'block':'none';
+}
+
+function clearNotifMesdem(){
+  if(!allDemandes||!allDemandes.length) return;
+  const seen=JSON.parse(localStorage.getItem(NOTIF_KEY)||'{}');
+  allDemandes.forEach(d=>{seen[d.id]=d.statut;});
+  localStorage.setItem(NOTIF_KEY,JSON.stringify(seen));
+  const dot=document.getElementById('notif-mesdem');
+  if(dot) dot.style.display='none';
+}
+
 // ══ MES DEMANDES ═════════════════════════════════════
 async function loadMesDemandes(){
   document.getElementById('mesdem-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
     const d=await gasGet({action:'get_demandes',nom:CU.nom});
     allDemandes=d.demandes||[];
+    checkNotifMesdem(allDemandes);
     const nbAttente=allDemandes.filter(d=>d.statut==='En attente').length;
     const badge=document.getElementById('home-agent-pending-badge');
     const txt=document.getElementById('home-agent-pending-txt');
