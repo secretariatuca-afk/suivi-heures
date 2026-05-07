@@ -1,26 +1,14 @@
 {
-  "name": "Suivi Heures CROUS",
-  "short_name": "Suivi Heures",
-  "description": "Application de suivi des heures — CROUS de Lille UCA",
+  "name": "CROUS UCA - Planning",
+  "short_name": "UCA Planning",
+  "description": "Suivi et changement de planning UCA - CROUS de Lille",
   "start_url": "/suivi-heures/",
-  "scope": "/suivi-heures/",
   "display": "standalone",
+  "background_color": "#1e3a5f",
+  "theme_color": "#1e3a5f",
   "orientation": "portrait",
-  "background_color": "#0C2340",
-  "theme_color": "#0C2340",
-  "lang": "fr",
   "icons": [
-    {
-      "src": "https://secretariatuca-afk.github.io/suivi-heures/icon.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "https://secretariatuca-afk.github.io/suivi-heures/icon.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }
