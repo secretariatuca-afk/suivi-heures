@@ -994,7 +994,13 @@ let CU=null,allAgents=[],allDemandes=[],allValidDem=[],allSoldes=[],agentsCache=
 let mesdemFilter='all',validFilter='En attente',tableauFilter='all';
 let selectedName='',pinBuffer='',currentType='prises';
 
-if('serviceWorker' in navigator) navigator.serviceWorker.register('/suivi-heures/sw.js',{scope:'/suivi-heures/'}).catch(()=>{});
+// Désinstalle l'ancien service worker et vide le cache
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    regs.forEach(r=>r.unregister());
+  });
+  caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));
+}
 
 function toast(m,d=2800){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
