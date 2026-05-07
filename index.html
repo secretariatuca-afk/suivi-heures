@@ -546,7 +546,7 @@ textarea{resize:vertical;min-height:80px}
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
           <h2>✅ Validation des demandes</h2>
-          <button class="btn btn-secondary btn-sm" onclick="loadValidation()">🔄</button>
+          <button class="btn btn-secondary btn-sm" onclick="invalidateCache('get_demandes');_validationLoaded=false;loadValidation(true)">🔄</button>
         </div>
         <div class="form-group" style="margin-bottom:12px;position:relative">
           <label>Rechercher un agent</label>
@@ -640,7 +640,7 @@ textarea{resize:vertical;min-height:80px}
           <input type="text" id="coord-tel" placeholder="06 XX XX XX XX"/>
         </div>
         <div class="form-group">
-          <label>Adresse email</label>
+          <label>Adresse email <span style="color:var(--text-muted);font-weight:400;font-size:.78rem">* mail personnel</span></label>
           <input type="email" id="coord-email" placeholder="prenom.nom@exemple.fr"/>
         </div>
 
@@ -1653,19 +1653,25 @@ async function loadSolde(){
   }catch(e){el.innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>';}
 }
 
-async function loadValidation(){
+let _validationLoaded=false;
+
+async function loadValidation(forceReload=false){
+  // Si déjà chargé et pas forcé → juste re-render depuis cache mémoire
+  if(_validationLoaded && !forceReload && allValidDem.length){
+    renderValidation();
+    return;
+  }
   document.getElementById('validation-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
     const [dDem, dAjust] = await Promise.all([
-      gasGet({action:'get_demandes'}, true),
-      gasGet({action:'get_ajustements'}, true)
+      gasGet({action:'get_demandes'}, !forceReload),
+      gasGet({action:'get_ajustements'}, !forceReload)
     ]);
     allValidDem=dDem.demandes||[];
     window._ajustValides=(dAjust.ajustements||[]).filter(a=>a.statut==='Validé'||a.statut==='Validé ✅');
-    // Peupler autocomplétion
-    _validAgentNames=[...new Set(allValidDem.map(x=>x.nom||x['Nom']||'').filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
+    _validAgentNames=[...new Set(allValidDem.map(x=>x.nom||'').filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
     initValidAutocomplete();
-
+    _validationLoaded=true;
     renderValidation();
     updateBadges(allValidDem.filter(x=>x.statut==='En attente').length);
   }catch(e){document.getElementById('validation-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>';}
@@ -1728,7 +1734,8 @@ async function validerDemande(id,action){
       // Invalide le cache pour forcer rechargement
       invalidateCache('get_demandes');
       invalidateCache('get_soldes');
-      loadValidation();
+      _validationLoaded=false;
+      loadValidation(true);
       loadPendingCount();
     }
     else{toast('Erreur : '+(res.msg||''));}
