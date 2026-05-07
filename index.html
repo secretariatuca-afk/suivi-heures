@@ -1044,7 +1044,7 @@ async function initNameScreen(){
   if(saved){
     cb.checked=true;
     document.getElementById('name-search').value=saved;
-    selectedName=saved;
+    selectedName=saved; // Sélection directe sans avoir besoin de la liste
   } else {
     document.getElementById('name-search').value='';
     cb.checked=false;
@@ -1062,6 +1062,14 @@ async function initNameScreen(){
   try{
     const d=await gasGet({action:'get_agents'});
     allAgents=d.agents||[];
+    // Si nom mémorisé ET case cochée → on peut valider directement
+    if(selectedName && document.getElementById('remember-me').checked){
+      const found=allAgents.find(a=>a.nom.toLowerCase()===selectedName.toLowerCase());
+      if(found) selectedName=found.nom;
+    }
+    // Mise à jour de la liste si quelque chose est tapé
+    const q=document.getElementById('name-search').value;
+    if(q) filterAgentsList(q);
   }catch(e){
     document.getElementById('name-error').textContent='Impossible de charger les agents.';
   }
@@ -1070,10 +1078,17 @@ async function initNameScreen(){
 function validateName(){
   const input=document.getElementById('name-search');
   const val=input?input.value.trim():'';
-  const found=allAgents.find(a=>a.nom.toLowerCase()===val.toLowerCase());
-  if(!found){document.getElementById('name-error').textContent='Nom introuvable. Tapez votre nom complet.';return;}
-  selectedName=found.nom;
-
+  // Cherche dans la liste des agents (chargée ou pas)
+  let found=allAgents.find(a=>a.nom.toLowerCase()===val.toLowerCase());
+  // Si agents pas encore chargés mais nom mémorisé → on continue quand même
+  if(!found && selectedName && selectedName.toLowerCase()===val.toLowerCase()){
+    found={nom:selectedName};
+  }
+  if(!found){
+    document.getElementById('name-error').textContent='Nom introuvable. Tapez votre nom complet.';
+    return;
+  }
+  selectedName=found.nom||val;
   // Mémorise ou efface selon la case
   const cb=document.getElementById('remember-me');
   if(cb&&cb.checked){
@@ -1081,7 +1096,6 @@ function validateName(){
   } else {
     localStorage.removeItem('crous_remember_name');
   }
-
   document.getElementById('name-suggestions').style.display='none';
   pinBuffer=''; updatePinDots();
   document.getElementById('pin-name-label').textContent='Code PIN pour '+selectedName;
