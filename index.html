@@ -1394,7 +1394,7 @@ function initAnnuaireAutocomplete(){
         e.preventDefault();
         input.value=a.nom||'';
         box.style.display='none';
-        // Ouvre directement la fiche
+        renderAnnuaire(allAnnuaireAgents);
         const idx=allAnnuaireAgents.findIndex(x=>x.nom===a.nom);
         if(idx>=0) showAgentCoordIdx(idx);
       };
@@ -2234,7 +2234,8 @@ function renderAnnuaire(agents){
 }
 
 function showAgentCoordIdx(i){
-  showAgentCoord(window._annuaireData[i]);
+  const data=window._annuaireData||allAnnuaireAgents;
+  if(data[i]) showAgentCoord(data[i]);
 }
 
 function showAgentCoord(a){
