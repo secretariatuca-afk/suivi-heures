@@ -580,7 +580,7 @@ textarea{resize:vertical;min-height:80px}
           ⚠️ <strong>Fiche incomplète</strong> — Veuillez remplir tous les champs obligatoires marqués ci-dessous.
         </div>
 
-        <div style="font-size:.78rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;padding-bottom:6px;border-bottom:1.5px solid var(--border)">Informations administratives</div>
+        <div id="coord-form-fields">;letter-spacing:.05em;margin-bottom:10px;padding-bottom:6px;border-bottom:1.5px solid var(--border)">Informations administratives</div>
 
         <div class="form-group">
           <label>Affectation (service ou unité de gestion)</label>
@@ -640,7 +640,7 @@ textarea{resize:vertical;min-height:80px}
           <input type="text" id="coord-tel" placeholder="06 XX XX XX XX"/>
         </div>
         <div class="form-group">
-          <label>Adresse email <span style="color:var(--text-muted);font-weight:400;font-size:.78rem">* mail personnel</span></label>
+          <label>Adresse email <span style="color:#e74c3c;font-weight:600;font-size:.78rem">— mail personnel uniquement</span></label>
           <input type="email" id="coord-email" placeholder="prenom.nom@exemple.fr"/>
         </div>
 
@@ -683,9 +683,22 @@ textarea{resize:vertical;min-height:80px}
           <label>Téléphone</label>
           <input type="text" id="coord-urgence-tel" placeholder="06 XX XX XX XX"/>
         </div>
+        </div><!-- fin coord-form-fields -->
 
-        <button class="btn btn-primary" onclick="saveCoordonnees()">💾 Enregistrer mes coordonnées</button>
+        <div style="display:flex;gap:10px;margin-top:6px">
+          <button class="btn btn-primary" onclick="saveCoordonnees()" style="flex:1">💾 Enregistrer</button>
+          <button class="btn btn-secondary" onclick="toggleCoordView()" id="btn-coord-view" style="flex:1">👁️ Voir ma fiche</button>
+        </div>
         <button class="btn btn-secondary" id="btn-change-pin" style="margin-top:10px;width:100%">🔐 Changer mon code PIN</button>
+
+        <!-- MODE LECTURE SEULE -->
+        <div id="coord-view-mode" style="display:none;margin-top:16px;background:var(--bg-input);border-radius:var(--radius);padding:16px;border:1.5px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <h3 style="font-size:.95rem;color:var(--primary)">📋 Ma fiche personnelle</h3>
+            <button class="btn btn-secondary btn-sm" onclick="toggleCoordEdit()">✏️ Modifier</button>
+          </div>
+          <div id="coord-view-content"></div>
+        </div>
       </div>
     </div>
 
@@ -2046,33 +2059,77 @@ function checkCoordBanner(){
 }
 
 async function saveCoordonnees(){
-  // Validation champs obligatoires
   const missing=Object.entries(COORD_REQUIRED).filter(([f])=>{
     const e=document.getElementById('coord-'+f);
     return !e||e.value.trim()==='';
   }).map(([,label])=>label);
   if(missing.length){
     toast('⚠️ Champs manquants : '+missing.slice(0,3).join(', ')+(missing.length>3?' …':''),4000);
-    // Highlight champs manquants
     Object.keys(COORD_REQUIRED).forEach(f=>{
       const e=document.getElementById('coord-'+f);
       if(e) e.style.borderColor=e.value.trim()===''?'var(--danger)':'var(--border)';
     });
     return;
   }
-  // Reset bordures
   COORD_FIELDS.forEach(f=>{const e=document.getElementById('coord-'+f);if(e)e.style.borderColor='';});
-  const btn=document.getElementById('btn-save-coord');
-  if(btn){btn.disabled=true;btn.textContent='⏳ Envoi…';}
   const data={action:'save_coordonnees',nom:CU.nom};
   COORD_FIELDS.forEach(f=>{const e=document.getElementById('coord-'+f);if(e)data['coord_'+f]=e.value.trim();});
   try{
     const res=await gasGet(data);
-    if(res.ok){toast('✅ Coordonnées enregistrées');checkCoordBanner();}
+    if(res.ok){
+      toast('✅ Fiche enregistrée avec succès !', 3000);
+      checkCoordBanner();
+      // Passe automatiquement en mode vue
+      setTimeout(()=>toggleCoordView(), 600);
+    }
     else{toast('❌ '+(res.msg||'Erreur'));}
   }catch(e){toast('❌ Erreur réseau');}
-  finally{if(btn){btn.disabled=false;btn.textContent='💾 Enregistrer';}}
 }
+
+const COORD_LABELS={
+  'affectation':'Affectation','nom-usage':'Nom d\'usage','nom-legal':'Nom légal',
+  'prenoms':'Prénom(s)','naissance':'Date & lieu de naissance','nationalite':'Nationalité',
+  'nss':'N° Sécurité sociale','caisse':'Caisse SS',
+  'adresse':'Adresse','cp':'Code postal','ville':'Ville','tel':'Téléphone','email':'Email personnel',
+  'situation':'Situation familiale','conjoint-profession':'Profession conjoint',
+  'nb-enfants':'Nb enfants','nb-enfants-17':'Enfants < 17 ans',
+  'urgence-nom':'Personne urgence','urgence-tel':'Tél urgence'
+};
+
+function toggleCoordView(){
+  const form=document.getElementById('coord-form-fields');
+  const view=document.getElementById('coord-view-mode');
+  const btn=document.getElementById('btn-coord-view');
+  if(!form||!view) return;
+  // Construit la vue
+  let html='<div style="display:grid;gap:8px">';
+  COORD_FIELDS.forEach(f=>{
+    const e=document.getElementById('coord-'+f);
+    const val=e?e.value.trim():'';
+    if(!val) return;
+    html+=`<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:.84rem">
+      <span style="color:var(--text-muted);min-width:130px;flex-shrink:0">${COORD_LABELS[f]||f}</span>
+      <span style="font-weight:600;color:var(--text)">${esc(val)}</span>
+    </div>`;
+  });
+  html+='</div>';
+  document.getElementById('coord-view-content').innerHTML=html;
+  // Bascule affichage
+  const isViewMode=view.style.display!=='none';
+  view.style.display=isViewMode?'none':'block';
+  if(btn) btn.textContent=isViewMode?'👁️ Voir ma fiche':'✕ Fermer la fiche';
+}
+
+function toggleCoordEdit(){
+  document.getElementById('coord-view-mode').style.display='none';
+  document.getElementById('btn-coord-view').textContent='👁️ Voir ma fiche';
+  // Scroll vers le formulaire
+  document.getElementById('coord-nom-usage')?.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// Alias pour compatibilité HTML
+function coordView(){ toggleCoordView(); }
+
 
 function formatNSS(input){
   // Ne garde que les chiffres
