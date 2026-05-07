@@ -983,6 +983,14 @@ if('serviceWorker' in navigator) navigator.serviceWorker.register('/suivi-heures
 function toast(m,d=2800){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function minsToHHMM(m){m=parseInt(m)||0;const sign=m<0?'-':'';const abs=Math.abs(m);const h=Math.floor(abs/60);const min=abs%60;return sign+String(h).padStart(2,'0')+'h'+String(min).padStart(2,'0');}
+function dureeToMinsFront(duree){
+  if(!duree) return 0;
+  const s=String(duree).trim();
+  if(/^\d+h\d+$/.test(s)){const[h,m]=s.split('h');return (parseInt(h)||0)*60+(parseInt(m)||0);}
+  if(/^\d+h$/.test(s)){return parseInt(s)*60;}
+  if(s.includes(':')){const[h,m]=s.split(':');return (parseInt(h)||0)*60+(parseInt(m)||0);}
+  return 0;
+}
 
 async function gasGet(p){
   const url=new URL(GAS);
