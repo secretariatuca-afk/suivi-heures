@@ -2300,6 +2300,9 @@ function showAgentCoord(a){
   list.style.display='none';
   detail.innerHTML=html;
   detail.style.display='block';
+  // Scroll vers le haut pour voir la fiche
+  detail.scrollIntoView({behavior:'smooth', block:'start'});
+  window.scrollTo(0,0);
 }
 
 // ══ AJUSTEMENT SOLDES ════════════════════════════════
