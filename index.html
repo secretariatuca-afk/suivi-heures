@@ -1375,7 +1375,10 @@ function initAjustAutocomplete(){
 // ══ INIT APP ═════════════════════════════════════════
 function initApp(){
   const isResp=(CU.role==='responsable');
-  document.getElementById('welcome-name').textContent=CU.nom;
+  // Affiche le prénom (dernier mot du nom complet)
+  const parts=CU.nom.trim().split(' ');
+  const prenom=parts[parts.length-1];
+  document.getElementById('welcome-name').textContent=prenom;
   document.getElementById('welcome-service').textContent=CU.service||'';
   document.getElementById('header-subtitle').textContent=CU.service||'Suivi des Heures';
   document.getElementById('user-badge').textContent='🚪 '+CU.nom.split(' ')[0];
@@ -2324,24 +2327,29 @@ function checkExportReminder(){
   if(!banner) return;
   const lastStr=localStorage.getItem(EXPORT_REMINDER_KEY);
   const now=new Date();
+  banner.style.display='flex';
+
   if(!lastStr){
-    banner.style.display='flex';
-    document.getElementById('export-alert-msg').textContent='Aucun export effectué — pensez à sauvegarder vos données !';
+    // Jamais exporté → orange d'urgence
+    banner.style.background='linear-gradient(135deg,#e67e22,#d35400)';
+    document.getElementById('export-alert-msg').textContent='⚠️ Aucun export effectué — pensez à sauvegarder vos données !';
     return;
   }
+
   const last=new Date(lastStr);
   const diffDays=Math.floor((now-last)/(1000*60*60*24));
   const reste=EXPORT_REMINDER_DAYS-diffDays;
+
   if(diffDays>=EXPORT_REMINDER_DAYS){
-    banner.style.display='flex';
+    // 7 jours atteints → orange
+    banner.style.background='linear-gradient(135deg,#e67e22,#d35400)';
     document.getElementById('export-alert-msg').textContent=
-      '⚠️ Dernier export il y a '+diffDays+' jours — Sauvegardez maintenant → Appuyez ici';
+      '⚠️ '+diffDays+' jours sans export — Sauvegardez maintenant → Appuyez ici';
   } else {
-    // Affiche toujours avec décompte
-    banner.style.display='flex';
-    document.getElementById('export-alert-msg').textContent=
-      'Prochain export recommandé dans '+reste+' jour'+(reste>1?'s':'')+' (dernier : il y a '+diffDays+' j)';
+    // Moins de 7 jours → vert avec décompte
     banner.style.background='linear-gradient(135deg,#1e8449,#148f77)';
+    document.getElementById('export-alert-msg').textContent=
+      '✅ Prochain export dans '+reste+' jour'+(reste>1?'s':'')+' (dernier : il y a '+diffDays+' j)';
   }
 }
 
