@@ -1525,184 +1525,63 @@ async function loadSolde(){
   const el=document.getElementById('solde-content');
   el.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
-    const [dSol, dAjust, dDem] = await Promise.all([
+    const [dSol,dAjust,dDem]=await Promise.all([
       gasGet({action:'get_soldes'}),
       gasGet({action:'get_ajustements'}),
-      gasGet({action:'get_demandes', nom:CU.nom})
+      gasGet({action:'get_demandes',nom:CU.nom})
     ]);
-
-    // Solde depuis feuille SOLDES (mis à jour à chaque validation)
     const s=(dSol.soldes||[]).find(x=>String(x.nom).trim()===String(CU.nom).trim())||{};
     const prises=parseInt(s.prises)||0;
     const recup=parseInt(s.recuperees)||0;
-    const soldeBase=recup-prises;
-
-    // Ajustements validés
     const ajusts=(dAjust.ajustements||[]).filter(a=>
-      (a.statut==='Validé'||a.statut==='Validé ✅') && String(a.nom||'').trim()===String(CU.nom).trim()
+      (a.statut==='Validé'||a.statut==='Validé ✅')&&String(a.nom||'').trim()===String(CU.nom).trim()
     );
     let ajustTotal=0;
     ajusts.forEach(a=>{
       const mins=dureeToMinsFront(a.duree||'');
-      if(a.type==='credit') ajustTotal+=mins;
-      else ajustTotal-=mins;
+      if(a.type==='credit') ajustTotal+=mins; else ajustTotal-=mins;
     });
-
-    const sol=soldeBase+ajustTotal;
+    const sol=(recup-prises)+ajustTotal;
     const cls=sol>0?'s-pos':sol<0?'s-neg':'s-zero';
-
-    // Détail demandes validées
     const demValidees=(dDem.demandes||[]).filter(d=>d.statut==='Validée ✅'||d.statut==='Validée');
-    let demDetail='';
+    const fmtD=v=>{
+      if(!v) return '';
+      if(/^\d{4}-\d{2}-\d{2}/.test(v)){
+        const d=new Date(v.slice(0,10)+'T12:00:00');
+        return isNaN(d)?'':d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+      }
+      return '';
+    };
+    let demHTML='';
     if(demValidees.length){
-      const fmt=v=>{
-        if(!v) return '';
-        if(/^\d{4}-\d{2}-\d{2}/.test(v)){
-          const d=new Date(v.slice(0,10)+'T12:00:00');
-          return isNaN(d)?'':d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
-        }
-        return '';
-      };
-      demDetail=`<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
-        <div style="font-size:.78rem;font-weight:700;color:var(--primary);margin-bottom:6px">📋 Demandes validées</div>
-        ${demValidees.map(d=>{
-          const d1=fmt(d.date_debut),d2=fmt(d.date_fin);
-          const dates=d1?(d2&&d2!==d1?d1+' → '+d2:d1):'';
-          const isP=(d.type||'').toLowerCase().includes('pris');
-          return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:.82rem">
-            <div>
-              <div>${isP?'⏸️':'⚡'} ${dates||'—'}</div>
-              ${d.observations?`<div style="color:var(--text-muted);font-size:.75rem">💬 ${esc(d.observations)}</div>`:''}
-            </div>
-            <span style="font-weight:700;color:${isP?'var(--danger)':'var(--success)'}">
-              ${isP?'-':'+'}${esc(d.duree||'')}
-            </span>
-          </div>`;
-        }).join('')}
-      </div>`;
+      demHTML='<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px"><div style="font-size:.78rem;font-weight:700;color:var(--primary);margin-bottom:6px">📋 Demandes validées</div>';
+      demValidees.forEach(d=>{
+        const d1=fmtD(d.date_debut),d2=fmtD(d.date_fin);
+        const dates=d1?(d2&&d2!==d1?d1+' → '+d2:d1):'—';
+        const isP=(d.type||'').toLowerCase().includes('pris');
+        demHTML+='<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:.82rem">'
+          +'<div><div>'+(isP?'⏸️':'⚡')+' '+dates+'</div>'
+          +(d.observations?'<div style="color:var(--text-muted);font-size:.75rem">💬 '+esc(d.observations)+'</div>':'')
+          +'</div><span style="font-weight:700;color:'+(isP?'var(--danger)':'var(--success)')+';">'+(isP?'-':'+')+esc(d.duree||'')+'</span></div>';
+      });
+      demHTML+='</div>';
     }
-
-    // Détail ajustements
-    let ajustDetail='';
+    let ajustHTML='';
     if(ajusts.length){
-      ajustDetail=`<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
-        <div style="font-size:.78rem;font-weight:700;color:var(--primary);margin-bottom:6px">⚖️ Ajustements validés</div>
-        ${ajusts.map(a=>{
-          const isC=a.type==='credit';
-          return `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:.82rem">
-            <span style="color:var(--text-light)">${esc(a.motif||'Ajustement')}</span>
-            <span style="font-weight:700;color:${isC?'var(--success)':'var(--danger)'}">
-              ${isC?'+':'-'}${esc(a.duree||'')}
-            </span>
-          </div>`;
-        }).join('')}
-      </div>`;
+      ajustHTML='<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px"><div style="font-size:.78rem;font-weight:700;color:var(--primary);margin-bottom:6px">⚖️ Ajustements validés</div>';
+      ajusts.forEach(a=>{
+        const isC=a.type==='credit';
+        ajustHTML+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:.82rem">'
+          +'<span style="color:var(--text-light)">'+esc(a.motif||'Ajustement')+'</span>'
+          +'<span style="font-weight:700;color:'+(isC?'var(--success)':'var(--danger)')+';">'+(isC?'+':'-')+esc(a.duree||'')+'</span></div>';
+      });
+      ajustHTML+='</div>';
     }
-
-    el.innerHTML=`
-      <div class="solde-grid">
-        <div class="solde-box"><div class="val s-neg">${minsToHHMM(prises)}</div><div class="lbl">Heures prises</div></div>
-        <div class="solde-box"><div class="val s-pos">${minsToHHMM(recup)}</div><div class="lbl">Heures récupérées</div></div>
-      </div>
-      ${ajustTotal!==0?`<div class="solde-box" style="padding:10px 14px;margin-top:8px;display:flex;justify-content:space-between">
-        <span style="font-size:.85rem;color:var(--text-light)">⚖️ Ajustements</span>
-        <span style="font-weight:700;color:${ajustTotal>=0?'var(--success)':'var(--danger)'}">
-          ${ajustTotal>=0?'+':''}${minsToHHMM(ajustTotal)}
-        </span>
-      </div>`:''}
-      <div class="solde-box" style="padding:16px;text-align:center;margin-top:8px">
-        <div class="val ${cls}" style="font-size:1.8rem">${sol>=0?'+':''}${minsToHHMM(sol)}</div>
-        <div class="lbl">Solde total</div>
-      </div>
-      ${demDetail}${ajustDetail}`;
+    const adjRow=ajustTotal!==0?'<div class="solde-box" style="padding:10px 14px;margin-top:8px;display:flex;justify-content:space-between"><span style="font-size:.85rem;color:var(--text-light)">⚖️ Ajustements</span><span style="font-weight:700;color:'+(ajustTotal>=0?'var(--success)':'var(--danger)')+';">'+(ajustTotal>=0?'+':'')+minsToHHMM(ajustTotal)+'</span></div>':'';
+    el.innerHTML='<div class="solde-grid"><div class="solde-box"><div class="val s-neg">'+minsToHHMM(prises)+'</div><div class="lbl">Heures prises</div></div><div class="solde-box"><div class="val s-pos">'+minsToHHMM(recup)+'</div><div class="lbl">Heures récupérées</div></div></div>'+adjRow+'<div class="solde-box" style="padding:16px;text-align:center;margin-top:8px"><div class="val '+cls+'" style="font-size:1.8rem">'+(sol>=0?'+':'')+minsToHHMM(sol)+'</div><div class="lbl">Solde total</div></div>'+demHTML+ajustHTML;
   }catch(e){el.innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>';}
 }
 
-    // Détail demandes validées
-    let demDetail='';
-    if(demValidees.length){
-      const fmt=v=>{
-        if(!v) return '';
-        const d=new Date(v);
-        if(isNaN(d)||d.getFullYear()<2000) return '';
-        return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
-      };
-      demDetail=`<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
-        <div style="font-size:.78rem;font-weight:700;color:var(--primary);margin-bottom:6px">📋 Demandes validées</div>
-        ${demValidees.map(d=>{
-          const d1=fmt(d.date_debut),d2=fmt(d.date_fin);
-          const dates=d1?(d2&&d2!==d1?d1+' → '+d2:d1):'';
-          const typeLabel=(d.type||'').toLowerCase().includes('pris')?'⏸️':'⚡';
-          const mins=dureeToMinsFront(d.duree||'');
-          const isP=(d.type||'').toLowerCase().includes('pris');
-          return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:.82rem">
-            <div>
-              <div>${typeLabel} ${dates||'—'}</div>
-              ${d.observations?`<div style="color:var(--text-muted);font-size:.75rem">💬 ${esc(d.observations)}</div>`:''}
-            </div>
-            <span style="font-weight:700;color:${isP?'var(--danger)':'var(--success)'}">
-              ${isP?'-':'+'}${minsToHHMM(mins)}
-            </span>
-          </div>`;
-        }).join('')}
-      </div>`;
-    }
-
-    // Détail ajustements
-    let ajustDetail='';
-    if(ajusts.length){
-      ajustDetail=`<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
-        <div style="font-size:.78rem;font-weight:700;color:var(--primary);margin-bottom:6px">⚖️ Ajustements validés</div>
-        ${ajusts.map(a=>{
-          const isC=a.type==='credit';
-          return `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:.82rem">
-            <span style="color:var(--text-light)">${esc(a.motif||'Ajustement')}</span>
-            <span style="font-weight:700;color:${isC?'var(--success)':'var(--danger)'}">
-              ${isC?'+':'-'}${esc(a.duree||'')}
-            </span>
-          </div>`;
-        }).join('')}
-      </div>`;
-    }
-
-    el.innerHTML=`
-      <div class="solde-grid">
-        <div class="solde-box"><div class="val s-neg">${minsToHHMM(prises)}</div><div class="lbl">Heures prises</div></div>
-        <div class="solde-box"><div class="val s-pos">${minsToHHMM(recup)}</div><div class="lbl">Heures récupérées</div></div>
-      </div>
-      ${ajustTotal!==0?`<div class="solde-box" style="padding:10px 14px;margin-top:8px;display:flex;justify-content:space-between">
-        <span style="font-size:.85rem;color:var(--text-light)">⚖️ Ajustements</span>
-        <span style="font-weight:700;color:${ajustTotal>=0?'var(--success)':'var(--danger)'}">
-          ${ajustTotal>=0?'+':''}${minsToHHMM(ajustTotal)}
-        </span>
-      </div>`:''}
-      <div class="solde-box" style="padding:16px;text-align:center;margin-top:8px">
-        <div class="val ${cls}" style="font-size:1.8rem">${sol>=0?'+':''}${minsToHHMM(sol)}</div>
-        <div class="lbl">Solde total</div>
-      </div>
-      ${demDetail}${ajustDetail}`;
-  }catch(e){el.innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>';}
-}
-
-// Convertit "Xh Ymin" ou "Xh" en minutes (côté front)
-function dureeToMinsFront(duree){
-  if(!duree) return 0;
-  const s=String(duree).trim();
-  // Format 08h00 ou 8h30
-  if(/\d+h\d*/.test(s)){
-    const h=parseInt(s.match(/(\d+)h/)?.[1]||0);
-    const m=parseInt(s.match(/h(\d+)/)?.[1]||0);
-    return h*60+m;
-  }
-  // Format HH:MM
-  if(s.includes(':')){
-    const[h,m]=s.split(':');
-    return (parseInt(h)||0)*60+(parseInt(m)||0);
-  }
-  return 0;
-}
-
-// ══ VALIDATION ═══════════════════════════════════════
 async function loadValidation(){
   document.getElementById('validation-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
