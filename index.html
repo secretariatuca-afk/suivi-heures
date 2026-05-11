@@ -35,7 +35,7 @@ input,select,textarea{font-family:inherit;font-size:1rem}
 #header-text h1{font-size:.95rem;font-weight:700;line-height:1.2}
 #header-text p{font-size:.75rem;opacity:.85}
 #user-badge{margin-left:auto;background:rgba(255,255,255,.15);border-radius:20px;padding:4px 10px;font-size:.78rem;cursor:pointer;white-space:nowrap}
-#nav{display:flex;background:var(--bg-card);border-top:1px solid var(--border);position:sticky;bottom:0;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+#nav{display:flex;justify-content:center;background:var(--bg-card);border-top:1px solid var(--border);position:sticky;bottom:0;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;font-size:.62rem;color:var(--text-muted);background:none;border:none;gap:2px;min-height:56px;transition:color .2s;position:relative}
 .nav-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .nav-btn.active{color:var(--primary-light)}
@@ -1466,9 +1466,17 @@ function initApp(){
     document.getElementById('home-agent-recent').style.display='none';
     // Afficher onglets direction
     document.getElementById('home-resp-recap').style.display='block';
-    ['nav-ajustement','nav-annuaire','nav-export','nav-validation','nav-solde-dir','nav-agents'].forEach(id=>{
-      const el=document.getElementById(id); if(el) el.style.display='flex';
+    // Afficher onglets direction dans le bon ordre
+    const navOrder=['nav-home','nav-ajustement','nav-validation','nav-solde-dir','nav-agents','nav-annuaire','nav-export'];
+    const nav=document.getElementById('nav');
+    navOrder.forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){ el.style.display='flex'; nav.appendChild(el); }
     });
+    // Style nav centré avec flex-wrap pour les 7 boutons
+    nav.style.flexWrap='wrap';
+    nav.style.justifyContent='center';
+    nav.style.gap='0';
     const sel=document.getElementById('agent-pour-demande');
     sel.innerHTML='<option value="">— Sélectionnez —</option>';
     [...allAgents].filter(a=>a.role!=='responsable').sort((a,b)=>a.nom.localeCompare(b.nom,'fr')).forEach(ag=>{
