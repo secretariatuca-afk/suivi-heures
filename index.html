@@ -1637,22 +1637,23 @@ async function loadSolde(){
   el.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
     const [dSol,dAjust,dDem]=await Promise.all([
-      gasGet({action:'get_soldes'}, true),
+      gasGet({action:'get_soldes'}, false), // Pas de cache pour avoir le solde à jour
       gasGet({action:'get_ajustements'}, true),
       gasGet({action:'get_demandes',nom:CU.nom})
     ]);
     const s=(dSol.soldes||[]).find(x=>String(x.nom).trim()===String(CU.nom).trim())||{};
     const prises=parseInt(s.prises)||0;
     const recup=parseInt(s.recuperees)||0;
+    // ─── SOLDE = valeur DIRECTE depuis SOLDES (source de vérité) ───
+    const sol=parseInt(s.solde)||0;
     const ajusts=(dAjust.ajustements||[]).filter(a=>
       (a.statut==='Validé'||a.statut==='Validé ✅')&&String(a.nom||'').trim()===String(CU.nom).trim()
     );
     let ajustTotal=0;
     ajusts.forEach(a=>{
       const mins=dureeToMinsFront(a.duree||'');
-      if(a.type==='credit') ajustTotal+=mins; else ajustTotal-=mins;
+      if(a.type==='credit') ajustTotal+=mins; else if(a.type==='debit') ajustTotal-=mins;
     });
-    const sol=(recup-prises)+ajustTotal;
     const cls=sol>0?'s-pos':sol<0?'s-neg':'s-zero';
     const demValidees=(dDem.demandes||[]).filter(d=>d.statut==='Validée ✅'||d.statut==='Validée');
     const fmtD=v=>{
@@ -2726,7 +2727,7 @@ async function loadSoldeDir(){
   document.getElementById('solde-dir-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
     const [dSol, dAjust, dAgt] = await Promise.all([
-      gasGet({action:'get_soldes'}, true),
+      gasGet({action:'get_soldes'}, false),
       gasGet({action:'get_ajustements'}, true),
       gasGet({action:'get_agents'}, true)
     ]);
@@ -2791,15 +2792,11 @@ function showSoldeDirFiche(i){
   const s=_soldeDirData[i];
   if(!s) return;
 
-  // Ajustements validés de cet agent
+  // Ajustements validés de cet agent (info uniquement, pas comptés)
   const ajusts=_soldeDirAjusts.filter(a=>a.nom===s.nom);
-  let ajustTotal=0;
-  ajusts.forEach(a=>{
-    const m=dureeToMinsFront(a.duree||'');
-    ajustTotal += a.type==='credit' ? m : -m;
-  });
 
-  const solFinal=s.solde+ajustTotal;
+  // ─── SOLDE = valeur DIRECTE depuis SOLDES (modifiable manuellement) ───
+  const solFinal=parseInt(s.solde)||0;
   const cls=solFinal>0?'s-pos':solFinal<0?'s-neg':'s-zero';
   const sign=solFinal>0?'+':solFinal<0?'-':'';
 
