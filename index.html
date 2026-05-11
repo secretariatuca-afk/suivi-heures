@@ -10,6 +10,11 @@
 <meta name="apple-mobile-web-app-title" content="UCA"/>
 <title>CROUS de Lille — UCA</title>
 <link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<meta name="theme-color" content="#1e3a5f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="UCA Planning"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -2029,25 +2034,71 @@ const COORD_REQUIRED={
 async function loadCoordonnees(){
   const el=document.getElementById('page-coordonnees');
   if(!el)return;
+  // Pré-remplissage avec données de session
   const preData={};
   if(CU.service) preData['affectation']=CU.service;
   if(CU.nom)     preData['nom-usage']=CU.nom;
   COORD_FIELDS.forEach(f=>{const e=document.getElementById('coord-'+f);if(e&&preData[f])e.value=preData[f];});
   try{
-    const d=await gasGet({action:'get_coordonnees',nom:CU.nom});
-    if(d.coordonnees){
-      const data=d.coordonnees;
-      COORD_FIELDS.forEach(f=>{const e=document.getElementById('coord-'+f);if(e&&data[f]!==undefined)e.value=data[f];});
+    const d=await gasGet({action:'get_coordonnees',nom:CU.nom},true);
+    const agent=d.agent||d.coordonnees||{};
+    const hasData=Object.keys(agent).some(k=>agent[k]&&agent[k].toString().trim()!=='');
+    if(hasData){
+      COORD_FIELDS.forEach(f=>{
+        const e=document.getElementById('coord-'+f);
+        if(e&&agent[f]!==undefined) e.value=agent[f]||'';
+      });
+      window._coordLoaded=true;
+      // Si fiche complète → verrouille et affiche en mode vue
+      const complete=Object.keys(COORD_REQUIRED).every(f=>{
+        const e=document.getElementById('coord-'+f);
+        return e&&e.value.trim()!=='';
+      });
+      if(complete){
+        lockCoordForm();
+        // Affiche automatiquement la fiche
+        setTimeout(()=>{
+          if(document.getElementById('coord-view-mode')?.style.display==='none'){
+            toggleCoordView();
+          }
+        },200);
+      }
     }
   }catch(e){toast('Impossible de charger les coordonnées');}
   checkCoordBanner();
 }
 
 function checkCoordComplete(){
-  return Object.keys(COORD_REQUIRED).every(f=>{
+  // Vérifie d'abord si on a des données chargées depuis le serveur
+  if(window._coordLoaded){
+    return Object.keys(COORD_REQUIRED).every(f=>{
+      const e=document.getElementById('coord-'+f);
+      return e&&e.value.trim()!=='';
+    });
+  }
+  return false;
+}
+
+function lockCoordForm(){
+  // Verrouille tous les champs en lecture seule
+  COORD_FIELDS.forEach(f=>{
     const e=document.getElementById('coord-'+f);
-    return e&&e.value.trim()!=='';
+    if(e){ e.readOnly=true; e.style.background='var(--bg-input)'; e.style.color='var(--text)'; }
   });
+  // Cache bouton Enregistrer, montre bouton Modifier
+  const saveBtn=document.querySelector('button[onclick="saveCoordonnees()"]');
+  if(saveBtn) saveBtn.style.display='none';
+  const viewBtn=document.getElementById('btn-coord-view');
+  if(viewBtn) viewBtn.textContent='👁️ Voir ma fiche';
+}
+
+function unlockCoordForm(){
+  COORD_FIELDS.forEach(f=>{
+    const e=document.getElementById('coord-'+f);
+    if(e){ e.readOnly=false; e.style.background=''; e.style.color=''; }
+  });
+  const saveBtn=document.querySelector('button[onclick="saveCoordonnees()"]');
+  if(saveBtn) saveBtn.style.display='';
 }
 
 function checkCoordBanner(){
@@ -2084,8 +2135,10 @@ async function saveCoordonnees(){
     const res=await gasGet(data);
     if(res.ok){
       toast('✅ Fiche enregistrée avec succès !', 3000);
+      window._coordLoaded=true;
+      lockCoordForm();
       checkCoordBanner();
-      // Passe automatiquement en mode vue
+      // Affiche la fiche en mode vue
       setTimeout(()=>toggleCoordView(), 600);
     }
     else{toast('❌ '+(res.msg||'Erreur'));}
@@ -2129,7 +2182,7 @@ function toggleCoordView(){
 function toggleCoordEdit(){
   document.getElementById('coord-view-mode').style.display='none';
   document.getElementById('btn-coord-view').textContent='👁️ Voir ma fiche';
-  // Scroll vers le formulaire
+  unlockCoordForm();
   document.getElementById('coord-nom-usage')?.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
