@@ -35,7 +35,7 @@ input,select,textarea{font-family:inherit;font-size:1rem}
 #header-text h1{font-size:.95rem;font-weight:700;line-height:1.2}
 #header-text p{font-size:.75rem;opacity:.85}
 #user-badge{margin-left:auto;background:rgba(255,255,255,.15);border-radius:20px;padding:4px 10px;font-size:.78rem;cursor:pointer;white-space:nowrap}
-#nav{display:flex;background:var(--bg-card);border-top:1px solid var(--border);position:sticky;bottom:0;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+#nav{display:flex;justify-content:center;background:var(--bg-card);border-top:1px solid var(--border);position:sticky;bottom:0;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;font-size:.62rem;color:var(--text-muted);background:none;border:none;gap:2px;min-height:56px;transition:color .2s;position:relative}
 .nav-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .nav-btn.active{color:var(--primary-light)}
@@ -43,6 +43,10 @@ input,select,textarea{font-family:inherit;font-size:1rem}
 .notif-badge{position:absolute;top:4px;right:4px;background:var(--danger);color:#fff;border-radius:10px;font-size:.6rem;font-weight:700;padding:1px 4px;min-width:15px;text-align:center;display:none}
 #content{flex:1;overflow-y:auto;padding:16px;padding-bottom:8px}
 .page{display:none}.page.active{display:block}
+#page-agents.active,#page-annuaire.active,#page-export.active{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:calc(100vh - 120px);padding:16px;
+}
 .card{background:var(--bg-card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
 .card h2{font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--primary)}
 .form-group{margin-bottom:14px}
@@ -1466,9 +1470,17 @@ function initApp(){
     document.getElementById('home-agent-recent').style.display='none';
     // Afficher onglets direction
     document.getElementById('home-resp-recap').style.display='block';
-    ['nav-ajustement','nav-annuaire','nav-export','nav-validation','nav-solde-dir','nav-agents'].forEach(id=>{
-      const el=document.getElementById(id); if(el) el.style.display='flex';
+    // Afficher onglets direction dans le bon ordre
+    const navOrder=['nav-home','nav-ajustement','nav-validation','nav-solde-dir','nav-agents','nav-annuaire','nav-export'];
+    const nav=document.getElementById('nav');
+    navOrder.forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){ el.style.display='flex'; nav.appendChild(el); }
     });
+    // Style nav centré avec flex-wrap pour les 7 boutons
+    nav.style.flexWrap='wrap';
+    nav.style.justifyContent='center';
+    nav.style.gap='0';
     const sel=document.getElementById('agent-pour-demande');
     sel.innerHTML='<option value="">— Sélectionnez —</option>';
     [...allAgents].filter(a=>a.role!=='responsable').sort((a,b)=>a.nom.localeCompare(b.nom,'fr')).forEach(ag=>{
@@ -1507,15 +1519,19 @@ function showPage(name){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name)?.classList.add('active');
   document.getElementById('nav-'+name)?.classList.add('active');
-  if(name==='mesdem')     loadMesDemandes();
-  if(name==='solde')      loadSolde();
-  if(name==='validation') { loadValidation(); }
-  if(name==='solde-dir')  loadSoldeDir();
-  if(name==='agents')     loadAgents();
+  // Scroll vers le haut à chaque changement d'onglet
+  const content=document.getElementById('content');
+  if(content) content.scrollTop=0;
+  window.scrollTo(0,0);
+  if(name==='mesdem')      loadMesDemandes();
+  if(name==='solde')       loadSolde();
+  if(name==='validation')  { loadValidation(); }
+  if(name==='solde-dir')   loadSoldeDir();
+  if(name==='agents')      loadAgents();
   if(name==='coordonnees') loadCoordonnees();
-  if(name==='annuaire')   loadAnnuaire();
-  if(name==='ajustement') loadAjustements();
-  if(name==='export')     initExportPage();
+  if(name==='annuaire')    loadAnnuaire();
+  if(name==='ajustement')  loadAjustements();
+  if(name==='export')      initExportPage();
 }
 
 // ══ TYPE DEMANDE ═════════════════════════════════════
@@ -1576,7 +1592,7 @@ function checkNotifMesdem(demandes){
   if(!demandes||!demandes.length) return;
   const seen=JSON.parse(localStorage.getItem(NOTIF_KEY)||'{}');
   const hasNew=demandes.some(d=>{
-    const isDecided=d.statut==='Validée ✅'||d.statut==='Validée'||d.statut==='Refusée ❌'||d.statut==='Refusée';
+    const isDecided=d.statut==='Validée ✅'||d.statut==='Validée'||d.statut==='Refusée ❌'||d.statut==='Refusée'||d.statut==='Non conforme ⚠️'||d.statut==='Non conforme';
     return isDecided && seen[d.id]!==d.statut;
   });
   const dot=document.getElementById('notif-mesdem');
@@ -1621,22 +1637,23 @@ async function loadSolde(){
   el.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
     const [dSol,dAjust,dDem]=await Promise.all([
-      gasGet({action:'get_soldes'}, true),
+      gasGet({action:'get_soldes'}, false), // Pas de cache pour avoir le solde à jour
       gasGet({action:'get_ajustements'}, true),
       gasGet({action:'get_demandes',nom:CU.nom})
     ]);
     const s=(dSol.soldes||[]).find(x=>String(x.nom).trim()===String(CU.nom).trim())||{};
     const prises=parseInt(s.prises)||0;
     const recup=parseInt(s.recuperees)||0;
+    // ─── SOLDE = valeur DIRECTE depuis SOLDES (source de vérité) ───
+    const sol=parseInt(s.solde)||0;
     const ajusts=(dAjust.ajustements||[]).filter(a=>
       (a.statut==='Validé'||a.statut==='Validé ✅')&&String(a.nom||'').trim()===String(CU.nom).trim()
     );
     let ajustTotal=0;
     ajusts.forEach(a=>{
       const mins=dureeToMinsFront(a.duree||'');
-      if(a.type==='credit') ajustTotal+=mins; else ajustTotal-=mins;
+      if(a.type==='credit') ajustTotal+=mins; else if(a.type==='debit') ajustTotal-=mins;
     });
-    const sol=(recup-prises)+ajustTotal;
     const cls=sol>0?'s-pos':sol<0?'s-neg':'s-zero';
     const demValidees=(dDem.demandes||[]).filter(d=>d.statut==='Validée ✅'||d.statut==='Validée');
     const fmtD=v=>{
@@ -1758,6 +1775,23 @@ async function validerDemande(id,action){
       // Invalide le cache pour forcer rechargement
       invalidateCache('get_demandes');
       invalidateCache('get_soldes');
+      _validationLoaded=false;
+      loadValidation(true);
+      loadPendingCount();
+    }
+    else{toast('Erreur : '+(res.msg||''));}
+  }catch(e){toast('Erreur réseau');}
+}
+
+async function marquerNonConforme(id){
+  const motif=prompt('Motif de non-conformité (visible par l\'agent) :','');
+  if(motif===null) return;
+  if(!motif.trim()){ toast('Motif obligatoire'); return; }
+  try{
+    const res=await gasGet({action:'non_conforme', id, motif:motif.trim()});
+    if(res.ok){
+      toast('⚠️ Demande marquée non conforme');
+      invalidateCache('get_demandes');
       _validationLoaded=false;
       loadValidation(true);
       loadPendingCount();
@@ -1962,11 +1996,13 @@ function demandeCard(d,isAdmin){
   const cls=statut.includes('Validée')?'validee':statut.includes('Refusée')?'refusee':'';
   const badge=statut.includes('Validée')?'<span class="badge badge-approved">✅ Validée</span>':
               statut.includes('Refusée')?'<span class="badge badge-rejected">❌ Refusée</span>':
+              statut.includes('Non conforme')?'<span class="badge" style="background:#fdebd0;color:#b15a00;padding:3px 8px;border-radius:4px;font-size:.75rem;font-weight:700">⚠️ Non conforme</span>':
               '<span class="badge badge-pending">⏳ En attente</span>';
   const actions=(isAdmin&&CU.role==='responsable'&&statut==='En attente')?`
-    <div class="demande-actions">
+    <div class="demande-actions" style="flex-wrap:wrap;gap:6px">
       <button class="btn btn-success btn-sm" onclick="validerDemande('${esc(d.id)}','valider')">✅ Valider</button>
       <button class="btn btn-danger btn-sm" onclick="validerDemande('${esc(d.id)}','refuser')">❌ Refuser</button>
+      <button class="btn btn-sm" style="background:#e67e22;color:#fff;border:none" onclick="marquerNonConforme('${esc(d.id)}')">⚠️ Non conforme</button>
     </div>`:'';
   const fmt=v=>{
     if(!v||v==='') return '';
@@ -1992,6 +2028,7 @@ function demandeCard(d,isAdmin){
         ${dates?`<div class="demande-meta">📅 ${dates}</div>`:''}
         ${dureeAff?`<div class="demande-meta" style="font-weight:600;color:var(--primary)">⏱ ${esc(dureeAff)}</div>`:''}
         ${d.observations?`<div class="demande-meta">💬 ${esc(d.observations)}</div>`:''}
+        ${d.motif_refus?`<div class="demande-meta" style="background:#fdebd0;border-left:3px solid #e67e22;padding:6px 10px;margin-top:6px;border-radius:4px;color:#b15a00;font-size:.78rem"><strong>⚠️ Motif :</strong> ${esc(d.motif_refus)}</div>`:''}
         ${isAdmin&&d.service?`<div class="demande-meta" style="color:var(--text-muted);font-size:.75rem">🏢 ${esc(d.service)}</div>`:''}
       </div>${badge}
     </div>${actions}
@@ -2034,25 +2071,71 @@ const COORD_REQUIRED={
 async function loadCoordonnees(){
   const el=document.getElementById('page-coordonnees');
   if(!el)return;
+  // Pré-remplissage avec données de session
   const preData={};
   if(CU.service) preData['affectation']=CU.service;
   if(CU.nom)     preData['nom-usage']=CU.nom;
   COORD_FIELDS.forEach(f=>{const e=document.getElementById('coord-'+f);if(e&&preData[f])e.value=preData[f];});
   try{
-    const d=await gasGet({action:'get_coordonnees',nom:CU.nom});
-    if(d.coordonnees){
-      const data=d.coordonnees;
-      COORD_FIELDS.forEach(f=>{const e=document.getElementById('coord-'+f);if(e&&data[f]!==undefined)e.value=data[f];});
+    const d=await gasGet({action:'get_coordonnees',nom:CU.nom},true);
+    const agent=d.agent||d.coordonnees||{};
+    const hasData=Object.keys(agent).some(k=>agent[k]&&agent[k].toString().trim()!=='');
+    if(hasData){
+      COORD_FIELDS.forEach(f=>{
+        const e=document.getElementById('coord-'+f);
+        if(e&&agent[f]!==undefined) e.value=agent[f]||'';
+      });
+      window._coordLoaded=true;
+      // Si fiche complète → verrouille et affiche en mode vue
+      const complete=Object.keys(COORD_REQUIRED).every(f=>{
+        const e=document.getElementById('coord-'+f);
+        return e&&e.value.trim()!=='';
+      });
+      if(complete){
+        lockCoordForm();
+        // Affiche automatiquement la fiche
+        setTimeout(()=>{
+          if(document.getElementById('coord-view-mode')?.style.display==='none'){
+            toggleCoordView();
+          }
+        },200);
+      }
     }
   }catch(e){toast('Impossible de charger les coordonnées');}
   checkCoordBanner();
 }
 
 function checkCoordComplete(){
-  return Object.keys(COORD_REQUIRED).every(f=>{
+  // Vérifie d'abord si on a des données chargées depuis le serveur
+  if(window._coordLoaded){
+    return Object.keys(COORD_REQUIRED).every(f=>{
+      const e=document.getElementById('coord-'+f);
+      return e&&e.value.trim()!=='';
+    });
+  }
+  return false;
+}
+
+function lockCoordForm(){
+  // Verrouille tous les champs en lecture seule
+  COORD_FIELDS.forEach(f=>{
     const e=document.getElementById('coord-'+f);
-    return e&&e.value.trim()!=='';
+    if(e){ e.readOnly=true; e.style.background='var(--bg-input)'; e.style.color='var(--text)'; }
   });
+  // Cache bouton Enregistrer, montre bouton Modifier
+  const saveBtn=document.querySelector('button[onclick="saveCoordonnees()"]');
+  if(saveBtn) saveBtn.style.display='none';
+  const viewBtn=document.getElementById('btn-coord-view');
+  if(viewBtn) viewBtn.textContent='👁️ Voir ma fiche';
+}
+
+function unlockCoordForm(){
+  COORD_FIELDS.forEach(f=>{
+    const e=document.getElementById('coord-'+f);
+    if(e){ e.readOnly=false; e.style.background=''; e.style.color=''; }
+  });
+  const saveBtn=document.querySelector('button[onclick="saveCoordonnees()"]');
+  if(saveBtn) saveBtn.style.display='';
 }
 
 function checkCoordBanner(){
@@ -2089,8 +2172,10 @@ async function saveCoordonnees(){
     const res=await gasGet(data);
     if(res.ok){
       toast('✅ Fiche enregistrée avec succès !', 3000);
+      window._coordLoaded=true;
+      lockCoordForm();
       checkCoordBanner();
-      // Passe automatiquement en mode vue
+      // Affiche la fiche en mode vue
       setTimeout(()=>toggleCoordView(), 600);
     }
     else{toast('❌ '+(res.msg||'Erreur'));}
@@ -2134,7 +2219,7 @@ function toggleCoordView(){
 function toggleCoordEdit(){
   document.getElementById('coord-view-mode').style.display='none';
   document.getElementById('btn-coord-view').textContent='👁️ Voir ma fiche';
-  // Scroll vers le formulaire
+  unlockCoordForm();
   document.getElementById('coord-nom-usage')?.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
@@ -2662,7 +2747,7 @@ async function loadSoldeDir(){
   document.getElementById('solde-dir-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
   try{
     const [dSol, dAjust, dAgt] = await Promise.all([
-      gasGet({action:'get_soldes'}, true),
+      gasGet({action:'get_soldes'}, false),
       gasGet({action:'get_ajustements'}, true),
       gasGet({action:'get_agents'}, true)
     ]);
@@ -2727,15 +2812,11 @@ function showSoldeDirFiche(i){
   const s=_soldeDirData[i];
   if(!s) return;
 
-  // Ajustements validés de cet agent
+  // Ajustements validés de cet agent (info uniquement, pas comptés)
   const ajusts=_soldeDirAjusts.filter(a=>a.nom===s.nom);
-  let ajustTotal=0;
-  ajusts.forEach(a=>{
-    const m=dureeToMinsFront(a.duree||'');
-    ajustTotal += a.type==='credit' ? m : -m;
-  });
 
-  const solFinal=s.solde+ajustTotal;
+  // ─── SOLDE = valeur DIRECTE depuis SOLDES (modifiable manuellement) ───
+  const solFinal=parseInt(s.solde)||0;
   const cls=solFinal>0?'s-pos':solFinal<0?'s-neg':'s-zero';
   const sign=solFinal>0?'+':solFinal<0?'-':'';
 
