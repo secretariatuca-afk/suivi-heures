@@ -433,7 +433,7 @@ textarea{resize:vertical;min-height:80px}
           <div class="form-group"><label>Date de fin</label><input type="date" id="prises-fin"/></div>
           <div class="form-group"><label>Durée</label>
             <div class="duration-row">
-              <select id="prises-h"><option value="0">0 h</option><option value="1">1 h</option><option value="2">2 h</option><option value="3">3 h</option><option value="4">4 h</option><option value="5">5 h</option><option value="6">6 h</option><option value="7">7 h</option><option value="8" selected>8 h</option><option value="9">9 h</option><option value="10">10 h</option><option value="11">11 h</option><option value="12">12 h</option></select>
+              <select id="prises-h"><option value="0">00 h</option><option value="1">01 h</option><option value="2">2 h</option><option value="3">3 h</option><option value="4">4 h</option><option value="5">5 h</option><option value="6">6 h</option><option value="7">7 h</option><option value="8" selected>8 h</option><option value="9">9 h</option><option value="10">10 h</option><option value="11">11 h</option><option value="12">12 h</option></select>
               <select id="prises-m"><option value="0" selected>00 min</option><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option></select>
             </div>
           </div>
@@ -443,7 +443,7 @@ textarea{resize:vertical;min-height:80px}
           <div class="form-group"><label>Date effectuée</label><input type="date" id="sup-date"/></div>
           <div class="form-group"><label>Durée</label>
             <div class="duration-row">
-              <select id="sup-h"><option value="1" selected>1 h</option><option value="2">2 h</option><option value="3">3 h</option><option value="4">4 h</option><option value="5">5 h</option><option value="6">6 h</option><option value="7">7 h</option><option value="8">8 h</option><option value="9">9 h</option><option value="10">10 h</option><option value="11">11 h</option><option value="12">12 h</option></select>
+              <select id="sup-h"><option value="0">00 h</option><option value="1">01 h</option><option value="2">2 h</option><option value="3">3 h</option><option value="4">4 h</option><option value="5">5 h</option><option value="6">6 h</option><option value="7">7 h</option><option value="8">8 h</option><option value="9">9 h</option><option value="10">10 h</option><option value="11">11 h</option><option value="12">12 h</option></select>
               <select id="sup-m"><option value="0" selected>00 min</option><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option></select>
             </div>
           </div>
@@ -1627,7 +1627,7 @@ function demandeCard(d,isAdmin){
     <div class="demande-actions" style="flex-wrap:wrap;gap:6px">
       <button class="btn btn-success btn-sm" onclick="validerDemande('${esc(d.id)}','valider')">✅ Valider</button>
       <button class="btn btn-danger btn-sm" onclick="validerDemande('${esc(d.id)}','refuser')">❌ Refuser</button>
-      <button class="btn btn-sm" style="background:#e67e22;color:#fff;border:none;padding:6px 12px;font-size:.8rem;font-weight:600;border-radius:var(--radius-sm);cursor:pointer" onclick="marquerNonConforme('${esc(d.id)}')">⚠️ Non conforme</button>
+      <button class="btn btn-sm" style="background:#e67e22;color:#fff;border:none" onclick="marquerNonConforme('${esc(d.id)}')">⚠️ Non conforme</button>
     </div>`:'';
   const fmt=v=>{
     if(!v||v==='') return '';
