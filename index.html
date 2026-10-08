@@ -66,6 +66,12 @@ textarea{resize:vertical;min-height:80px}
 .btn-danger{background:var(--danger);color:#fff;width:auto}
 .btn-success{background:var(--success);color:#fff;width:auto}
 .btn-sm{padding:6px 12px;font-size:.8rem}
+/* Boutons de validation d'une demande : 3 rectangles identiques (même largeur ET même hauteur) */
+.valact{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px}
+.valact>button{width:100%;min-height:40px;padding:6px 4px;font-size:.76rem;font-weight:600;color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;line-height:1.15}
+.va-ok{background:var(--success)}
+.va-no{background:var(--danger)}
+.va-nc{background:#e67e22}
 /* Accès rapide (direction) : boutons tous EXACTEMENT de même taille (rectangles identiques) */
 .qa-list>button{height:60px;box-sizing:border-box;overflow:hidden}
 .qa-list>button>div:nth-child(2){flex:1;min-width:0}
@@ -1831,10 +1837,10 @@ function demandeCard(d,isAdmin){
               '<span class="badge badge-pending">⏳ En attente</span>';
   // ✅ Bouton "Non conforme" visible seulement pour les demandes "En attente"
   const actions=(isAdmin&&CU.role==='responsable'&&statut==='En attente')?`
-    <div class="demande-actions" style="flex-wrap:wrap;gap:6px">
-      <button class="btn btn-success btn-sm" onclick="validerDemande('${esc(d.id)}','valider')">✅ Valider</button>
-      <button class="btn btn-danger btn-sm" onclick="validerDemande('${esc(d.id)}','refuser')">❌ Refuser</button>
-      <button class="btn btn-sm" style="background:#e67e22;color:#fff;border:none;padding:6px 12px;font-size:.8rem;font-weight:600;border-radius:var(--radius-sm);cursor:pointer" onclick="marquerNonConforme('${esc(d.id)}')">⚠️ Non conforme</button>
+    <div class="valact">
+      <button class="va-ok" onclick="validerDemande('${esc(d.id)}','valider')">✅ Valider</button>
+      <button class="va-no" onclick="validerDemande('${esc(d.id)}','refuser')">❌ Refuser</button>
+      <button class="va-nc" onclick="marquerNonConforme('${esc(d.id)}')">⚠️ Non conforme</button>
     </div>`:'';
   const fmt=v=>{
     if(!v||v==='') return '';
