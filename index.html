@@ -66,6 +66,9 @@ textarea{resize:vertical;min-height:80px}
 .btn-danger{background:var(--danger);color:#fff;width:auto}
 .btn-success{background:var(--success);color:#fff;width:auto}
 .btn-sm{padding:6px 12px;font-size:.8rem}
+/* Accès rapide (direction) : boutons tous de même hauteur/forme */
+.qa-list>button{min-height:62px;box-sizing:border-box}
+.qa-list>button>div:nth-child(2){flex:1;min-width:0}
 .type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
 .type-card{border:2px solid var(--border);border-radius:var(--radius-sm);padding:14px 10px;text-align:center;cursor:pointer;transition:all .18s;background:var(--bg-card)}
 .type-card.selected{border-color:var(--primary-light);background:#e8f0fe}
@@ -384,7 +387,7 @@ textarea{resize:vertical;min-height:80px}
         <div style="display:none" id="recap-fiches"></div>
         <div class="card" style="margin-bottom:14px">
           <h2 style="margin-bottom:14px">📌 Accès rapide</h2>
-          <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="qa-list" style="display:flex;flex-direction:column;gap:8px">
             <button onclick="showPage('ajustement')" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-input);border-radius:var(--radius-sm);border:1.5px solid var(--border);text-align:left;width:100%">
               <div style="width:36px;height:36px;border-radius:8px;background:#e8f0fe;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="20" height="20" stroke="var(--primary)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
               <div><div style="font-weight:600;font-size:.88rem;color:var(--primary)">Ajustement</div><div style="font-size:.74rem;color:var(--text-light)">Créditer ou débiter le solde d'un agent</div></div>
@@ -858,7 +861,8 @@ async function gasGet(p, useCache=false){
     const r=await fetch(url.toString(),{redirect:'follow'});
     const data=await r.json();
     // Jeton expiré/invalide → retour propre à l'écran de connexion.
-    if(data && data.code==='AUTH' && CU){ handleAuthExpired(); return data; }
+    // (Seulement si on AVAIT un jeton : évite toute boucle si le serveur n'en délivre pas encore.)
+    if(data && data.code==='AUTH' && CU && CU.token){ handleAuthExpired(); return data; }
     _cache[key]={data, ts:Date.now()};
     lsDataSet(key, data);   // persistance navigateur → affichage instantané à la prochaine ouverture
     return data;
@@ -871,10 +875,23 @@ async function gasGet(p, useCache=false){
 // ══ PERSISTANCE DES DONNÉES (stale-while-revalidate) ══
 // On garde les dernières données connues dans le navigateur pour les réafficher
 // instantanément à l'ouverture, puis on rafraîchit en arrière-plan.
-function _hashKey(s){s=String(s).replace(/([?&])token=[^&]*/g,'$1').replace(/[?&]+$/,'');let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0;}return 'crous_d_'+(h>>>0).toString(36);}
+// Clé de persistance : liée à l'UTILISATEUR connecté (jamais les données d'un autre compte)
+// et indépendante du jeton (qui change à chaque session).
+function _hashKey(s){
+  s=String(s).replace(/([?&])token=[^&]*/g,'$1').replace(/[?&]+$/,'');
+  const tag=(CU&&CU.nom)?CU.nom:'_';
+  s=tag+'|'+s;
+  let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0;}
+  return 'crous_d_'+(h>>>0).toString(36);
+}
 function _urlForParams(p){const u=new URL(GAS);Object.entries(p).forEach(([k,v])=>u.searchParams.set(k,v));return u.toString();}
-// On ne persiste PAS les données sensibles (codes PIN, coordonnées perso / n° sécu).
-function _persistable(key){ return !/get_agents|get_coordonnees|get_all_coordonnees/.test(key); }
+// On ne persiste PAS les données sensibles (codes PIN, coordonnées perso / n° sécu) ni le login (jeton).
+function _persistable(key){ return !/get_agents|get_coordonnees|get_all_coordonnees|login/.test(key); }
+// Nettoie la mémoire de session (appelé à chaque connexion) pour ne jamais hériter d'un autre compte.
+function clearRuntimeData(){
+  try{ Object.keys(_cache).forEach(k=>delete _cache[k]); }catch(e){}
+  try{ Object.keys(_inflight).forEach(k=>delete _inflight[k]); }catch(e){}
+}
 function lsDataSet(key,data){ if(!_persistable(key)) return; try{ localStorage.setItem(_hashKey(key), JSON.stringify(data)); }catch(e){} }
 function lsData(p){ // lecture synchrone des dernières données connues (ou null)
   try{ const r=localStorage.getItem(_hashKey(_urlForParams(p))); return r?JSON.parse(r):null; }catch(e){ return null; }
@@ -1037,6 +1054,7 @@ async function pinValidate(){
     const res=await gasGet({action:'login',nom:selectedName,pin:pinBuffer});
     if(res.ok){
       CU={nom:res.nom||selectedName,service:res.service,role:res.role,pin:pinBuffer,token:res.token||null};
+      clearRuntimeData();   // on repart propre : jamais les données du compte précédent
       document.getElementById('pin-error').textContent='';
       document.getElementById('pin-error').style.color='';
       if(pinBuffer==='1234'){
@@ -1060,7 +1078,7 @@ async function pinValidate(){
   }
   finally{ _pinBusy=false; }
 }
-function logout(){CU=null;clearAutoRefresh();initNameScreen();}
+function logout(){clearRuntimeData();CU=null;clearAutoRefresh();initNameScreen();}
 // Session expirée : on déconnecte proprement et on réaffiche l'écran de connexion (une seule fois).
 let _authExpiredHandled=false;
 function handleAuthExpired(){
@@ -2057,17 +2075,19 @@ async function loadAnnuaire(){
       pin:     a.pin||a['PIN']||'',
       email:   a.email||a['Email Responsable']||''
     }));
+    // Correspondance robuste nom AGENTS ↔ nom Annuaire (ignore espaces multiples et casse).
+    const _norm=s=>String(s||'').trim().replace(/\s+/g,' ').toLowerCase();
     const coordMap={};
     (dc.agents||[]).forEach(c=>{
-      const n=c.nom||c['Nom']||'';
-      if(n) coordMap[n]=c;
+      const n=_norm(c.nom||c['Nom']);
+      // On ne retient une fiche que si elle contient réellement des données (pas une ligne vide).
+      const rempli=Object.keys(c).some(k=>k!=='nom'&&k!=='Nom'&&String(c[k]||'').trim()!=='');
+      if(n && rempli) coordMap[n]=c;
     });
-    allAnnuaireAgents=agents.map(a=>({
-      ...coordMap[a.nom]||{},
-      ...a,
-      nom: a.nom,
-      _hasCoord: !!coordMap[a.nom]
-    }));
+    allAnnuaireAgents=agents.map(a=>{
+      const c=coordMap[_norm(a.nom)];
+      return { ...(c||{}), ...a, nom:a.nom, _hasCoord: !!c };
+    });
     if(!allAnnuaireAgents.length){
       list.innerHTML='<p style="color:var(--text-muted);padding:12px;text-align:center">Aucun agent</p>';return;
     }
