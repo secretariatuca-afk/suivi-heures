@@ -823,6 +823,10 @@ function toast(m,d=2800){const t=document.getElementById('toast');t.textContent=
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 // Anti-injection de formule (CSV/Excel) : neutralise les valeurs commençant par = + - @ ou tabulation.
 function sanitizeCell(v){const s=String(v==null?'':v);return /^[=+\-@\t\r]/.test(s)?("'"+s):s;}
+// Anti-rebond : la fonction ne s'exécute qu'après une courte pause (saisie fluide dans les recherches).
+function debounce(fn,ms){let t;return function(){const a=arguments,c=this;clearTimeout(t);t=setTimeout(()=>fn.apply(c,a),ms);};}
+// Temporisation : regroupe les frappes rapides pour ne rejouer un traitement lourd qu'une fois la saisie calmée.
+function debounce(fn,ms){let t;return function(){const a=arguments,c=this;clearTimeout(t);t=setTimeout(()=>fn.apply(c,a),ms);};}
 function minsToHHMM(m){m=parseInt(m)||0;const sign=m<0?'-':'';const abs=Math.abs(m);const h=Math.floor(abs/60);const min=abs%60;return sign+String(h).padStart(2,'0')+'h'+String(min).padStart(2,'0');}
 function dureeToMinsFront(duree){
   if(!duree) return 0;
@@ -1248,7 +1252,9 @@ function setupAgentAutocomplete(inputId, boxId, getNames, onSelect){
   const input=document.getElementById(inputId);
   const box=document.getElementById(boxId);
   if(!input||!box) return;
-  input.oninput=()=>{ buildSuggestionBox(input,box,getNames(),onSelect); onSelect(null); };
+  // La liste déroulante se met à jour instantanément ; le re-rendu lourd de la liste est anti-rebondi.
+  const refreshList=debounce(()=>onSelect(null),130);
+  input.oninput=()=>{ buildSuggestionBox(input,box,getNames(),onSelect); refreshList(); };
   input.onfocus=()=>buildSuggestionBox(input,box,getNames(),onSelect);
   input.onblur=()=>setTimeout(()=>{ box.style.display='none'; },200);
   input.onkeydown=e=>{ if(e.key==='Escape'||e.key==='Delete'){ input.value=''; box.style.display='none'; onSelect(''); } };
@@ -1271,13 +1277,13 @@ function initAnnuaireAutocomplete(){
   const input=document.getElementById('annuaire-search');
   const box=document.getElementById('annuaire-suggestions');
   if(!input||!box) return;
-  input.oninput=()=>{
-    const q=input.value.trim();
-    if(!q){ box.style.display='none'; renderAnnuaire(allAnnuaireAgents); return; }
-    const filtered=allAnnuaireAgents.filter(a=>(a.nom||'').toLowerCase().includes(q.toLowerCase()));
-    if(!filtered.length){ box.style.display='none'; renderAnnuaire([]); return; }
+  const buildBox=()=>{
+    const q=input.value.trim().toLowerCase();
+    if(!q){ box.style.display='none'; return; }
+    const filtered=allAnnuaireAgents.filter(a=>(a.nom||'').toLowerCase().includes(q));
+    if(!filtered.length){ box.style.display='none'; return; }
     box.innerHTML='';
-    filtered.slice(0,12).forEach((a,i)=>{
+    filtered.slice(0,12).forEach(a=>{
       const div=document.createElement('div');
       div.textContent=(a.nom||'')+(a.service?' — '+a.service:'');
       div.style.cssText='padding:10px 14px;cursor:pointer;font-size:.88rem;border-bottom:1px solid var(--border);background:#fff';
@@ -1294,9 +1300,13 @@ function initAnnuaireAutocomplete(){
       box.appendChild(div);
     });
     box.style.display='block';
-    renderAnnuaire(filtered);
   };
-  input.onfocus=()=>{ if(input.value) input.dispatchEvent(new Event('input')); };
+  const renderList=debounce(()=>{
+    const q=input.value.trim().toLowerCase();
+    renderAnnuaire(q ? allAnnuaireAgents.filter(a=>(a.nom||'').toLowerCase().includes(q)) : allAnnuaireAgents);
+  },130);
+  input.oninput=()=>{ buildBox(); renderList(); };
+  input.onfocus=()=>{ if(input.value){ buildBox(); renderList(); } };
   input.onblur=()=>setTimeout(()=>box.style.display='none',200);
   input.onkeydown=e=>{ if(e.key==='Escape'){ input.value=''; box.style.display='none'; renderAnnuaire(allAnnuaireAgents); } };
 }
@@ -1739,7 +1749,7 @@ async function loadAgents(){
   try{const d=await gasGet({action:'get_agents'}, true);agentsCache=d.agents||[];document.getElementById('agents-count').textContent=agentsCache.length;renderAgents(agentsCache);}
   catch(e){document.getElementById('agents-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>';}
 }
-function filterAgents(){const q=document.getElementById('agent-search').value.toLowerCase();renderAgents(agentsCache.filter(a=>(a.nom||'').toLowerCase().includes(q)||(a.service||'').toLowerCase().includes(q)));}
+const filterAgents=debounce(function(){const q=document.getElementById('agent-search').value.toLowerCase();renderAgents(agentsCache.filter(a=>(a.nom||'').toLowerCase().includes(q)||(a.service||'').toLowerCase().includes(q)));},120);
 
 function renderAgents(list){
   const el=document.getElementById('agents-list');
