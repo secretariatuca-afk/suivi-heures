@@ -122,7 +122,6 @@ textarea{resize:vertical;min-height:80px}
 .tab.active{background:var(--primary-light);color:#fff;border-color:var(--primary-light)}
 @media(min-width:600px){#content{max-width:580px;margin:0 auto;padding:20px}}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <div id="toast"></div>
@@ -805,19 +804,59 @@ function dureeToMinsFront(duree){
   return 0;
 }
 
+// ══ CHARGEMENT XLSX À LA DEMANDE ═════════════════════
+// La librairie Excel (~900 Ko) n'est plus chargée au démarrage.
+// Elle est téléchargée uniquement au 1er export, et mise en cache ensuite.
+let _xlsxPromise=null;
+function ensureXLSX(){
+  if(window.XLSX) return Promise.resolve();
+  if(_xlsxPromise) return _xlsxPromise;
+  _xlsxPromise=new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=()=>resolve();
+    s.onerror=()=>{_xlsxPromise=null;reject(new Error('Impossible de charger le module Excel'));};
+    document.head.appendChild(s);
+  });
+  return _xlsxPromise;
+}
+
 // ══ CACHE SYSTÈME ════════════════════════════════════
 const _cache={};
 const _CACHE_TTL=60000;
+const _inflight={};  // dédoublonnage des appels identiques simultanés
 
 async function gasGet(p, useCache=false){
   const url=new URL(GAS);
   Object.entries(p).forEach(([k,v])=>url.searchParams.set(k,v));
   const key=url.toString();
   if(useCache && _cache[key] && (Date.now()-_cache[key].ts < _CACHE_TTL)){return _cache[key].data;}
-  const r=await fetch(url.toString(),{redirect:'follow'});
-  const data=await r.json();
-  _cache[key]=({data, ts:Date.now()});
-  return data;
+  // Si une requête identique est déjà en cours, on attend sa réponse au lieu d'en relancer une.
+  if(_inflight[key]) return _inflight[key];
+  const promise=(async()=>{
+    const r=await fetch(url.toString(),{redirect:'follow'});
+    const data=await r.json();
+    _cache[key]={data, ts:Date.now()};
+    return data;
+  })();
+  _inflight[key]=promise;
+  try{ return await promise; }
+  finally{ delete _inflight[key]; }
+}
+
+// ══ CACHE PERSISTANT LISTE AGENTS ════════════════════
+// Permet d'afficher l'écran de connexion instantanément au 2e lancement.
+const _AGENTS_LS_KEY='crous_agents_cache_v1';
+function saveAgentsCache(agents){
+  try{ localStorage.setItem(_AGENTS_LS_KEY, JSON.stringify({ts:Date.now(), agents})); }catch(e){}
+}
+function loadAgentsCache(){
+  try{
+    const raw=localStorage.getItem(_AGENTS_LS_KEY);
+    if(!raw) return null;
+    const o=JSON.parse(raw);
+    return (o&&Array.isArray(o.agents)&&o.agents.length) ? o.agents : null;
+  }catch(e){ return null; }
 }
 
 function invalidateCache(action){
@@ -880,14 +919,24 @@ async function initNameScreen(){
   input.onblur=()=>setTimeout(()=>{const box=document.getElementById('name-suggestions');if(box) box.style.display='none';},200);
   input.onfocus=()=>{ if(input.value) filterAgentsList(input.value); };
   input.onkeydown=e=>{ if(e.key==='Enter') validateName(); };
-  try{
-    const d=await gasGet({action:'get_agents'}, true);
-    allAgents=d.agents||[];
-  }catch(e){
-    document.getElementById('name-error').textContent='Impossible de charger les agents.';
-    return;
-  }
   input.oninput=()=>filterAgentsList(input.value);
+
+  // 1) Affichage immédiat depuis le cache local (pas d'attente du réseau).
+  const cached=loadAgentsCache();
+  if(cached){ allAgents=cached; }
+
+  // 2) Rafraîchissement réseau : bloquant seulement si aucun cache.
+  const refresh=(async()=>{
+    try{
+      const d=await gasGet({action:'get_agents'}, true);
+      if(d&&d.agents){ allAgents=d.agents; saveAgentsCache(d.agents); }
+    }catch(e){
+      if(!cached) document.getElementById('name-error').textContent='Impossible de charger les agents.';
+    }
+  })();
+  if(!cached) await refresh;
+
+  // 3) Pré-remplissage « Se souvenir de moi ».
   const saved=localStorage.getItem('crous_remember_name');
   const cb=document.getElementById('remember-me');
   if(saved){
@@ -895,7 +944,7 @@ async function initNameScreen(){
     input.value=saved;
     const found=allAgents.find(a=>a.nom.toLowerCase()===saved.toLowerCase());
     if(found){selectedName=found.nom;setTimeout(()=>validateName(),100);}
-    else{localStorage.removeItem('crous_remember_name');input.value='';cb.checked=false;}
+    else if(!cached){localStorage.removeItem('crous_remember_name');input.value='';cb.checked=false;}
   } else {input.value='';cb.checked=false;}
   const q=input.value;
   if(q) filterAgentsList(q);
@@ -2162,6 +2211,7 @@ function renderExportHistory(){
 async function exporterTout(){
   showExportStatus(true);
   try{
+    await ensureXLSX();
     const [dDem,dSol,dAnn,dAjust,dAgt]=await Promise.all([
       gasGet({action:'get_demandes'}, true),
       gasGet({action:'get_soldes'}, true),
@@ -2185,6 +2235,7 @@ async function exporterTout(){
 async function exporterFeuille(type){
   showExportStatus(true);
   try{
+    await ensureXLSX();
     const wb=XLSX.utils.book_new();
     if(type==='demandes'){const d=await gasGet({action:'get_demandes'}, true);ajouterFeuilleAuto(wb,'Demandes',d.demandes||[]);logExport('Demandes');}
     else if(type==='soldes'){const d=await gasGet({action:'get_soldes'}, true);ajouterFeuilleAuto(wb,'Soldes',d.soldes||[]);logExport('Soldes');}
