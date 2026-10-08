@@ -2,6 +2,12 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8"/>
+<!-- Politique de sécurité du contenu : limite d'où peuvent venir scripts, données et connexions. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'self'"/>
+<meta http-equiv="X-Content-Type-Options" content="nosniff"/>
+<meta name="referrer" content="no-referrer"/>
+<!-- Anti-clickjacking : si la page est chargée dans un cadre externe, on force la sortie. -->
+<script>try{if(window.top!==window.self){window.top.location=window.self.location.href;}}catch(e){window.self.location.href='about:blank';}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <meta name="theme-color" content="#1e3a5f"/>
 <meta name="mobile-web-app-capable" content="yes"/>
@@ -805,6 +811,8 @@ if('serviceWorker' in navigator){
 
 function toast(m,d=2800){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+// Anti-injection de formule (CSV/Excel) : neutralise les valeurs commençant par = + - @ ou tabulation.
+function sanitizeCell(v){const s=String(v==null?'':v);return /^[=+\-@\t\r]/.test(s)?("'"+s):s;}
 function minsToHHMM(m){m=parseInt(m)||0;const sign=m<0?'-':'';const abs=Math.abs(m);const h=Math.floor(abs/60);const min=abs%60;return sign+String(h).padStart(2,'0')+'h'+String(min).padStart(2,'0');}
 function dureeToMinsFront(duree){
   if(!duree) return 0;
@@ -838,6 +846,8 @@ const _CACHE_TTL=60000;
 const _inflight={};  // dédoublonnage des appels identiques simultanés
 
 async function gasGet(p, useCache=false){
+  // Jeton de session : envoyé sur chaque appel (sauf le login) dès que le serveur en fournit un.
+  if(CU && CU.token && p.action!=='login'){ p=Object.assign({}, p, {token:CU.token}); }
   const url=new URL(GAS);
   Object.entries(p).forEach(([k,v])=>url.searchParams.set(k,v));
   const key=url.toString();
@@ -848,6 +858,7 @@ async function gasGet(p, useCache=false){
     const r=await fetch(url.toString(),{redirect:'follow'});
     const data=await r.json();
     _cache[key]={data, ts:Date.now()};
+    lsDataSet(key, data);   // persistance navigateur → affichage instantané à la prochaine ouverture
     return data;
   })();
   _inflight[key]=promise;
@@ -855,11 +866,27 @@ async function gasGet(p, useCache=false){
   finally{ delete _inflight[key]; }
 }
 
+// ══ PERSISTANCE DES DONNÉES (stale-while-revalidate) ══
+// On garde les dernières données connues dans le navigateur pour les réafficher
+// instantanément à l'ouverture, puis on rafraîchit en arrière-plan.
+function _hashKey(s){s=String(s).replace(/([?&])token=[^&]*/g,'$1').replace(/[?&]+$/,'');let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0;}return 'crous_d_'+(h>>>0).toString(36);}
+function _urlForParams(p){const u=new URL(GAS);Object.entries(p).forEach(([k,v])=>u.searchParams.set(k,v));return u.toString();}
+// On ne persiste PAS les données sensibles (codes PIN, coordonnées perso / n° sécu).
+function _persistable(key){ return !/get_agents|get_coordonnees|get_all_coordonnees/.test(key); }
+function lsDataSet(key,data){ if(!_persistable(key)) return; try{ localStorage.setItem(_hashKey(key), JSON.stringify(data)); }catch(e){} }
+function lsData(p){ // lecture synchrone des dernières données connues (ou null)
+  try{ const r=localStorage.getItem(_hashKey(_urlForParams(p))); return r?JSON.parse(r):null; }catch(e){ return null; }
+}
+
 // ══ CACHE PERSISTANT LISTE AGENTS ════════════════════
 // Permet d'afficher l'écran de connexion instantanément au 2e lancement.
 const _AGENTS_LS_KEY='crous_agents_cache_v1';
 function saveAgentsCache(agents){
-  try{ localStorage.setItem(_AGENTS_LS_KEY, JSON.stringify({ts:Date.now(), agents})); }catch(e){}
+  try{
+    // On ne garde que nom + service + rôle pour l'écran de connexion : jamais les codes PIN.
+    const light=(agents||[]).map(a=>({nom:a.nom||a['Nom']||'', service:a.service||a['Service']||'', role:a.role||a['Role']||'agent'}));
+    localStorage.setItem(_AGENTS_LS_KEY, JSON.stringify({ts:Date.now(), agents:light}));
+  }catch(e){}
 }
 function loadAgentsCache(){
   try{
@@ -911,7 +938,8 @@ function fillNameList(agents){
       selectedName=ag.nom;
       box.style.display='none';
       const sel=document.getElementById('name-list');
-      let opt=sel.querySelector(`option[value="${ag.nom}"]`);
+      // Recherche sûre (évite de casser un sélecteur CSS si le nom contient des caractères spéciaux).
+      let opt=Array.from(sel.options).find(o=>o.value===ag.nom);
       if(!opt){opt=document.createElement('option');opt.value=ag.nom;opt.textContent=ag.nom;sel.appendChild(opt);}
       sel.value=ag.nom;
     };
@@ -1006,7 +1034,7 @@ async function pinValidate(){
   try{
     const res=await gasGet({action:'login',nom:selectedName,pin:pinBuffer});
     if(res.ok){
-      CU={nom:res.nom||selectedName,service:res.service,role:res.role,pin:pinBuffer};
+      CU={nom:res.nom||selectedName,service:res.service,role:res.role,pin:pinBuffer,token:res.token||null};
       document.getElementById('pin-error').textContent='';
       document.getElementById('pin-error').style.color='';
       if(pinBuffer==='1234'){
@@ -1112,30 +1140,29 @@ document.addEventListener('DOMContentLoaded',()=>{
 // ══ RÉCAP DIRECTION ══════════════════════════════════
 async function loadRespRecap(){
   checkExportReminder();
-  try{
-    const d=await gasGet({action:'get_demandes'}, true);
+  // Partie visible (demandes en attente + dernières demandes) : affichage instantané puis rafraîchissement.
+  const renderDem=(d)=>{
     const demandes=d.demandes||[];
     const pending=demandes.filter(x=>x.statut==='En attente').length;
-    document.getElementById('recap-pending').textContent=pending;
+    const rp=document.getElementById('recap-pending'); if(rp) rp.textContent=pending;
     updateBadges(pending);
     const el=document.getElementById('home-resp-recent');
+    if(!el) return;
     const last=demandes.slice(0,5);
-    if(!last.length){el.innerHTML='<p style="color:var(--text-muted);font-size:.85rem">Aucune demande</p>';}
-    else el.innerHTML=last.map(d=>demandeCard(d,true)).join('');
-  }catch(e){}
-  try{
-    const s=await gasGet({action:'get_soldes'}, true);
-    const negatifs=(s.soldes||[]).filter(x=>(parseInt(x.solde)||0)<0).length;
-    document.getElementById('recap-negatifs').textContent=negatifs;
-  }catch(e){}
-  try{
-    const a=await gasGet({action:'get_ajustements'}, true);
-    document.getElementById('recap-ajust').textContent=(a.ajustements||[]).length;
-  }catch(e){}
-  try{
-    const f=await gasGet({action:'get_all_coordonnees'});
-    document.getElementById('recap-fiches').textContent=(f.agents||[]).length;
-  }catch(e){}
+    el.innerHTML=last.length?last.map(x=>demandeCard(x,true)).join(''):'<p style="color:var(--text-muted);font-size:.85rem">Aucune demande</p>';
+  };
+  const instDem=lsData({action:'get_demandes'}); if(instDem) renderDem(instDem);
+  gasGet({action:'get_demandes'}, true).then(renderDem).catch(()=>{});
+  // Compteurs secondaires (cachés) : en parallèle, sans bloquer l'affichage.
+  Promise.allSettled([
+    gasGet({action:'get_soldes'}, true),
+    gasGet({action:'get_ajustements'}, true),
+    gasGet({action:'get_all_coordonnees'}, true)
+  ]).then(([rs,ra,rf])=>{
+    if(rs.status==='fulfilled'){const n=document.getElementById('recap-negatifs');if(n)n.textContent=(rs.value.soldes||[]).filter(x=>(parseInt(x.solde)||0)<0).length;}
+    if(ra.status==='fulfilled'){const n=document.getElementById('recap-ajust');if(n)n.textContent=(ra.value.ajustements||[]).length;}
+    if(rf.status==='fulfilled'){const n=document.getElementById('recap-fiches');if(n)n.textContent=(rf.value.agents||[]).length;}
+  });
 }
 
 // ══ AUTO-REFRESH ═════════════════════════════════════
@@ -1408,18 +1435,25 @@ function clearNotifMesdem(){
 
 // ══ MES DEMANDES ═════════════════════════════════════
 async function loadMesDemandes(force=false){
-  document.getElementById('mesdem-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
-  try{
-    const d=await gasGet({action:'get_demandes',nom:CU.nom}, !force);
+  const applyDemandes=(d)=>{
     allDemandes=d.demandes||[];
     checkNotifMesdem(allDemandes);
-    const nbAttente=allDemandes.filter(d=>d.statut==='En attente').length;
+    const nbAttente=allDemandes.filter(x=>x.statut==='En attente').length;
     const badge=document.getElementById('home-agent-pending-badge');
     const txt=document.getElementById('home-agent-pending-txt');
     if(badge){ badge.textContent=nbAttente; badge.style.display=nbAttente>0?'block':'none'; }
     if(txt){ txt.textContent=nbAttente>0?nbAttente+' en attente':'Mes demandes'; }
     renderMesDemandes();
-  }catch(e){document.getElementById('mesdem-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>';}
+  };
+  // 1) Affichage instantané depuis les dernières données connues.
+  let shown=false;
+  if(!force){ const inst=lsData({action:'get_demandes',nom:CU.nom}); if(inst){ applyDemandes(inst); shown=true; } }
+  if(!shown) document.getElementById('mesdem-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+  // 2) Rafraîchissement réseau.
+  try{
+    const d=await gasGet({action:'get_demandes',nom:CU.nom}, !force);
+    applyDemandes(d);
+  }catch(e){ if(!shown) document.getElementById('mesdem-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>'; }
 }
 function filterMesdem(f,el){mesdemFilter=f;document.querySelectorAll('#mesdem-tabs .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderMesDemandes();}
 function renderMesDemandes(){
@@ -1430,18 +1464,42 @@ function renderMesDemandes(){
 }
 
 // ══ MON SOLDE ════════════════════════════════════════
+// Paramètres des 3 appels nécessaires au solde (réutilisés pour la lecture instantanée).
+function _soldeParams(){
+  return [
+    {action:'get_soldes'},
+    {action:'get_ajustements'},
+    {action:'get_demandes',nom:CU.nom}
+  ];
+}
+
 async function loadSolde(force=false){
   const el=document.getElementById('solde-content');
-  el.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+  // 1) Affichage INSTANTANÉ depuis les dernières données connues (sauf rafraîchissement forcé).
+  let shown=false;
+  if(!force){
+    const inst=_soldeParams().map(p=>lsData(p));
+    if(inst.every(Boolean)){ renderSolde(inst); shown=true; }
+  }
+  if(!shown) el.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+  // 2) Rafraîchissement réseau en arrière-plan, puis réaffichage avec les données fraîches.
   try{
-    // Cache-first : réutilise les données déjà préchargées au login (affichage quasi instantané).
-    // Le bouton 🔄 passe force=true pour forcer un rafraîchissement réseau.
     const useC=!force;
-    const [dSol,dAjust,dDem]=await Promise.all([
+    const fresh=await Promise.all([
       gasGet({action:'get_soldes'}, useC),
       gasGet({action:'get_ajustements'}, useC),
       gasGet({action:'get_demandes',nom:CU.nom}, useC)
     ]);
+    renderSolde(fresh);
+  }catch(e){
+    if(!shown) el.innerHTML='<p style="color:var(--danger);padding:12px">Erreur de chargement</p>';
+  }
+}
+
+function renderSolde([dSol,dAjust,dDem]){
+  const el=document.getElementById('solde-content');
+  if(!el) return;
+  try{
     const s=(dSol.soldes||[]).find(x=>String(x.nom).trim()===String(CU.nom).trim())||{};
     const prises=parseInt(s.prises)||0;
     const recup=parseInt(s.recuperees)||0;
@@ -1501,7 +1559,21 @@ async function loadValidation(forceReload=false){
     renderValidation();
     return;
   }
-  document.getElementById('validation-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+  // 1) Affichage instantané depuis les dernières données connues.
+  let shown=false;
+  if(!forceReload){
+    const iDem=lsData({action:'get_demandes'}), iAj=lsData({action:'get_ajustements'});
+    if(iDem){
+      allValidDem=iDem.demandes||[];
+      window._ajustValides=((iAj&&iAj.ajustements)||[]).filter(a=>a.statut==='Validé'||a.statut==='Validé ✅');
+      _validAgentNames=[...new Set(allValidDem.map(x=>x.nom||'').filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
+      initValidAutocomplete();
+      renderValidation();
+      shown=true;
+    }
+  }
+  if(!shown) document.getElementById('validation-list').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+  // 2) Rafraîchissement réseau.
   try{
     const [dDem, dAjust] = await Promise.all([
       gasGet({action:'get_demandes'}, !forceReload),
@@ -1514,8 +1586,7 @@ async function loadValidation(forceReload=false){
     _validationLoaded=true;
     renderValidation();
     updateBadges(allValidDem.filter(x=>x.statut==='En attente').length);
-  }catch(e){document.getElementById('validation-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>';}
-  // ✅ CORRIGÉ : suppression de l'appel à loadTableau() inexistant
+  }catch(e){ if(!shown) document.getElementById('validation-list').innerHTML='<p style="color:var(--danger);padding:12px">Erreur</p>'; }
 }
 
 function filterValidStatus(f,el){validFilter=f;document.querySelectorAll('#valid-tabs .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderValidation();}
@@ -1638,7 +1709,7 @@ function renderAgents(list){
   window._agentsData=list;
   el.innerHTML=list.map((a,i)=>`
     <div class="agent-row" style="flex-wrap:wrap;gap:6px">
-      <div class="agent-avatar">${esc(a.nom||'?').charAt(0).toUpperCase()}</div>
+      <div class="agent-avatar">${esc(String(a.nom||'?').charAt(0).toUpperCase())}</div>
       <div class="agent-info" style="flex:1">
         <div class="agent-name">${esc(a.nom||'')}</div>
         <div class="agent-service">${esc(a.service||'')} · ${a.role==='responsable'?'Responsable':'Agent'}</div>
@@ -1660,7 +1731,7 @@ function voirFicheAgent(a){
   const email=a.email||a['Email Responsable']||'';
   document.getElementById('modal-agent-content').innerHTML=`
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <div class="agent-avatar" style="width:52px;height:52px;font-size:1.4rem;flex-shrink:0">${(a.nom||'?').charAt(0).toUpperCase()}</div>
+      <div class="agent-avatar" style="width:52px;height:52px;font-size:1.4rem;flex-shrink:0">${esc(String(a.nom||'?').charAt(0).toUpperCase())}</div>
       <div>
         <div style="font-weight:700;font-size:1rem;color:var(--primary)">${esc(a.nom||'')}</div>
         <div style="font-size:.8rem;color:var(--text-light)">${esc(service)} · ${role}</div>
@@ -1765,13 +1836,17 @@ function demandeCard(d,isAdmin){
 
 // ══ ACTIVITÉ RÉCENTE ═════════════════════════════════
 async function loadRecentActivity(){
-  try{
-    const d=await gasGet({action:'get_demandes',nom:CU.nom}, true);
-    const list=(d.demandes||[]).slice(0,3);
+  const render=(d)=>{
     const el=document.getElementById('home-recent');
+    if(!el) return;
+    const list=(d.demandes||[]).slice(0,3);
     if(!list.length){el.innerHTML='<p style="color:var(--text-muted);font-size:.85rem">Aucune demande récente</p>';return;}
     el.innerHTML=list.map(d=>demandeCard(d,false)).join('');
-  }catch(e){document.getElementById('home-recent').innerHTML='<p style="color:var(--text-muted);font-size:.85rem">Chargement impossible</p>';}
+  };
+  // Affichage instantané puis rafraîchissement.
+  const inst=lsData({action:'get_demandes',nom:CU.nom}); if(inst) render(inst);
+  try{ const d=await gasGet({action:'get_demandes',nom:CU.nom}, true); render(d); }
+  catch(e){ if(!inst){const el=document.getElementById('home-recent');if(el)el.innerHTML='<p style="color:var(--text-muted);font-size:.85rem">Chargement impossible</p>';} }
 }
 
 // ══ MES COORDONNÉES ══════════════════════════════════
@@ -1996,7 +2071,7 @@ function renderAnnuaire(agents){
     const nom=a.nom||a['Nom']||'';
     const service=a.affectation||a.service||a['Service']||'';
     return `<div class="agent-row" style="cursor:pointer" onclick="showAgentCoordIdx(${i})">
-      <div class="agent-avatar">${(nom||'?').charAt(0).toUpperCase()}</div>
+      <div class="agent-avatar">${esc(String(nom||'?').charAt(0).toUpperCase())}</div>
       <div class="agent-info">
         <div class="agent-name">${esc(nom)}</div>
         <div class="agent-service">${esc(service)}<span style="color:var(--primary-light);font-size:.7rem"> ▶ voir fiche</span></div>
@@ -2334,7 +2409,7 @@ function ajouterFeuilleAuto(wb, nom, data){
       const m=abs%60;
       return sign+h+'h'+(m>0?String(m).padStart(2,'0'):'00');
     }
-    return String(val);
+    return sanitizeCell(val);
   }));
   const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
   ws['!cols']=keys.map(()=>({wch:22}));
@@ -2405,7 +2480,7 @@ function renderSoldeDirList(){
     const sign=solTotal>0?'+':solTotal<0?'-':'';
     const solH=minsToHHMM(Math.abs(solTotal));
     return `<div class="agent-row" style="cursor:pointer" onclick="showSoldeDirFiche(${i})">
-      <div class="agent-avatar">${s.nom.charAt(0).toUpperCase()}</div>
+      <div class="agent-avatar">${esc(String(s.nom||'?').charAt(0).toUpperCase())}</div>
       <div class="agent-info">
         <div class="agent-name">${esc(s.nom)}</div>
         <div class="agent-service">${esc(s.service)}</div>
