@@ -857,6 +857,8 @@ async function gasGet(p, useCache=false){
   const promise=(async()=>{
     const r=await fetch(url.toString(),{redirect:'follow'});
     const data=await r.json();
+    // Jeton expiré/invalide → retour propre à l'écran de connexion.
+    if(data && data.code==='AUTH' && CU){ handleAuthExpired(); return data; }
     _cache[key]={data, ts:Date.now()};
     lsDataSet(key, data);   // persistance navigateur → affichage instantané à la prochaine ouverture
     return data;
@@ -1059,6 +1061,17 @@ async function pinValidate(){
   finally{ _pinBusy=false; }
 }
 function logout(){CU=null;clearAutoRefresh();initNameScreen();}
+// Session expirée : on déconnecte proprement et on réaffiche l'écran de connexion (une seule fois).
+let _authExpiredHandled=false;
+function handleAuthExpired(){
+  if(_authExpiredHandled) return;
+  _authExpiredHandled=true;
+  CU=null;
+  try{clearAutoRefresh();}catch(e){}
+  try{initNameScreen();}catch(e){}
+  setTimeout(()=>{_authExpiredHandled=false;},3000);
+  try{toast('Session expirée, reconnectez-vous');}catch(e){}
+}
 
 // ══ CHANGEMENT DE PIN ════════════════════════════════
 let changePinBuffer='', changePinFirst='';
