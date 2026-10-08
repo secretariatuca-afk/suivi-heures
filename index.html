@@ -66,9 +66,10 @@ textarea{resize:vertical;min-height:80px}
 .btn-danger{background:var(--danger);color:#fff;width:auto}
 .btn-success{background:var(--success);color:#fff;width:auto}
 .btn-sm{padding:6px 12px;font-size:.8rem}
-/* Accès rapide (direction) : boutons tous de même hauteur/forme */
-.qa-list>button{min-height:62px;box-sizing:border-box}
+/* Accès rapide (direction) : boutons tous EXACTEMENT de même taille (rectangles identiques) */
+.qa-list>button{height:60px;box-sizing:border-box;overflow:hidden}
 .qa-list>button>div:nth-child(2){flex:1;min-width:0}
+.qa-list>button>div:nth-child(2)>div:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
 .type-card{border:2px solid var(--border);border-radius:var(--radius-sm);padding:14px 10px;text-align:center;cursor:pointer;transition:all .18s;background:var(--bg-card)}
 .type-card.selected{border-color:var(--primary-light);background:#e8f0fe}
